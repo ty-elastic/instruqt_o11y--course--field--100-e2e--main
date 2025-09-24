@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <logger name="com.example" level="debug"/>
+  <root level="info">
+    <!--
+      IMPORTANT enable a console appender to troubleshoot cases where
+      logs are missing in the OTel backend
+    -->
+  </root>
+</configuration>

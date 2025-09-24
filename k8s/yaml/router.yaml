@@ -1,0 +1,59 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: trading
+    service: router
+  name: router
+  namespace: $NAMESPACE
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trading
+      service: router
+  template:
+    metadata:
+      annotations:
+        instrumentation.opentelemetry.io/inject-nodejs: "opentelemetry-operator-system/elastic-instrumentation"
+        io.opentelemetry.discovery.logs/enabled: "true"
+      labels:
+        app: trading
+        service: router
+    spec:
+      tolerations:
+      - key: "REGION"
+        operator: "Equal"
+        value: "$REGION"
+        effect: "PreferNoSchedule"
+      containers:
+        - env:
+            - name: RECORDER_HOST_1
+              value: recorder-java
+            - name: RECORDER_HOST_CANARY
+              value: recorder-go-zero
+          image: $REPO/router:$COURSE
+          imagePullPolicy: Always
+          name: router
+          ports:
+            - containerPort: 9000
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: trading
+    service: router
+  name: router
+  namespace: $NAMESPACE
+spec:
+  ports:
+    - name: router
+      port: 9000
+      targetPort: 9000
+  selector:
+    app: trading
+    service: router
+---

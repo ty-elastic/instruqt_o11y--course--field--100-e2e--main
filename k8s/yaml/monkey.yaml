@@ -1,0 +1,61 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monkey
+  namespace: $NAMESPACE
+  labels:
+    app: trading
+    service: monkey
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trading
+      service: monkey
+  template:
+    metadata:
+      annotations:
+        instrumentation.opentelemetry.io/inject-python: "opentelemetry-operator-system/elastic-instrumentation"
+        io.opentelemetry.discovery.logs/enabled: "false"
+      labels:
+        app: trading
+        service: monkey
+    spec:
+      tolerations:
+      - key: "REGION"
+        operator: "Equal"
+        value: "$REGION"
+        effect: "PreferNoSchedule"
+      containers:
+        - name: monkey
+          image: $REPO/monkey:$COURSE
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9002
+          env:
+            - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+              value: "true"
+            - name: TRADER_SERVICE
+              value: proxy:9090/trader
+            - name: REGION
+              value: "$REGION"
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: trading
+    service: monkey
+  name: monkey
+  namespace: $NAMESPACE
+spec:
+  ports:
+    - name: monkey
+      port: 9002
+      targetPort: 9002
+  selector:
+    app: trading
+    service: monkey
+---

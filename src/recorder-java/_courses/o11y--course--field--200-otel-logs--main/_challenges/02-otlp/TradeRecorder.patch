@@ -1,0 +1,11 @@
+--- ../src/main/java/com/example/recorder/TradeRecorder.java	2025-09-19 20:08:32
++++ o11y--course--field--200-otel-logs--main/_challenges/02-otlp/TradeRecorder.java	2025-09-20 07:14:52
+@@ -35,7 +35,7 @@
+ 
+         Trade savedTrade = tradeRepo.save(trade);
+ 
+-        log.atInfo().log("trade committed for " + trade.customerId);
++        log.atInfo().addKeyValue(Main.ATTRIBUTE_PREFIX + ".gc_time", utilities.getGarbageCollectorDeltaTime()).log("trade committed for " + trade.customerId);
+ 
+         return savedTrade;
+     }

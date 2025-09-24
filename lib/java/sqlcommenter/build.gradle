@@ -1,0 +1,36 @@
+plugins {
+	id 'java-library' 
+  id "com.gradleup.shadow" version "8.3.6"
+}
+
+group = "com.example"
+version = "1.0.0" // CURRENT_VERSION
+
+java {
+	sourceCompatibility = '17'
+}
+
+repositories {
+  mavenCentral()
+}
+
+def findBugsJsr305Version = '3.0.2'
+def opentelemetryVersion = '1.5.0'
+
+
+dependencies {
+    compileOnly "org.hibernate:hibernate-core:7.0.3.Final"
+
+    compileOnly "com.google.code.findbugs:jsr305:${findBugsJsr305Version}"
+
+    implementation "io.opentelemetry:opentelemetry-api:${opentelemetryVersion}"
+    compileOnly "io.opentelemetry:opentelemetry-sdk:${opentelemetryVersion}"
+}
+
+tasks {
+
+  compileJava {
+  }
+
+  assemble.dependsOn(shadowJar)
+}
