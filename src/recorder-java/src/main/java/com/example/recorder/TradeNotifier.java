@@ -21,12 +21,9 @@ public class TradeNotifier {
     private String notifierEndpoint;
 
     public TradeNotifier() {
-        try {
-            notifierEndpoint = System.getenv("NOTIFIER_ENDPOINT");
-        } catch (Exception e) 
-        {
+        notifierEndpoint = System.getenv("NOTIFIER_ENDPOINT");
+        if (notifierEndpoint == null)
             notifierEndpoint = "http://notifier:5000/notify";
-        }
     }
 
     public void notify(Trade trade) {
@@ -44,7 +41,7 @@ public class TradeNotifier {
                     .send(request, BodyHandlers.ofString());
         }
         catch (Exception e) {
-            log.warn("unable to notify", e);
+            log.warn("unable to notify: " + e.toString());
         }
     }
 }

@@ -36,9 +36,9 @@ public class TradeController {
 			Trade trade = new Trade(tradeId, customerId, symbol, shares, sharePrice, action);
 			
 			// intentionally thrash GC in NA region
-			if (region.equals("EU") || region.equals("EMEA") || region.equals("APAC")) {
-				Utilities.thrashGarbageCollector();
-			}
+			// if (region.equals("EU") || region.equals("EMEA") || region.equals("APAC")) {
+			// 	Utilities.thrashGarbageCollector();
+			// }
 
 			CompletableFuture<Trade> resp = tradeService.processTrade(trade);
 
