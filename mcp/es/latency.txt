@@ -1,0 +1,5 @@
+FROM traces-generic.otel-default
+| WHERE transaction.duration.us IS NOT NULL
+| WHERE service.name == ?service_name and `@timestamp` >= NOW() - 7 DAYS
+| STATS avg_latency = AVG(transaction.duration.us) BY transaction.name, k8s.node.name
+| KEEP avg_latency, transaction.name, k8s.node.name

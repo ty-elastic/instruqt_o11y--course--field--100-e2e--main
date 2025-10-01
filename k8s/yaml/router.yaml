@@ -18,9 +18,11 @@ spec:
       annotations:
         instrumentation.opentelemetry.io/inject-nodejs: "opentelemetry-operator-system/elastic-instrumentation"
         io.opentelemetry.discovery.logs/enabled: "true"
+        resource.opentelemetry.io/service.version: "$SERVICE_VERSION"
       labels:
         app: trading
         service: router
+        app.kubernetes.io/version: "$SERVICE_VERSION"
     spec:
       tolerations:
       - key: "REGION"

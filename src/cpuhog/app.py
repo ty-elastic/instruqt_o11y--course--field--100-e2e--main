@@ -45,7 +45,7 @@ def sigterm_handler(signum, frame):
 signal.signal(signal.SIGTERM, sigterm_handler)
 
 
-def cpu_intensive_task():
+def do_lots_of_math():
     stop = False
     try:
         while not stop:
@@ -65,9 +65,9 @@ if __name__ == "__main__":
     processes = []
 
     for region in REGIONS:
-        create_latency(region, 600)
+        create_latency(region, 2000)
 
-    cpu_intensive_task()
+    do_lots_of_math()
 
     # try:
     #     for _ in range(num_cores):

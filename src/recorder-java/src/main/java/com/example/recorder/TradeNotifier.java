@@ -1,6 +1,8 @@
 package com.example.recorder;
 
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -9,6 +11,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Service layer is where all the business logic lies
@@ -22,11 +25,12 @@ public class TradeNotifier {
 
     public TradeNotifier() {
         notifierEndpoint = System.getenv("NOTIFIER_ENDPOINT");
-        if (notifierEndpoint == null)
+        if ((notifierEndpoint == null) || notifierEndpoint.equals(""))
             notifierEndpoint = "http://notifier:5000/notify";
     }
 
-    public void notify(Trade trade) {
+    @Async
+    public CompletableFuture<HttpResponse<String>> notify (Trade trade) {
         try {
             String body = mapper.writeValueAsString(trade);
 
@@ -36,9 +40,13 @@ public class TradeNotifier {
                     .POST(HttpRequest.BodyPublishers.ofString(body))
                     .build();
 
-            HttpResponse<String> response = HttpClient.newBuilder()
+            CompletableFuture<HttpResponse<String>> response = HttpClient.newBuilder()
                     .build()
-                    .send(request, BodyHandlers.ofString());
+                    .sendAsync(request, BodyHandlers.ofString());
+
+            log.info("sent async notification to " + notifierEndpoint);
+
+            return response;
         }
         catch (Exception e) {
             log.warn("unable to notify: " + e.toString());

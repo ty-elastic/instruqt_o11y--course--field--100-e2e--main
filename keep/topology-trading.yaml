@@ -1,0 +1,96 @@
+applications:
+- id: 16faaaab-4c3f-4934-bfe8-900f265e74c6
+  description: ''
+  name: Trading
+  repository: ''
+  services:
+  - 1
+  - 2
+  - 3
+  - 4
+services:
+- team: trader-dev
+  is_manual: true
+  email: trader-support@corp.com
+  repository: https://github.com/ty-elastic/k8s-otel-finance/tree/main/src/trader
+  slack: trader-support
+  source_provider_id: unknown
+  tags:
+  - python
+  ip_address: null
+  environment: prod
+  mac_address: null
+  id: 1
+  display_name: Trader
+  category: service
+  service: trader
+  description: null
+  manufacturer: null
+  namespace: trading
+- team: routing
+  is_manual: true
+  email: routing-support@corp.com
+  repository: https://github.com/ty-elastic/k8s-otel-finance/tree/main/src/routing
+  slack: routing-support
+  source_provider_id: unknown
+  tags:
+  - node
+  ip_address: null
+  environment: prod
+  mac_address: null
+  id: 2
+  display_name: Router
+  category: service
+  service: router
+  description: null
+  manufacturer: null
+  namespace: null
+- team: database
+  is_manual: true
+  email: database-support@corp.com
+  repository: https://github.com/ty-elastic/k8s-otel-finance/tree/main/src/recorder-java
+  slack: database-support
+  source_provider_id: unknown
+  tags:
+  - java
+  ip_address: null
+  environment: prod
+  mac_address: null
+  id: 3
+  display_name: Recorder
+  category: service
+  service: recorder-java
+  description: null
+  manufacturer: null
+  namespace: null
+- team: routing
+  is_manual: true
+  email: routing-support@corp.com
+  repository: https://github.com/ty-elastic/k8s-otel-finance/tree/main/src/notifier
+  slack: routing-support
+  source_provider_id: unknown
+  tags:
+  - net
+  ip_address: null
+  environment: prod
+  mac_address: null
+  id: 4
+  display_name: Notifier
+  category: service
+  service: notifier
+  description: null
+  manufacturer: null
+  namespace: null
+dependencies:
+- id: 1
+  service_id: 1
+  depends_on_service_id: 2
+  protocol: REST
+- id: 2
+  service_id: 2
+  depends_on_service_id: 3
+  protocol: REST
+- id: 3
+  service_id: 3
+  depends_on_service_id: 4
+  protocol: REST

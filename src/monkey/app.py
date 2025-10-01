@@ -13,17 +13,22 @@ from ua_generator.options import Options
 from ua_generator.data.version import VersionRange
 from faker import Faker
 
+from opentelemetry import trace
+
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
 
 def init_otel(): 
     if 'OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED' in os.environ:
-        print("enable otel logging")
+        print("enable otel logging")      
         root_logger = logging.getLogger()
         for handler in root_logger.handlers:
             if isinstance(handler, logging.StreamHandler):
                 root_logger.removeHandler(handler)
-init_otel()
+
+    tracer = trace.get_tracer(__name__)
+    return tracer
+tracer = init_otel()
 
 TRADE_TIMEOUT = 5
 S_PER_DAY = 60
@@ -144,6 +149,7 @@ def bump_version_up_per_browser(*, browser, region):
 def conform_request_bool(value):
     return value.lower() == 'true'
 
+@tracer.start_as_current_span("generate_trade_request")
 def generate_trade_request(*, subscription, customer_id, symbol, day_of_week, region, latency_amount, latency_action, error_model, error_db, error_db_service, error_request, skew_market_factor, canary, classification=None, data_source):
     try:
         params={'symbol': symbol, 

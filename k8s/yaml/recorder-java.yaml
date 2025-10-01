@@ -29,9 +29,11 @@ spec:
       annotations:
         instrumentation.opentelemetry.io/inject-java: "opentelemetry-operator-system/elastic-instrumentation"
         io.opentelemetry.discovery.logs/enabled: "false"
+        resource.opentelemetry.io/service.version: "$SERVICE_VERSION"
       labels:
         app: trading
         service: recorder-java
+        app.kubernetes.io/version: "$SERVICE_VERSION"
     spec:
       tolerations:
       - key: "REGION"
@@ -78,9 +80,11 @@ spec:
               value: $POSTGRESQL_USER
             - name: POSTGRESQL_SSLMODE
               value: "$POSTGRESQL_SSLMODE"
+            - name: POSTGRESQL_DBNAME
+              value: $POSTGRESQL_DBNAME
 
-            - name: NOTIFIER_HOST
-              value: $NOTIFIER_HOST
+            - name: NOTIFIER_ENDPOINT
+              value: $NOTIFIER_ENDPOINT
           image: $REPO/recorder-java:$COURSE
           imagePullPolicy: Always
           ports:

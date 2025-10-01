@@ -155,7 +155,7 @@ def trade(*, region, trade_id, customer_id, symbol, day_of_week, shares, share_p
     response['share_price']= share_price
     response['action']= action
     
-    app.logger.info(f"traded {symbol} on day {day_of_week} for {customer_id}")
+    app.logger.info(f"traded {symbol} on day {day_of_week} for {customer_id}@email.co")
     
     return response
     

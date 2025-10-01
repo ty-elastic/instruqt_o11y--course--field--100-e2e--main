@@ -1,0 +1,2 @@
+#required for RUM symbol upload
+server.maxPayload: 4194304

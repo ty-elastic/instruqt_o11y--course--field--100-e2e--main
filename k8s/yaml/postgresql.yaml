@@ -19,7 +19,7 @@ spec:
         app: trading
         service: postgresql
         type: postgresql
-        dbName: trades
+        dbName: $POSTGRESQL_DBNAME
       annotations:
         io.opentelemetry.discovery.logs/enabled: "true"
         io.opentelemetry.discovery.logs/config: |
@@ -82,9 +82,6 @@ spec:
             field: attributes.severity_field
           - type: remove
             on_error: send_quiet
-            field: attributes.trace_version
-          - type: remove
-            on_error: send_quiet
             field: attributes.trace_id
           - type: remove
             on_error: send_quiet
@@ -102,7 +99,7 @@ spec:
         - name: postgresql
           env:
             - name: POSTGRES_DB
-              value: trades
+              value: $POSTGRESQL_DBNAME
             - name: POSTGRES_PASSWORD
               value: $POSTGRESQL_PASSWORD
             - name: POSTGRES_USER

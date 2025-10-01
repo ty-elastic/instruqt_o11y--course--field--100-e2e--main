@@ -24,5 +24,7 @@ done
 
 az postgres flexible-server db create --resource-group $RESOURCE_GROUP --server-name tbekiarestrades --database-name trades
 
+az postgres flexible-server parameter set --resource-group $RESOURCE_GROUP --server-name tbekiarestrades --name azure.extensions --value pg_stat_statements
+
 az postgres flexible-server firewall-rule create --resource-group $RESOURCE_GROUP --name tbekiarestrades --rule-name allowazureservices --start-ip-address 0.0.0.0
 

@@ -18,9 +18,11 @@ spec:
       annotations:
         instrumentation.opentelemetry.io/inject-python: "opentelemetry-operator-system/elastic-instrumentation"
         io.opentelemetry.discovery.logs/enabled: "false"
+        resource.opentelemetry.io/service.version: "$SERVICE_VERSION"
       labels:
         app: trading
         service: trader
+        app.kubernetes.io/version: "$SERVICE_VERSION"
     spec:
       tolerations:
       - key: "REGION"

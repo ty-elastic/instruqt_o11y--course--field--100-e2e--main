@@ -1,0 +1,64 @@
+TY
+-----
+
+Intro slides
+
+First Demo
+
+1) Database problem
+- alert
+- log rate analysis
+- postgres dashboard
+- APM service
+- correlation on failure
+- logs
+- get help
+
+2) high latency problem 
+
+
+1) Alerts > Discover
+- Discover, proxy logs
+- load saved query by bucket
+- update query by hostname
+
+1a) AI Flow
+can you parse these nginx access logs and give me a table showing average event duration split by server host name?
+
+2) Alerts > Latency
+- View in app
+- open row
+- note high latency
+- click transaction id
+- check logs
+- ai assistant on warning
+- not related
+- latency correlation
+- ah seems host related
+
+3) Alerts > Latency
+- Alert details
+- Details
+- AI assistant on alert
+
+-----
+AI Assistant Flow
+
+* are the open alerts related?
+
+* what pod is causing the high cpu usage?
+
+* can you graph trading volume by region?
+
+* what does the runbook say to do?
+
+* can you open a case, attach the relevant alerts, and summarize our findings?
+
+TY
+-----
+Keep Flow
+
+
+TY
+-----
+MCP w/ VSCode

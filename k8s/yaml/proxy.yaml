@@ -21,7 +21,6 @@ spec:
         app: trading
         service: proxy
       annotations:
-        instrumentation.opentelemetry.io/inject-nginx: "true"
         io.opentelemetry.discovery.logs/enabled: "true"
     spec:
       tolerations:

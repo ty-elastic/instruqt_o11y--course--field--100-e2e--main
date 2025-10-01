@@ -1,0 +1,51 @@
+receivers:
+  # Receiver for logs, traces, and metrics from SDKs
+  otlp/fromsdk:
+    protocols:
+      grpc:
+      http:
+
+connectors:
+  elasticapm:
+
+processors:
+  elasticinframetrics:
+  elastictrace:
+
+  resource/environment:
+    attributes:
+      - key: deployment.environment.name
+        value: "trading-1"
+        action: upsert
+
+exporters:
+  debug:
+    verbosity: detailed
+
+  elasticsearch/otel:
+    endpoints: [ "${env:ELASTIC_ENDPOINT}" ]
+    api_key: ${env:ELASTIC_API_KEY}
+    mapping:
+      mode: otel
+
+service:
+  pipelines:
+    traces/fromsdk:
+      receivers: [otlp/fromsdk]
+      processors: [resource/environment, elastictrace]
+      exporters: [elasticapm, elasticsearch/otel]
+
+    metrics/fromsdk:
+      receivers: [otlp/fromsdk]
+      processors: [resource/environment]
+      exporters: [elasticsearch/otel]
+
+    metrics/aggregated-metrics:
+      receivers: [elasticapm]
+      processors: []
+      exporters: [elasticsearch/otel]
+
+    logs/fromsdk:
+      receivers: [otlp/fromsdk]
+      processors: [resource/environment]
+      exporters: [elasticapm, elasticsearch/otel]

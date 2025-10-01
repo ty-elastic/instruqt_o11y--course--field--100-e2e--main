@@ -208,7 +208,7 @@ collectors:
         resource/environment:
           attributes:
             - key: deployment.environment.name
-              from_attribute: service.namespace
+              from_attribute: k8s.namespace.name
               action: upsert
         transform/parse_json_body:
             error_mode: ignore
@@ -695,4 +695,4 @@ instrumentation:
   python:
     image: docker.elastic.co/observability/elastic-otel-python:1.3.0
   go:
-    image: ghcr.io/open-telemetry/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.22.0
+    image: ghcr.io/open-telemetry/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.23.0

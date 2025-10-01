@@ -7,6 +7,6 @@ for i in static/js/*.js; do
   -F "service_name=${SERVICE_NAME}" \
   -F "service_version=${SERVICE_VERSION}" \
   -F "bundle_filepath=/${i}" \
-  -F "sourcemap=@${i}.map" > /dev/null 2>&1
+  -F "sourcemap=@${i}.map"
   sleep 5
 done

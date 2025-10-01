@@ -1,0 +1,51 @@
+workflow:
+  id: b02d316e-1ee9-4e97-b3a4-3a5193de7c9b
+  name: Test
+  description: Test
+  disabled: false
+  triggers:
+    - type: incident
+      events:
+        - created
+  inputs: []
+  consts: {}
+  owners: []
+  services: []
+  steps:
+    - name: console-step1
+      provider:
+        type: console
+        config: "{{ providers.default-console }}"
+        with:
+          message: "{{ incident }}"
+    - name: alarm-extract
+      provider:
+        type: webhook
+        config: "{{ providers.Alarms }}"
+        with:
+          body: "{{ incident.alerts }}"
+          method: POST
+          url: http://10.128.0.27:5000/alarms/clean
+    - name: alarm-rca
+      provider:
+        type: webhook
+        config: "{{ providers.Alarms }}"
+        with:
+          body: "are the following alert ids related: {{ steps.alarm-extract.results.body.alert_ids }}? if so, what is the likely root cause?"
+          method: POST
+          url: http://10.128.0.27:5000/alarms/rca
+    - name: console-step2
+      provider:
+        type: console
+        config: "{{ providers.default-console }}"
+        with:
+          message: "{{steps.alarm-rca.results.body}}"
+    - name: kibana-cases
+      provider:
+        type: webhook
+        config: "{{ providers.Alarms }}"
+        with:
+          body: '{"incident": {{ incident }}, "message": {{ steps.alarm-rca.results.body.result }}, "alarms": {{ steps.alarm-extract.results.body.alarms }} }'
+          method: POST
+          url: http://10.128.0.27:5000/case/create
+  actions: []

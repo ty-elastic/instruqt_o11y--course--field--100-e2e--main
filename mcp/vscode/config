@@ -1,0 +1,19 @@
+.vscode/mcp.json
+
+{
+	"servers": {
+        "Elky": {
+            "command": "npx",
+            "args": [
+                "mcp-remote",
+                "https://xyz",
+                "--header",
+                "Authorization:${AUTH_HEADER}"
+            ],
+            "env": {
+                "AUTH_HEADER": "ApiKey abc123"
+            }
+        }
+	},
+	"inputs": []
+}

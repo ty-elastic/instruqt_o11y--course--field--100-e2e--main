@@ -2,3 +2,5 @@ flask
 requests
 ua-generator
 Faker
+
+elastic-opentelemetry
