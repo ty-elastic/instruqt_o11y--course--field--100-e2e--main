@@ -18,23 +18,9 @@ public class TradeRecorder {
     
     private final Utilities utilities;
     private final TradeRepo tradeRepo;
-    private boolean pgStatEnabled = false;
 
     @Transactional
     public Trade recordTrade (Trade trade){
-        if (!pgStatEnabled) {
-            try {
-                log.atInfo().log("enabling pg_stat_statements");
-                tradeRepo.enablePGStatStatements();
-            }
-            catch (Exception e) {
-                log.atWarn().log(e.getMessage());
-                if (e.getMessage().contains("already exists")) {
-                    pgStatEnabled = true;
-                }
-            }
-        }
-
         Trade savedTrade = tradeRepo.save(trade);
 
         log.atInfo().addKeyValue(Main.ATTRIBUTE_PREFIX + ".gc_time", utilities.getGarbageCollectorDeltaTime()).log("trade committed for " + trade.customerId);

@@ -8,8 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import jakarta.validation.constraints.Min;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -25,11 +23,9 @@ public class Trade {
   @Column(name="symbol")
   public String symbol;
 
-  @Min(value = 0, message = "shares must be > 0")
   @Column(name="shares")
   public int shares;
 
-  @Min(value = 0, message = "share_price must be > 0")
   @Column(name="share_price")
   public float sharePrice;
 
