@@ -7,17 +7,9 @@ COPY requirements.txt .
 RUN --mount=type=cache,target=/root/.cache/pip pip3 install --root-user-action=ignore -r requirements.txt
 
 COPY app.py .
+COPY yaml yaml
 
-ENV TRADER_SERVICE="trader:9001"
 ENV PYTHONUNBUFFERED=1
 
-ENV OTEL_SERVICE_NAME="chaos"
-ENV OTEL_PYTHON_LOG_LEVEL="info"
-ENV OTEL_PYTHON_LOG_CORRELATION="true"
-ENV OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED="true"
-ENV OTEL_EXPERIMENTAL_RESOURCE_DETECTORS="process_runtime"
-ENV ELASTIC_OTEL_SYSTEM_METRICS_ENABLED="true"
-ENV OTEL_LOGS_EXPORTER="otlp"
-
-EXPOSE 9002
-CMD [ "flask", "run", "--host=0.0.0.0", "-p", "9002" ]
+EXPOSE 10000
+CMD [ "flask", "run", "--host=0.0.0.0", "-p", "10000" ]

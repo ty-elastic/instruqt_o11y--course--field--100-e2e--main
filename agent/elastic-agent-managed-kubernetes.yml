@@ -6,15 +6,15 @@ metadata:
   name: elastic-agent
   namespace: kube-system
   labels:
-    app.kubernetes.io/name: elastic-agent
+    app: elastic-agent
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: elastic-agent
+      app: elastic-agent
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: elastic-agent
+        app: elastic-agent
     spec:
       # Tolerations are needed to run Elastic Agent on Kubernetes control-plane nodes.
       # Agents running on control-plane nodes collect metrics from the control plane components (scheduler, controller manager) of Kubernetes
@@ -28,7 +28,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: elastic-agent
-          image: docker.elastic.co/elastic-agent/elastic-agent:9.1.4
+          image: docker.elastic.co/elastic-agent/elastic-agent:8.19.4
           env:
             # Set to 1 for enrollment into Fleet server. If not set, Elastic Agent is run in standalone mode
             - name: FLEET_ENROLL
@@ -194,7 +194,7 @@ kind: ClusterRole
 metadata:
   name: elastic-agent
   labels:
-    app.kubernetes.io/name: elastic-agent
+    k8s-app: elastic-agent
 rules:
   - apiGroups: [""]
     resources:
@@ -266,7 +266,7 @@ metadata:
   # Should be the namespace where elastic-agent is running
   namespace: kube-system
   labels:
-    app.kubernetes.io/name: elastic-agent
+    k8s-app: elastic-agent
 rules:
   - apiGroups:
       - coordination.k8s.io
@@ -280,7 +280,7 @@ metadata:
   name: elastic-agent-kubeadm-config
   namespace: kube-system
   labels:
-    app.kubernetes.io/name: elastic-agent
+    k8s-app: elastic-agent
 rules:
   - apiGroups: [""]
     resources:
@@ -295,5 +295,5 @@ metadata:
   name: elastic-agent
   namespace: kube-system
   labels:
-    app.kubernetes.io/name: elastic-agent
+    k8s-app: elastic-agent
 ---

@@ -50,6 +50,8 @@ public class TradeNotifier {
         }
         catch (Exception e) {
             log.warn("unable to notify: " + e.toString());
+            Throwable failureReason = new RuntimeException("unable to notify");
+            return CompletableFuture.failedFuture(failureReason);
         }
     }
 }

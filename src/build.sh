@@ -35,6 +35,11 @@ for service_dir in ./*/; do
         if [[ "$service" == "all" || "$service" == "$current_service" ]]; then
             echo $service
             echo $course
+
+            if [[ "$service" == "chaos" ]]; then
+                cp ../k8s/yaml/*.yaml $service/yaml/
+            fi
+
             docker buildx build --platform $arch \
                 --build-arg NAMESPACE=$namespace \
                 --build-arg SERVICE_VERSION=$service_version \

@@ -1,0 +1,61 @@
+source /opt/workshops/elastic-retry.sh
+export $(curl http://kubernetes-vm:9000/env | xargs)
+
+export INSTRUQT_TRACK_SLUG=o11y--course--field--200-otel-logs--main
+export REPO=us-central1-docker.pkg.dev/elastic-sa/tbekiares
+
+/opt/workshops/clone-code.sh -r ty-elastic/instruqt_$INSTRUQT_TRACK_SLUG -d false
+
+# ------------- OTEL
+
+source /workspace/workshop/instruqt/scripts/elastic-otel.sh
+
+# ------------- STREAMS
+
+source /workspace/workshop/instruqt/scripts/elastic-streams.sh
+
+# ------------- OTTL
+
+docker run -d -p 9876:8080 $REPO/ottl-playground:$INSTRUQT_TRACK_SLUG
+
+# ------------- DEPLOY
+
+cd /workspace/workshop
+./deploy.sh -o true -c $INSTRUQT_TRACK_SLUG -v $INSTRUQT_TRACK_SLUG
+
+# ------------- WAIT
+
+retry_command_lin curl --silent --fail --output /dev/null --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" "$ELASTICSEARCH_URL/_cat/indices/logs-proxy.otel-default?allow_no_indices=false"
+
+curl -X POST "$ELASTICSEARCH_URL/logs-proxy.otel-default/_rollover" \
+    --header 'Content-Type: application/json' \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"
+
+# dv=$(curl -X POST "$KIBANA_URL/api/data_views/data_view" \
+#     --header 'Content-Type: application/json' \
+#     --header "kbn-xsrf: true" \
+#     --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
+#     -d'
+#     {
+#       "data_view": {
+#         "namespaces": [
+#           "default"
+#         ],
+#         "title": "logs-proxy.otel-default",
+#         "name": "logs-proxy.otel-default",
+#         "timeFieldName": "@timestamp"
+#       }
+#     }')
+
+# dv_id=$(echo $dv | jq --compact-output -r '.data_view.id')
+
+# echo "Setup DV refresh for $dv_id"
+# cat <<EOF >> dataview.sh
+# while /bin/true; do
+#   curl -s -o /dev/null -X GET "$KIBANA_URL/internal/data_views/fields?pattern=logs-proxy.otel-default&meta_fields=_source&meta_fields=_id&meta_fields=_index&meta_fields=_score&meta_fields=_ignored&allow_no_index=true&apiVersion=1" --header "kbn-xsrf: true" --header 'x-elastic-internal-origin: Kibana' --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64";
+#   sleep 1;
+# done
+# EOF
+# chmod a+x dataview.sh
+# nohup ./dataview.sh > dataview.log 2>&1 &
+# echo "Setup DV refresh...done"

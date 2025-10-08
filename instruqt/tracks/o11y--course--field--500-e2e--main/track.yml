@@ -1,0 +1,26 @@
+slug:o11y--course--field--500-e2e--main
+id: kgt52bjczuld
+title: 'Observability 500: End-to-End'
+description:
+icon: ""
+tags:
+owner: elastic
+developers:
+- tyrone.bekiares@elastic.co
+show_timer: true
+idle_timeout: 900
+timelimit: 7200
+sandbox_preset: managed-vm-elastic-9-2-0
+lab_config:
+  extend_ttl: 3600
+  sidebar_enabled: true
+  feedback_recap_enabled: true
+  feedback_tab_enabled: false
+  loadingMessages:
+  - Setting up your Elastic experience...
+  theme:
+    name: modern-dark
+  override_challenge_layout: false
+  hideStopButton: false
+checksum: "5754240647345436010"
+enhanced_loading: false

@@ -1,1 +1,0 @@
-kubectl delete -f cpuhog.yaml

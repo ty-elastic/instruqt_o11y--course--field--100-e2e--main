@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: cpuhog
-  namespace: trading-2
+  namespace: $NAMESPACE
   labels:
     app: trading
     service: cpuhog
@@ -21,7 +21,7 @@ spec:
       tolerations:
       - key: "REGION"
         operator: "Equal"
-        value: "2"
+        value: "$REGION"
         effect: "PreferNoSchedule"
       containers:
         - name: cpuhog

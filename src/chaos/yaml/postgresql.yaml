@@ -1,0 +1,131 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: trading
+    service: postgresql
+  name: postgresql
+  namespace: $NAMESPACE
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trading
+      service: postgresql
+  template:
+    metadata:
+      labels:
+        app: trading
+        service: postgresql
+        type: postgresql
+        dbName: $POSTGRESQL_DBNAME
+      annotations:
+        io.opentelemetry.discovery.logs/enabled: "true"
+        io.opentelemetry.discovery.logs/config: |
+          operators:
+          - type: container
+          - type: regex_parser
+            on_error: send_quiet
+            parse_from: body
+            regex: '^(?P<timestamp_field>\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}.\d{3}\s[A-z]+)\s\[\d+\]\s(?P<severity_field>[A-Z]+):\s*(?<msg_field>.*?)\s*(\/\*traceparent=\x27(?P<version>\d*)?-(?P<trace_id>\S*)-(?P<span_id>\S*)-(?P<trace_flags>\d*)\x27\*\/)?$'
+            timestamp:
+              parse_from: attributes.timestamp_field
+              on_error: send_quiet
+              layout_type: strptime
+              layout: '%Y-%m-%d %H:%M:%S.%L %Z'
+            trace:
+              trace_id:
+                parse_from: attributes.trace_id
+                on_error: send_quiet
+              span_id:
+                parse_from: attributes.span_id
+                on_error: send_quiet
+              trace_flags:
+                parse_from: attributes.trace_flags
+                on_error: send_quiet
+            severity:
+              parse_from: attributes.severity_field
+              on_error: send_quiet
+              mapping:
+                warn: 
+                  - WARNING
+                  - NOTICE
+                error:
+                  - ERROR
+                info: 
+                  - LOG
+                  - INFO
+                  - STATEMENT
+                debug1:
+                  - DEBUG1
+                debug2:
+                  - DEBUG2
+                debug3:
+                  - DEBUG3
+                debug4:
+                  - DEBUG4
+                debug5:
+                  - DEBUG5
+                fatal:
+                  - FATAL
+                  - PANIC
+          - type: move
+            on_error: send_quiet
+            from: attributes.msg_field
+            to: body
+          - type: remove
+            on_error: send_quiet
+            field: attributes.timestamp_field
+          - type: remove
+            on_error: send_quiet
+            field: attributes.severity_field
+          - type: remove
+            on_error: send_quiet
+            field: attributes.trace_id
+          - type: remove
+            on_error: send_quiet
+            field: attributes.span_id
+          - type: remove
+            on_error: send_quiet
+            field: attributes.trace_flags
+    spec:
+      tolerations:
+      - key: "REGION"
+        operator: "Equal"
+        value: "$REGION"
+        effect: "PreferNoSchedule"
+      containers:
+        - name: postgresql
+          env:
+            - name: POSTGRES_DB
+              value: $POSTGRESQL_DBNAME
+            - name: POSTGRES_PASSWORD
+              value: $POSTGRESQL_PASSWORD
+            - name: POSTGRES_USER
+              value: $POSTGRESQL_USER
+          image: postgres
+          args: ["-c", "log_statement=all", "-c", "shared_preload_libraries=pg_stat_statements"]
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: trading
+    service: postgresql
+  name: postgresql
+  namespace: $NAMESPACE
+spec:
+  ports:
+    - name: postgresql
+      port: 5432
+      targetPort: 5432
+      protocol: TCP
+  selector:
+    app: trading
+    service: postgresql
+---
