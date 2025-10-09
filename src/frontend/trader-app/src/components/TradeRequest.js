@@ -1,6 +1,7 @@
 import * as React from 'react';
 import axios from "axios";
 
+import { CircularProgress } from '@mui/material';
 import MonkeyState from './MonkeyState'
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
@@ -21,7 +22,9 @@ class TradeRequest extends React.Component {
             symbol: 'OELK',
             day_of_week: 'M',
             customer_id: "tb93",
-            region: 'NA'
+            region: 'NA',
+            loading: false,
+            result: null
         };
 
         this.handleInputChange = this.handleInputChange.bind(this);
@@ -41,16 +44,27 @@ class TradeRequest extends React.Component {
     async handleSubmit(event) {
         event.preventDefault();
         
+        this.setState({['loading']: true});
+        this.setState({['error']: null});
         try {
-            await axios.post("/trader/trade/request", {
+            const response = await axios.post("/trader/trade/request", {
                     'symbol': this.state.symbol,
                     'day_of_week': this.state.day_of_week,
                     'customer_id': this.state.customer_id,
                     'region': this.state.region,
                     'data_source': 'customer'
             });
+            if (response.status != 200) {
+                throw new Error(response.status);
+            } else{
+                this.setState({['result']: "successfully completed trade request"});
+            }
         } catch (err) {
             console.log(err.message)
+            this.setState({['result']: `unable to complete trade request! status: ${err.message}`});
+        }
+        finally {
+            this.setState({['loading']: false});
         }
     }
 
@@ -105,7 +119,15 @@ class TradeRequest extends React.Component {
                             <MenuItem value="NA">NA</MenuItem>
                         </Select>
                     </FormControl>
-                    <Box width="100%"><Button variant="contained" data-transaction-name="TradeRequest" type="submit">Submit</Button></Box>
+
+                    <div>
+                        {this.state.loading ? (
+                        <CircularProgress />
+                        ) : (
+                        <Box width="100%"><Button variant="contained" data-transaction-name="TradeRequest" type="submit">Submit</Button></Box>
+                        )}
+                        {this.state.result ? (<p>Result: {this.state.result}</p>) : (<p></p>)}
+                    </div>
                 </Grid>
             </form>
         );

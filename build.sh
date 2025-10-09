@@ -1,9 +1,3 @@
-postgresql_host=postgresql
-postgresql_user=postgres
-postgresql_password=postgres
-postgresql_sslmode=disable
-postgresql_dbname=trades
-
 notifier_endpoint=""
 
 arch=linux/amd64
@@ -19,7 +13,9 @@ build_lib=false
 deploy_otel=false
 deploy_service=false
 
-while getopts "a:c:s:l:b:x:o:d:r:v:" opt
+database=postgresql
+
+while getopts "a:c:s:l:b:x:o:d:r:v:p:" opt
 do
    case "$opt" in
       a ) arch="$OPTARG" ;;
@@ -34,8 +30,31 @@ do
 
       r ) region="$OPTARG" ;;
       v ) service_version="$OPTARG" ;;
+      p ) database="$OPTARG" ;;
    esac
 done
+
+if [ "$database" = "mssql" ]; then
+    postgresql_host=mssql
+    postgresql_user=sa
+    postgresql_password=Pa55w0rd2019
+    postgresql_dbname=trades
+    db_port=1433
+    db_protocol=sqlserver
+    db_setup=none
+    db_options=";databaseName=trades;integratedSecurity=false;encrypt=false;trustServerCertificate=true"
+    db_dialect="SQLServerDialect"
+else
+    postgresql_host=postgresql
+    postgresql_user=postgres
+    postgresql_password=postgres
+    postgresql_dbname=trades
+    db_protocol=postgresql
+    db_setup=none
+    db_options="/trades?sslmode=disable"
+    db_port=5432
+    db_dialect=PostgreSQLDialect
+fi
 
 # Save the original IFS to restore it later
 OIFS="$IFS"
@@ -95,7 +114,7 @@ for current_region in "${regions[@]}"; do
         sleep 30
     fi
 
-    if [[ "$deploy_service" == "true" || "$deploy_service" == "delete" ]]; then
+    if [[ "$deploy_service" == "true" || "$deploy_service" == "delete" || "$deploy_service" == "force" ]]; then
         export COURSE=$course
         export REPO=$repo
         export NAMESPACE=$namespace
@@ -103,8 +122,12 @@ for current_region in "${regions[@]}"; do
         export POSTGRESQL_HOST=$postgresql_host
         export POSTGRESQL_USER=$postgresql_user
         export POSTGRESQL_PASSWORD=$postgresql_password
-        export POSTGRESQL_SSLMODE=$postgresql_sslmode
         export POSTGRESQL_DBNAME=$postgresql_dbname
+        export DB_PROTOCOL=$db_protocol
+        export DB_SETUP=$db_setup
+        export DB_OPTIONS=$db_options
+        export DB_PORT=$db_port
+        export DB_DIALECT=$db_dialect
 
         export SERVICE_VERSION=$service_version
         export NOTIFIER_ENDPOINT=$notifier_endpoint
@@ -122,7 +145,9 @@ for current_region in "${regions[@]}"; do
                     else
                         echo "deploying $current_service to region $REGION"
                         envsubst < k8s/yaml/$current_service.yaml | kubectl apply -f -
-                        kubectl -n $namespace rollout restart deployment/$current_service
+                        if [ "$deploy_service" = "force" ]; then
+                            kubectl -n $namespace rollout restart deployment/$current_service
+                        fi
 
                         echo "adding deployment annotation"
                         ts=$(date -z utc +%FT%TZ)

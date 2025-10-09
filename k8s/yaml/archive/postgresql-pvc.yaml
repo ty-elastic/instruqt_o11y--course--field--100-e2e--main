@@ -2,15 +2,14 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: postgres-data-pvc
+  name: postgresql-data-claim
   namespace: $NAMESPACE
 spec:
   accessModes:
-	  - ReadWriteOnce
+    - ReadWriteOnce
   resources:
-	  requests:
-  	  storage: 100Gi
-  storageClassName: standard
+    requests:
+      storage: 100Mi
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -30,7 +29,7 @@ data:
     CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   labels:
     app: trading
@@ -131,7 +130,7 @@ spec:
             - name: init-scripts-volume
               mountPath: /docker-entrypoint-initdb.d
             - name: postgres-data
-              mountPath: /var/lib/postgresql/data
+              mountPath: /var/lib/pgsql
           env:
             - name: POSTGRES_DB
               value: $POSTGRESQL_DBNAME
@@ -139,6 +138,8 @@ spec:
               value: $POSTGRESQL_PASSWORD
             - name: POSTGRES_USER
               value: $POSTGRESQL_USER
+            - name: PGDATA
+              value: /var/lib/pgsql/data
           image: postgres
           args: ["-c", "log_statement=all", "-c", "shared_preload_libraries=pg_stat_statements"]
           ports:
@@ -150,7 +151,7 @@ spec:
             name: postgres-init-scripts
         - name: postgres-data
           persistentVolumeClaim:
-            claimName: postgres-data-pvc
+            claimName: postgresql-data-claim
       restartPolicy: Always
 ---
 apiVersion: v1

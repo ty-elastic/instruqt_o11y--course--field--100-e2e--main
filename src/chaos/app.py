@@ -81,9 +81,13 @@ def add_deployment_from_yaml(namespace, path):
         content = content.replace(f"$POSTGRESQL_HOST", os.environ['POSTGRESQL_HOST'])
         content = content.replace(f"$POSTGRESQL_USER", os.environ['POSTGRESQL_USER']) 
         content = content.replace(f"$POSTGRESQL_PASSWORD", os.environ['POSTGRESQL_PASSWORD'])
-        content = content.replace(f"$POSTGRESQL_SSLMODE", os.environ['POSTGRESQL_SSLMODE'])
         content = content.replace(f"$POSTGRESQL_DBNAME", os.environ['POSTGRESQL_DBNAME'])
-     
+        content = content.replace(f"$DB_PROTOCOL", os.environ['DB_PROTOCOL'])
+        content = content.replace(f"$DB_SETUP", os.environ['DB_SETUP'])
+        content = content.replace(f"$DB_OPTIONS", os.environ['DB_OPTIONS'])
+        content = content.replace(f"$DB_PORT", os.environ['DB_PORT'])
+        content = content.replace(f"$DB_DIALECT", os.environ['DB_DIALECT'])
+        
         content = content.replace(f"$SERVICE_VERSION", os.environ['SERVICE_VERSION'])
         content = content.replace(f"$NOTIFIER_ENDPOINT", os.environ['NOTIFIER_ENDPOINT'])          
 
