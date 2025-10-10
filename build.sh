@@ -35,6 +35,7 @@ do
 done
 
 if [ "$database" = "mssql" ]; then
+    echo "using mssql"
     postgresql_host=mssql
     postgresql_user=sa
     postgresql_password=Pa55w0rd2019
@@ -45,6 +46,7 @@ if [ "$database" = "mssql" ]; then
     db_options=";databaseName=trades;integratedSecurity=false;encrypt=false;trustServerCertificate=true"
     db_dialect="SQLServerDialect"
 else
+    echo "using postgresql"
     postgresql_host=postgresql
     postgresql_user=postgres
     postgresql_password=postgres
@@ -138,6 +140,13 @@ for current_region in "${regions[@]}"; do
             for file in k8s/yaml/*.yaml; do
                 current_service=$(basename "$file")
                 current_service="${current_service%.*}"
+
+                if [[ "$current_service" == "mssql" && "$db_protocol" == "postgresql" ]]; then
+                    continue
+                elif [[ "$current_service" == "postgresql" && "$db_protocol" == "sqlserver" ]]; then
+                    continue
+                fi
+
                 if [[ "$service" == "all" || "$service" == "$current_service" ]]; then
                     if [ "$deploy_service" = "delete" ]; then
                         echo "deleting $current_service from region $REGION"

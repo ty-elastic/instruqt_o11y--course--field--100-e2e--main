@@ -72,15 +72,23 @@ spec:
               value: "$REGION"
 
             - name: POSTGRESQL_HOST
-              value: "$POSTGRESQL_HOST"
-            - name: POSTGRESQL_USER
-              value: "$POSTGRESQL_USER"
+              value: $POSTGRESQL_HOST
             - name: POSTGRESQL_PASSWORD
-              value: "$POSTGRESQL_PASSWORD"
-            - name: POSTGRESQL_SSLMODE
-              value: "$POSTGRESQL_SSLMODE"
+              value: $POSTGRESQL_PASSWORD
+            - name: POSTGRESQL_USER
+              value: $POSTGRESQL_USER
             - name: POSTGRESQL_DBNAME
-              value: "$POSTGRESQL_DBNAME"
+              value: $POSTGRESQL_DBNAME
+            - name: DB_PROTOCOL
+              value: $DB_PROTOCOL
+            - name: DB_SETUP
+              value: $DB_SETUP
+            - name: DB_OPTIONS
+              value: $DB_OPTIONS
+            - name: DB_PORT
+              value: "$DB_PORT"
+            - name: DB_DIALECT
+              value: $DB_DIALECT
 
             - name: SERVICE_VERSION
               value: "$SERVICE_VERSION"

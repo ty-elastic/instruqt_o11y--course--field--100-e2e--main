@@ -367,7 +367,8 @@ def get_state():
 @app.post('/tput/region/<region>/<speed>')
 def tput_region(region, speed):
     global high_tput_per_region
-    high_tput_per_region[region] = HIGH_TPUT_PCT
+    if region in REGIONS:
+        high_tput_per_region[region] = HIGH_TPUT_PCT
     return high_tput_per_region
 @app.delete('/tput/region/<region>')
 def tput_region_delete(region):
@@ -405,9 +406,10 @@ def latency_region(region, amount):
     global latency_per_action_per_region
     latency_action = request.args.get('latency_action', default=None, type=str)
     latency_oneshot = request.args.get('latency_oneshot', default=True, type=conform_request_bool)
-    latency_per_action_per_region[region] = {'action': latency_action, 'amount': int(amount), 'start': time.time(), 'oneshot': latency_oneshot}
-    if latency_oneshot:
-        high_tput_per_region[region] = HIGH_TPUT_PCT
+    if region in REGIONS:
+        latency_per_action_per_region[region] = {'action': latency_action, 'amount': int(amount), 'start': time.time(), 'oneshot': latency_oneshot}
+        if latency_oneshot:
+            high_tput_per_region[region] = HIGH_TPUT_PCT
     return latency_per_action_per_region    
 @app.delete('/latency/region/<region>')
 def latency_region_delete(region):
@@ -424,8 +426,9 @@ def latency_region_delete(region):
 def err_db_region(region, amount):
     global db_error_per_region
     err_db_service = request.args.get('err_db_service', default=None, type=str)
-    db_error_per_region[region] = {'service': err_db_service, 'amount': int(amount), 'start': time.time()}
-    high_tput_per_region[region] = HIGH_TPUT_PCT
+    if region in REGIONS:     
+        db_error_per_region[region] = {'service': err_db_service, 'amount': int(amount), 'start': time.time()}
+        high_tput_per_region[region] = HIGH_TPUT_PCT
     return db_error_per_region
 @app.delete('/err/db/region/<region>')
 def err_db_region_delete(region):
@@ -487,7 +490,8 @@ def err_request_customer_delete(browser):
 def err_model_region(region, amount):
     global model_error_per_region
     model_error_per_region[region] = {'amount': int(amount), 'start': time.time()}
-    high_tput_per_region[region] = HIGH_TPUT_PCT
+    if region in REGIONS:
+        high_tput_per_region[region] = HIGH_TPUT_PCT
     return model_error_per_region    
 @app.delete('/err/model/region/<region>')
 def err_model_region_delete(region):
@@ -513,7 +517,8 @@ def skew_pr_symbol_delete(symbol):
 @app.post('/canary/region/<region>')
 def canary_region(region):
     global canary_per_region
-    canary_per_region[region] = True
+    if region in REGIONS:
+        canary_per_region[region] = True
     return canary_per_region    
 @app.delete('/canary/region/<region>')
 def canary_region_delete(region):
@@ -526,7 +531,8 @@ def generate_trade_force(*, subscription, customer_id, day_of_week, region, symb
     try:
 
         headers = {}
-        headers["X-Forwarded-For"] = IP_ADDRESS_PER_USER[customer_id]
+        if customer_id is not None and customer_id in IP_ADDRESS_PER_USER:
+            headers["X-Forwarded-For"] = IP_ADDRESS_PER_USER[customer_id]
         if customer_id is not None and customer_id in USERAGENTS_PER_USER:
             headers['User-Agent']= USERAGENTS_PER_USER[customer_id].text
 

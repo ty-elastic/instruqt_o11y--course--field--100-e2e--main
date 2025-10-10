@@ -48,7 +48,8 @@ function customRouter(req: any) {
 
 const proxyMiddleware = createProxyMiddleware<Request, Response>({
   router: customRouter,
-  changeOrigin: true
+  changeOrigin: true,
+  proxyTimeout: 5000
 })
 
 app.use('/', proxyMiddleware);

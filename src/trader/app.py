@@ -23,6 +23,7 @@ from opentelemetry.processor.logrecord.baggage import BaggageLogRecordProcessor
 from opentelemetry.processor.baggage import BaggageSpanProcessor, ALLOW_ALL_BAGGAGE_KEYS
 
 ATTRIBUTE_PREFIX = "com.example"
+TRADE_TIMEOUT = 5
 
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
@@ -148,7 +149,7 @@ def trade(*, region, trade_id, customer_id, symbol, day_of_week, shares, share_p
         if error_db_service is not None:
             params['service'] = error_db_service
         
-    trade_response = requests.post(f"http://{os.environ['ROUTER_HOST']}:9000/record", params=params)
+    trade_response = requests.post(f"http://{os.environ['ROUTER_HOST']}:9000/record", params=params, timeout=TRADE_TIMEOUT)
     trade_response.raise_for_status()
 
     response['shares']= shares
