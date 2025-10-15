@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 
 	log "github.com/sirupsen/logrus"
 
@@ -28,10 +29,23 @@ type TradeService struct {
 func NewTradeService() (*TradeService, error) {
 	c := TradeService{}
 
+	// [scheme://][user[:password]@][protocol([addr])]/dbname[?param1=value1&paramN=valueN]
+	// spring.datasource.url=jdbc:${DB_PROTOCOL}://${POSTGRESQL_HOST}:${DB_PORT}${DB_OPTIONS}
+
+	//connString := fmt.Sprintf("%s://%s:%s@%s:%s/trades?Trusted_Connection=false&Encrypt=false&TrustServerCertificate=true", os.Getenv("MSSQL_PROTOCOL"), os.Getenv("MSSQL_USER"), os.Getenv("MSSQL_PASSWORD"), os.Getenv("MSSQL_HOST"), os.Getenv("MSSQL_PORT"))
 	connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%s%s", os.Getenv("MSSQL_HOST"), os.Getenv("MSSQL_USER"), os.Getenv("MSSQL_PASSWORD"), os.Getenv("MSSQL_PORT"), os.Getenv("MSSQL_OPTIONS"))
 	logger.Warn(connString)
+
+	port, err := strconv.ParseInt(os.Getenv("MSSQL_PORT"), 10, 64)
+
 	db, err := otelsql.Open("mssql", connString, otelsql.WithAttributes(
 		semconv.DBSystemNameMicrosoftSQLServer,
+		semconv.ServerAddress(os.Getenv("MSSQL_HOST")),
+		semconv.ServerPortKey.Int64(port),
+		attribute.String("db.system", "mssql"),
+		attribute.String("span.destination.service.resource", os.Getenv("MSSQL_HOST")),
+		attribute.String("span.subtype", "mssql"),
+		attribute.String("service.target.name", os.Getenv("MSSQL_HOST")),
 	))
 	if err != nil {
 		log.Fatal("unable to connect to database: ", err)
@@ -42,6 +56,8 @@ func NewTradeService() (*TradeService, error) {
 	// Register DB stats to meter
 	err = otelsql.RegisterDBStatsMetrics(db, otelsql.WithAttributes(
 		semconv.DBSystemNameMicrosoftSQLServer,
+		semconv.ServerAddress(os.Getenv("MSSQL_HOST")),
+		semconv.ServerPortKey.Int64(port),
 	))
 	if err != nil {
 		log.Fatal("unable to setup dbstats: ", err)

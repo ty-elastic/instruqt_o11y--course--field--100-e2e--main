@@ -89,6 +89,17 @@ func initResource() *sdkresource.Resource {
 			sdkresource.Default(),
 			extraResources,
 		)
+
+		// port, _ := strconv.ParseInt(os.Getenv("MSSQL_PORT"), 10, 64)
+
+		// resource, _ = sdkresource.Merge(
+		// 	resource,
+		// 	sdkresource.NewWithAttributes(
+		// 		semconv.SchemaURL,
+		// 		semconv.ServerAddress(os.Getenv("MSSQL_HOST")),
+		// 		semconv.ServerPortKey.Int64(port),
+		// 	),
+		// )
 	})
 	return resource
 }
