@@ -32,7 +32,7 @@ for service_dir in ./*/; do
     echo $service_dir
     if [[ -d "$service_dir" ]]; then
         current_service=$(basename "$service_dir")
-        if [[ "$service" == "all" || "$current_service" == "$service"* ]]; then
+        if [[ "$service" == "all" || "$current_service" == "$service" ]]; then
             echo $service
             echo $course
 

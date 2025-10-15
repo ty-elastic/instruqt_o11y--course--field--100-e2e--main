@@ -13,9 +13,7 @@ build_lib=false
 deploy_otel=false
 deploy_service=false
 
-database=postgresql
-
-while getopts "a:c:s:l:b:x:o:d:r:v:p:" opt
+while getopts "a:c:s:l:b:x:o:d:r:v:" opt
 do
    case "$opt" in
       a ) arch="$OPTARG" ;;
@@ -30,33 +28,28 @@ do
 
       r ) region="$OPTARG" ;;
       v ) service_version="$OPTARG" ;;
-      p ) database="$OPTARG" ;;
    esac
 done
 
-if [ "$database" = "mssql" ]; then
-    echo "using mssql"
-    postgresql_host=mssql
-    postgresql_user=sa
-    postgresql_password=Pa55w0rd2019
-    postgresql_dbname=trades
-    db_port=1433
-    db_protocol=sqlserver
-    db_setup=none
-    db_options=";databaseName=trades;integratedSecurity=false;encrypt=false;trustServerCertificate=true"
-    db_dialect="SQLServerDialect"
-else
-    echo "using postgresql"
-    postgresql_host=postgresql
-    postgresql_user=postgres
-    postgresql_password=postgres
-    postgresql_dbname=trades
-    db_protocol=postgresql
-    db_setup=none
-    db_options="/trades?sslmode=disable"
-    db_port=5432
-    db_dialect=PostgreSQLDialect
-fi
+export MSSQL_HOST=mssql
+export MSSQL_USER=sa
+export MSSQL_PASSWORD=Pa55w0rd2019
+export MSSQL_DBNAME=trades
+export MSSQL_PORT=1433
+export MSSQL_PROTOCOL=sqlserver
+export MSSQL_SETUP=none
+export MSSQL_OPTIONS=";Database=trades;Integrated Security=false;Encrypt=false;TrustServerCertificate=true"
+export MSSQL_DIALECT="SQLServerDialect"
+
+export POSTGRESQL_HOST=postgresql
+export POSTGRESQL_USER=postgres
+export POSTGRESQL_PASSWORD=postgres
+export POSTGRESQL_DBNAME=trades
+export POSTGRESQL_PROTOCOL=postgresql
+export POSTGRESQL_SETUP=none
+export POSTGRESQL_OPTIONS="/trades?sslmode=disable"
+export POSTGRESQL_PORT=5432
+export POSTGRESQL_DIALECT=PostgreSQLDialect
 
 # Save the original IFS to restore it later
 OIFS="$IFS"
@@ -121,15 +114,7 @@ for current_region in "${regions[@]}"; do
         export REPO=$repo
         export NAMESPACE=$namespace
         export REGION=$current_region
-        export POSTGRESQL_HOST=$postgresql_host
-        export POSTGRESQL_USER=$postgresql_user
-        export POSTGRESQL_PASSWORD=$postgresql_password
-        export POSTGRESQL_DBNAME=$postgresql_dbname
-        export DB_PROTOCOL=$db_protocol
-        export DB_SETUP=$db_setup
-        export DB_OPTIONS=$db_options
-        export DB_PORT=$db_port
-        export DB_DIALECT=$db_dialect
+
 
         export SERVICE_VERSION=$service_version
         export NOTIFIER_ENDPOINT=$notifier_endpoint
@@ -140,12 +125,6 @@ for current_region in "${regions[@]}"; do
             for file in k8s/yaml/*.yaml; do
                 current_service=$(basename "$file")
                 current_service="${current_service%.*}"
-
-                if [[ "$current_service" == "mssql" && "$db_protocol" == "postgresql" ]]; then
-                    continue
-                elif [[ "$current_service" == "postgresql" && "$db_protocol" == "sqlserver" ]]; then
-                    continue
-                fi
 
                 if [[ "$service" == "all" || "$service" == "$current_service" ]]; then
                     if [ "$deploy_service" = "delete" ]; then
