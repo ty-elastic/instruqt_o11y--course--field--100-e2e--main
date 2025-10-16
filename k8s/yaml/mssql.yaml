@@ -198,7 +198,7 @@ data:
     GO
   start.sh: |
     echo "--------- wait"
-    sleep 20 # Wait for SQL Server to start
+    sleep 60 # Wait for SQL Server to start
     echo "--------- start"
     /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U SA -P $MSSQL_PASSWORD -i /opt/scripts/init.sql
     echo "--------- done"

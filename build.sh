@@ -63,7 +63,7 @@ IFS="$OIFS"
 for current_region in "${regions[@]}"; do
     echo "setup for region=$current_region"
     
-    export $(cat ./.env-$current_region | xargs)
+    export $(cat ./.env | xargs)
 
     namespace=$namespace_base-$current_region
     echo $namespace

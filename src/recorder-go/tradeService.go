@@ -38,7 +38,7 @@ func NewTradeService() (*TradeService, error) {
 
 	port, err := strconv.ParseInt(os.Getenv("MSSQL_PORT"), 10, 64)
 
-	db, err := otelsql.Open("mssql", connString, otelsql.WithAttributes(
+	db, err := otelsql.Open("mssql", connString, otelsql.WithSQLCommenter(true), otelsql.WithAttributes(
 		semconv.DBSystemNameMicrosoftSQLServer,
 		semconv.ServerAddress(os.Getenv("MSSQL_HOST")),
 		semconv.ServerPortKey.Int64(port),
