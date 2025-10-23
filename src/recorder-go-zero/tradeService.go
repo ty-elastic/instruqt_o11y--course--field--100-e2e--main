@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"net"
 	"os"
 
 	log "github.com/sirupsen/logrus"
@@ -16,20 +15,6 @@ import (
 type TradeService struct {
 	db *sql.DB
 }
-
-const tradesSqlTable = `
-	CREATE TABLE trades(
-		trade_id VARCHAR(100) PRIMARY KEY,
-		customer_id VARCHAR(100) NOT NULL,
-		timestamp timestamp default current_timestamp,
-		symbol VARCHAR(10) NOT NULL,
-		shares int NOT NULL,
-		share_price float NOT NULL,
-		action VARCHAR(10) NOT NULL,
-		constraint shares_nonnegative check (shares >= 0),
-		constraint share_price_nonnegative check (share_price >= 0)
-	)
-`
 
 func NewTradeService() (*TradeService, error) {
 	c := TradeService{}
@@ -48,18 +33,6 @@ func NewTradeService() (*TradeService, error) {
 	if err != nil {
 		log.Fatal("unable to connect to database: ", err)
 		os.Exit(1)
-	}
-
-	// try to create initial table
-	_, err = c.db.Exec(tradesSqlTable)
-	if err != nil {
-		// if unable to connect, die and retry
-		if _, ok := err.(net.Error); ok {
-			log.Fatal("unable to connect to database: ", err)
-			os.Exit(1)
-		} else {
-			log.Warn("unable to create table: ", err)
-		}
 	}
 
 	return &c, nil

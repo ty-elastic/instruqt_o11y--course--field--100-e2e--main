@@ -23,8 +23,6 @@ public class TradeRecorder {
     public Trade recordTrade (Trade trade){
         Trade savedTrade = tradeRepo.save(trade);
 
-        log.atInfo().addKeyValue(Main.ATTRIBUTE_PREFIX + ".gc_time", utilities.getGarbageCollectorDeltaTime()).log("trade committed for " + trade.customerId);
-
         return savedTrade;
     }
 }
