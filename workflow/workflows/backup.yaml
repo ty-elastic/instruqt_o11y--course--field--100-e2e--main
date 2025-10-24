@@ -1,0 +1,2421 @@
+{
+  "_pagination": {
+    "page": 1,
+    "limit": 50,
+    "total": 7
+  },
+  "results": [
+    {
+      "id": "workflow-3f4e0bfd-5f06-411f-85b3-b1f4f71fb4a5",
+      "name": "case_process",
+      "description": "Process o11y cases",
+      "enabled": true,
+      "yaml": "version: \"1\"\nname: case_process\ndescription: Process o11y cases\nenabled: true\ntags:\n  - automated_observability_triage\ntriggers:\n  - type: manual\n    enabled: true\ninputs:\n  - name: case_id\n    type: string\n  - name: conversation_id\n    type: string\n  - name: start_at_step\n    type: number\n  - name: stop_at_step\n    type: number\nsteps:\n  - name: debug2\n    type: console\n    with:\n      message: \"{{ inputs | json(2)}}\"\n\n  - name: get_case_process_id\n    type: http\n    with:\n      url: \"{{ consts.es_host }}/workflow_config/_doc/case_process_workflow\"\n      method: GET\n      headers:\n        Authorization: \"{{ consts.kbn_auth }}\"\n\n    # get open cases\n  - name: get_case\n    type: kibana.request\n    with:\n      method: GET\n      path: /api/cases/{{ inputs.case_id }}\n      headers:\n        Authorization: \"{{ consts.kbn_auth }}\"\n\n  - name: get_case_alerts\n    type: kibana.request\n    with:\n      method: GET\n      path: /api/cases/{{ inputs.case_id }}/alerts\n      headers:\n        Authorization: \"{{ consts.kbn_auth }}\"\n\n  - name: debug3\n    type: console\n    with:\n      message: \"{{ steps.get_case_alerts.output | json(2)}}\"\n\n  - name: get_case_comments\n    type: kibana.request\n    with:\n      method: GET\n      path: /api/cases/{{ inputs.case_id }}/comments/_find\n      headers:\n        Authorization: \"{{ consts.kbn_auth }}\"\n\n  - name: debug1\n    type: console\n    with:\n      message: \"{{ steps.get_case.output | json(2)}}\"\n\n  # always try to get a topology to help with dependencies in RCA\n  - name: get_topology\n    type: http\n    with:\n      url: \"{{ consts.es_host }}/workflow_topology/_search\"\n      method: GET\n      headers:\n        Content-Type: application/json\n        Authorization: \"{{ consts.kbn_auth }}\"\n      body:\n        size: 0\n        aggs:\n          unique_field_buckets:\n            terms:\n              field: system.keyword\n              size: 100\n            aggs:\n              latest_document:\n                top_hits:\n                  size: 1\n                  sort:\n                    - \"@timestamp\":\n                      order: \"desc\"\n                  \"_source\":\n                    \"includes\": [\"system\", \"topology\"]\n\n  - name: rca1\n    type: http\n    with:\n      url: \"{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete\"\n      method: \"POST\"\n      timeout: \"{{ consts.ai_timeout }}\"\n      headers:\n        Content-Type: application/json\n        kibana-host: \"{{ consts.kbn_host }}\"\n        kibana-auth: \"{{ consts.kbn_auth }}\"\n      body:\n        output: false\n        persist: true\n        connectorId: \"{{ consts.ai_connector }}\"\n        messages:\n          - \"@timestamp\": \"now\"\n            message:\n              role: \"user\"\n              content: |\n                We will be performing a multi-step Root Cause Analysis. During your analysis, use the provided incident/case, consider the alerts attached to the case and any comments in the case, and the attached topology to understand dependencies. When looking for problems, always start at the service which is closest to or is a leaf node and is alerting. Do not start the RCA analysis; we will be doing it together step-by-step.\n\n                First, can you identify the service from the topology which is both closet to being a leaf node AND has an active alert associated with it? Additionally, what is a good time window to search for problems before and after the associated active alert?\n                <case>\n                  {{ steps.get_case.output | json(2) }}\n                </case>\n                <alerts>\n                  {{ steps.get_case_alerts.output | json(2) }}\n                </alerts>\n                <comments>\n                  {{ steps.get_case_comments.output | json(2) }}\n                </comments>\n                <topology>\n                  {{ steps.get_topology.output.data.hits.hits | json(2) }}\n                </topology\n\n  - name: \"exec_test_2_start\"\n    type: if\n    condition: \"inputs.start_at_step <= 2 and inputs.stop_at_step > 2\"\n    steps:\n      - name: rca2\n        type: http\n        with:\n          url: \"{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete\"\n          method: \"POST\"\n          timeout: \"{{ consts.ai_timeout }}\"\n          headers:\n            Content-Type: application/json\n            kibana-host: \"{{ consts.kbn_host }}\"\n            kibana-auth: \"{{ consts.kbn_auth }}\"\n          body:\n            conversationId: \"{{ inputs.conversation_id }}\"\n            persist: true\n            output: false\n            connectorId: \"{{ consts.ai_connector }}\"\n            messages:\n              - \"@timestamp\": \"now\"\n                message:\n                  role: \"user\"\n                  content: |\n                    Second, look at the logs for the identified service with the recommended time window. In particular, focus on logs with warning, error, or fatal severity. Does the log rate or log content suggest a problem?\n    else:\n        - name: \"exec_test_2_stop\"\n          type: if\n          condition: \"inputs.stop_at_step : 2\"\n          steps:\n            - name: start_case_process2\n              type: http\n              with:\n                url: \"{{ consts.kbn_host }}/api/workflows/{{ steps.get_case_process_id.output.data._source.workflow_id }}/run\"\n                method: \"POST\"\n                body: \n                  inputs:\n                    case_id: \"{{ inputs.case_id }}\"\n                    conversation_id: \"{{ steps.rca1.output.data.conversationId }}\"\n                    start_at_step: 2\n                    stop_at_step: 3\n                headers:\n                  x-elastic-internal-origin: kibana\n                  kbn-xsrf: true\n                  Content-Type: application/json\n                  Authorization: \"{{ consts.kbn_auth }}\"\n\n  - name: \"exec_test_3_start\"\n    type: if\n    condition: \"inputs.start_at_step <= 3 and inputs.stop_at_step > 3\"\n    steps:\n      - name: rca3\n        type: http\n        with:\n          url: \"{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete\"\n          method: \"POST\"\n          timeout: \"{{ consts.ai_timeout }}\"\n          headers:\n            Content-Type: application/json\n            kibana-host: \"{{ consts.kbn_host }}\"\n            kibana-auth: \"{{ consts.kbn_auth }}\"\n          body:\n            conversationId: \"{{ inputs.conversation_id }}\"\n            persist: true\n            output: false\n            connectorId: \"{{ consts.ai_connector }}\"\n            messages:\n              - \"@timestamp\": \"now\"\n                message:\n                  role: \"user\"\n                  content: |\n                    Third, look at the metrics for the identified service with the recommended time window. Is there anything in the metric data that would suggest a problem?\n    else:\n        - name: \"exec_test_3_stop\"\n          type: if\n          condition: \"inputs.stop_at_step : 3\"\n          steps:\n            - name: start_case_process3\n              type: http\n              with:\n                url: \"{{ consts.kbn_host }}/api/workflows/{{ steps.get_case_process_id.output.data._source.workflow_id }}/run\"\n                method: \"POST\"\n                body: \n                  inputs:\n                    case_id: \"{{ inputs.case_id }}\"\n                    conversation_id: \"{{ inputs.conversation_id }}\"\n                    start_at_step: 3\n                    stop_at_step: 4\n                headers:\n                  x-elastic-internal-origin: kibana\n                  kbn-xsrf: true\n                  Content-Type: application/json\n                  Authorization: \"{{ consts.kbn_auth }}\"\n\n  - name: \"exec_test_4_start\"\n    type: if\n    condition: \"inputs.start_at_step <= 4 and inputs.stop_at_step > 4\"\n    steps:\n      - name: rca4\n        type: http\n        with:\n          url: \"{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete\"\n          method: \"POST\"\n          timeout: \"{{ consts.ai_timeout }}\"\n          headers:\n            Content-Type: application/json\n            kibana-host: \"{{ consts.kbn_host }}\"\n            kibana-auth: \"{{ consts.kbn_auth }}\"\n          body:\n            conversationId: \"{{ inputs.conversation_id }}\"\n            persist: true\n            output: false\n            connectorId: \"{{ consts.ai_connector }}\"\n            messages:\n              - \"@timestamp\": \"now\"\n                message:\n                  role: \"user\"\n                  content: |\n                    Fourth, look at the traces for the identified service with the recommended time window. Look in particular for failed traces and associated exceptions. Is there anything in the trace data that would suggest a problem?\n    else:\n        - name: \"exec_test_4_stop\"\n          type: if\n          condition: \"inputs.stop_at_step : 4\"\n          steps:\n            - name: start_case_process4\n              type: http\n              with:\n                url: \"{{ consts.kbn_host }}/api/workflows/{{ steps.get_case_process_id.output.data._source.workflow_id }}/run\"\n                method: \"POST\"\n                body: \n                  inputs:\n                    case_id: \"{{ inputs.case_id }}\"\n                    conversation_id: \"{{ inputs.conversation_id }}\"\n                    start_at_step: 4\n                    stop_at_step: 5\n                headers:\n                  x-elastic-internal-origin: kibana\n                  kbn-xsrf: true\n                  Content-Type: application/json\n                  Authorization: \"{{ consts.kbn_auth }}\"\n\n  - name: \"exec_test_5_start\"\n    type: if\n    condition: \"inputs.start_at_step <= 5 and inputs.stop_at_step > 5\"\n    steps:\n      - name: rca5\n        type: http\n        with:\n          url: \"{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete\"\n          method: \"POST\"\n          timeout: \"{{ consts.ai_timeout }}\"\n          headers:\n            Content-Type: application/json\n            kibana-host: \"{{ consts.kbn_host }}\"\n            kibana-auth: \"{{ consts.kbn_auth }}\"\n          body:\n            conversationId: \"{{ inputs.conversation_id }}\"\n            persist: true\n            output: true\n            connectorId: \"{{ consts.ai_connector }}\"\n            messages:\n              - \"@timestamp\": \"now\"\n                message:\n                  role: \"user\"\n                  content: |\n                    Considing the provided topology, the analysis, and the attached alerts, please output a detailed Root Cause Analysis in a field called \"rca\".\n      - name: add_comment_to_existing_case\n        type: kibana.request\n        with:\n          method: POST\n          path: /api/cases/{{ inputs.case_id }}/comments\n          body:\n            type: user\n            owner: observability\n            comment: \"{{ steps.rca5.output.data.rca }}\"\n          headers:\n            kbn-xsrf: true\n            Content-Type: application/json\n            Authorization: \"{{ consts.kbn_auth }}\"\n      - name: add_conversation_to_existing_case\n        type: kibana.request\n        with:\n          method: POST\n          path: /api/cases/{{ inputs.case_id }}/comments\n          body:\n            type: user\n            owner: observability\n            comment: 'You can continue your investigation <a href=\"/app/observabilityAIAssistant/conversations/{{ inputs.conversation_id }} target=\"_blank\">here</a>.'\n          headers:\n            kbn-xsrf: true\n            Content-Type: application/json\n            Authorization: \"{{ consts.kbn_auth }}\"\n    else:\n        - name: \"exec_test_5_stop\"\n          type: if\n          condition: \"inputs.stop_at_step : 5\"\n          steps:\n            - name: start_case_process5\n              type: http\n              with:\n                url: \"{{ consts.kbn_host }}/api/workflows/{{ steps.get_case_process_id.output.data._source.workflow_id }}/run\"\n                method: \"POST\"\n                body: \n                  inputs:\n                    case_id: \"{{ inputs.case_id }}\"\n                    conversation_id: \"{{ inputs.conversation_id }}\"\n                    start_at_step: 5\n                    stop_at_step: 6\n                headers:\n                  x-elastic-internal-origin: kibana\n                  kbn-xsrf: true\n                  Content-Type: application/json\n                  Authorization: \"{{ consts.kbn_auth }}\"\n\nconsts:\n  ai_timeout: 10m\n  ai_connector: \"Elastic-Managed-LLM\"\n  ai_proxy: https://tbekiares-demo-aiassistant-1059491012611.us-central1.run.app\n  kbn_host: https://581b85187ee040c3bc41f917001ef0b7.us-west2.gcp.elastic-cloud.com\n  es_host: https://eb9be4b1f8e94c2fb951189307a03646.us-west2.gcp.elastic-cloud.com\n  kbn_auth: ApiKey U1ZyZjdaa0I4eVREU3ZXeGx6bm06cnRpNUhkMldyYlQ1NjNaTGt5UExJQQ==\"\"\"",
+      "definition": {
+        "version": "1",
+        "name": "case_process",
+        "description": "Process o11y cases",
+        "enabled": true,
+        "tags": [
+          "automated_observability_triage"
+        ],
+        "triggers": [
+          {
+            "type": "manual",
+            "enabled": true
+          }
+        ],
+        "inputs": [
+          {
+            "name": "case_id",
+            "type": "string"
+          },
+          {
+            "name": "conversation_id",
+            "type": "string"
+          },
+          {
+            "name": "start_at_step",
+            "type": "number"
+          },
+          {
+            "name": "stop_at_step",
+            "type": "number"
+          }
+        ],
+        "consts": {
+          "ai_timeout": "10m",
+          "ai_connector": "Elastic-Managed-LLM",
+          "ai_proxy": "https://tbekiares-demo-aiassistant-1059491012611.us-central1.run.app",
+          "kbn_host": "https://581b85187ee040c3bc41f917001ef0b7.us-west2.gcp.elastic-cloud.com",
+          "es_host": "https://eb9be4b1f8e94c2fb951189307a03646.us-west2.gcp.elastic-cloud.com",
+          "kbn_auth": "ApiKey U1ZyZjdaa0I4eVREU3ZXeGx6bm06cnRpNUhkMldyYlQ1NjNaTGt5UExJQQ==\"\"\""
+        },
+        "steps": [
+          {
+            "name": "debug2",
+            "type": "console",
+            "with": {
+              "message": "{{ inputs | json(2)}}"
+            }
+          },
+          {
+            "name": "get_case_process_id",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.es_host }}/workflow_config/_doc/case_process_workflow",
+              "method": "GET",
+              "headers": {
+                "Authorization": "{{ consts.kbn_auth }}"
+              },
+              "timeout": "30s"
+            }
+          },
+          {
+            "name": "get_case",
+            "type": "kibana.request",
+            "with": {
+              "method": "GET",
+              "path": "/api/cases/{{ inputs.case_id }}",
+              "headers": {
+                "Authorization": "{{ consts.kbn_auth }}"
+              }
+            }
+          },
+          {
+            "name": "get_case_alerts",
+            "type": "kibana.request",
+            "with": {
+              "method": "GET",
+              "path": "/api/cases/{{ inputs.case_id }}/alerts",
+              "headers": {
+                "Authorization": "{{ consts.kbn_auth }}"
+              }
+            }
+          },
+          {
+            "name": "debug3",
+            "type": "console",
+            "with": {
+              "message": "{{ steps.get_case_alerts.output | json(2)}}"
+            }
+          },
+          {
+            "name": "get_case_comments",
+            "type": "kibana.request",
+            "with": {
+              "method": "GET",
+              "path": "/api/cases/{{ inputs.case_id }}/comments/_find",
+              "headers": {
+                "Authorization": "{{ consts.kbn_auth }}"
+              }
+            }
+          },
+          {
+            "name": "debug1",
+            "type": "console",
+            "with": {
+              "message": "{{ steps.get_case.output | json(2)}}"
+            }
+          },
+          {
+            "name": "get_topology",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.es_host }}/workflow_topology/_search",
+              "method": "GET",
+              "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "{{ consts.kbn_auth }}"
+              },
+              "body": {
+                "size": 0,
+                "aggs": {
+                  "unique_field_buckets": {
+                    "terms": {
+                      "field": "system.keyword",
+                      "size": 100
+                    },
+                    "aggs": {
+                      "latest_document": {
+                        "top_hits": {
+                          "size": 1,
+                          "sort": [
+                            {
+                              "@timestamp": null,
+                              "order": "desc"
+                            }
+                          ],
+                          "_source": {
+                            "includes": [
+                              "system",
+                              "topology"
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "timeout": "30s"
+            }
+          },
+          {
+            "name": "rca1",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete",
+              "method": "POST",
+              "headers": {
+                "Content-Type": "application/json",
+                "kibana-host": "{{ consts.kbn_host }}",
+                "kibana-auth": "{{ consts.kbn_auth }}"
+              },
+              "body": {
+                "output": false,
+                "persist": true,
+                "connectorId": "{{ consts.ai_connector }}",
+                "messages": [
+                  {
+                    "@timestamp": "now",
+                    "message": {
+                      "role": "user",
+                      "content": """We will be performing a multi-step Root Cause Analysis. During your analysis, use the provided incident/case, consider the alerts attached to the case and any comments in the case, and the attached topology to understand dependencies. When looking for problems, always start at the service which is closest to or is a leaf node and is alerting. Do not start the RCA analysis; we will be doing it together step-by-step.
+
+First, can you identify the service from the topology which is both closet to being a leaf node AND has an active alert associated with it? Additionally, what is a good time window to search for problems before and after the associated active alert?
+<case>
+  {{ steps.get_case.output | json(2) }}
+</case>
+<alerts>
+  {{ steps.get_case_alerts.output | json(2) }}
+</alerts>
+<comments>
+  {{ steps.get_case_comments.output | json(2) }}
+</comments>
+<topology>
+  {{ steps.get_topology.output.data.hits.hits | json(2) }}
+</topology
+"""
+                    }
+                  }
+                ]
+              },
+              "timeout": "{{ consts.ai_timeout }}"
+            }
+          },
+          {
+            "name": "exec_test_2_start",
+            "type": "if",
+            "condition": "inputs.start_at_step <= 2 and inputs.stop_at_step > 2",
+            "steps": [
+              {
+                "name": "rca2",
+                "type": "http",
+                "with": {
+                  "url": "{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete",
+                  "method": "POST",
+                  "headers": {
+                    "Content-Type": "application/json",
+                    "kibana-host": "{{ consts.kbn_host }}",
+                    "kibana-auth": "{{ consts.kbn_auth }}"
+                  },
+                  "body": {
+                    "conversationId": "{{ inputs.conversation_id }}",
+                    "persist": true,
+                    "output": false,
+                    "connectorId": "{{ consts.ai_connector }}",
+                    "messages": [
+                      {
+                        "@timestamp": "now",
+                        "message": {
+                          "role": "user",
+                          "content": """Second, look at the logs for the identified service with the recommended time window. In particular, focus on logs with warning, error, or fatal severity. Does the log rate or log content suggest a problem?
+"""
+                        }
+                      }
+                    ]
+                  },
+                  "timeout": "{{ consts.ai_timeout }}"
+                }
+              }
+            ],
+            "else": [
+              {
+                "name": "exec_test_2_stop",
+                "type": "if",
+                "condition": "inputs.stop_at_step : 2",
+                "steps": [
+                  {
+                    "name": "start_case_process2",
+                    "type": "http",
+                    "with": {
+                      "url": "{{ consts.kbn_host }}/api/workflows/{{ steps.get_case_process_id.output.data._source.workflow_id }}/run",
+                      "method": "POST",
+                      "headers": {
+                        "x-elastic-internal-origin": "kibana",
+                        "kbn-xsrf": true,
+                        "Content-Type": "application/json",
+                        "Authorization": "{{ consts.kbn_auth }}"
+                      },
+                      "body": {
+                        "inputs": {
+                          "case_id": "{{ inputs.case_id }}",
+                          "conversation_id": "{{ steps.rca1.output.data.conversationId }}",
+                          "start_at_step": 2,
+                          "stop_at_step": 3
+                        }
+                      },
+                      "timeout": "30s"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "exec_test_3_start",
+            "type": "if",
+            "condition": "inputs.start_at_step <= 3 and inputs.stop_at_step > 3",
+            "steps": [
+              {
+                "name": "rca3",
+                "type": "http",
+                "with": {
+                  "url": "{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete",
+                  "method": "POST",
+                  "headers": {
+                    "Content-Type": "application/json",
+                    "kibana-host": "{{ consts.kbn_host }}",
+                    "kibana-auth": "{{ consts.kbn_auth }}"
+                  },
+                  "body": {
+                    "conversationId": "{{ inputs.conversation_id }}",
+                    "persist": true,
+                    "output": false,
+                    "connectorId": "{{ consts.ai_connector }}",
+                    "messages": [
+                      {
+                        "@timestamp": "now",
+                        "message": {
+                          "role": "user",
+                          "content": """Third, look at the metrics for the identified service with the recommended time window. Is there anything in the metric data that would suggest a problem?
+"""
+                        }
+                      }
+                    ]
+                  },
+                  "timeout": "{{ consts.ai_timeout }}"
+                }
+              }
+            ],
+            "else": [
+              {
+                "name": "exec_test_3_stop",
+                "type": "if",
+                "condition": "inputs.stop_at_step : 3",
+                "steps": [
+                  {
+                    "name": "start_case_process3",
+                    "type": "http",
+                    "with": {
+                      "url": "{{ consts.kbn_host }}/api/workflows/{{ steps.get_case_process_id.output.data._source.workflow_id }}/run",
+                      "method": "POST",
+                      "headers": {
+                        "x-elastic-internal-origin": "kibana",
+                        "kbn-xsrf": true,
+                        "Content-Type": "application/json",
+                        "Authorization": "{{ consts.kbn_auth }}"
+                      },
+                      "body": {
+                        "inputs": {
+                          "case_id": "{{ inputs.case_id }}",
+                          "conversation_id": "{{ inputs.conversation_id }}",
+                          "start_at_step": 3,
+                          "stop_at_step": 4
+                        }
+                      },
+                      "timeout": "30s"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "exec_test_4_start",
+            "type": "if",
+            "condition": "inputs.start_at_step <= 4 and inputs.stop_at_step > 4",
+            "steps": [
+              {
+                "name": "rca4",
+                "type": "http",
+                "with": {
+                  "url": "{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete",
+                  "method": "POST",
+                  "headers": {
+                    "Content-Type": "application/json",
+                    "kibana-host": "{{ consts.kbn_host }}",
+                    "kibana-auth": "{{ consts.kbn_auth }}"
+                  },
+                  "body": {
+                    "conversationId": "{{ inputs.conversation_id }}",
+                    "persist": true,
+                    "output": false,
+                    "connectorId": "{{ consts.ai_connector }}",
+                    "messages": [
+                      {
+                        "@timestamp": "now",
+                        "message": {
+                          "role": "user",
+                          "content": """Fourth, look at the traces for the identified service with the recommended time window. Look in particular for failed traces and associated exceptions. Is there anything in the trace data that would suggest a problem?
+"""
+                        }
+                      }
+                    ]
+                  },
+                  "timeout": "{{ consts.ai_timeout }}"
+                }
+              }
+            ],
+            "else": [
+              {
+                "name": "exec_test_4_stop",
+                "type": "if",
+                "condition": "inputs.stop_at_step : 4",
+                "steps": [
+                  {
+                    "name": "start_case_process4",
+                    "type": "http",
+                    "with": {
+                      "url": "{{ consts.kbn_host }}/api/workflows/{{ steps.get_case_process_id.output.data._source.workflow_id }}/run",
+                      "method": "POST",
+                      "headers": {
+                        "x-elastic-internal-origin": "kibana",
+                        "kbn-xsrf": true,
+                        "Content-Type": "application/json",
+                        "Authorization": "{{ consts.kbn_auth }}"
+                      },
+                      "body": {
+                        "inputs": {
+                          "case_id": "{{ inputs.case_id }}",
+                          "conversation_id": "{{ inputs.conversation_id }}",
+                          "start_at_step": 4,
+                          "stop_at_step": 5
+                        }
+                      },
+                      "timeout": "30s"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "exec_test_5_start",
+            "type": "if",
+            "condition": "inputs.start_at_step <= 5 and inputs.stop_at_step > 5",
+            "steps": [
+              {
+                "name": "rca5",
+                "type": "http",
+                "with": {
+                  "url": "{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete",
+                  "method": "POST",
+                  "headers": {
+                    "Content-Type": "application/json",
+                    "kibana-host": "{{ consts.kbn_host }}",
+                    "kibana-auth": "{{ consts.kbn_auth }}"
+                  },
+                  "body": {
+                    "conversationId": "{{ inputs.conversation_id }}",
+                    "persist": true,
+                    "output": true,
+                    "connectorId": "{{ consts.ai_connector }}",
+                    "messages": [
+                      {
+                        "@timestamp": "now",
+                        "message": {
+                          "role": "user",
+                          "content": """Considing the provided topology, the analysis, and the attached alerts, please output a detailed Root Cause Analysis in a field called "rca".
+"""
+                        }
+                      }
+                    ]
+                  },
+                  "timeout": "{{ consts.ai_timeout }}"
+                }
+              },
+              {
+                "name": "add_comment_to_existing_case",
+                "type": "kibana.request",
+                "with": {
+                  "method": "POST",
+                  "path": "/api/cases/{{ inputs.case_id }}/comments",
+                  "body": {
+                    "type": "user",
+                    "owner": "observability",
+                    "comment": "{{ steps.rca5.output.data.rca }}"
+                  },
+                  "headers": {
+                    "kbn-xsrf": true,
+                    "Content-Type": "application/json",
+                    "Authorization": "{{ consts.kbn_auth }}"
+                  }
+                }
+              },
+              {
+                "name": "add_conversation_to_existing_case",
+                "type": "kibana.request",
+                "with": {
+                  "method": "POST",
+                  "path": "/api/cases/{{ inputs.case_id }}/comments",
+                  "body": {
+                    "type": "user",
+                    "owner": "observability",
+                    "comment": """You can continue your investigation <a href="/app/observabilityAIAssistant/conversations/{{ inputs.conversation_id }} target="_blank">here</a>."""
+                  },
+                  "headers": {
+                    "kbn-xsrf": true,
+                    "Content-Type": "application/json",
+                    "Authorization": "{{ consts.kbn_auth }}"
+                  }
+                }
+              }
+            ],
+            "else": [
+              {
+                "name": "exec_test_5_stop",
+                "type": "if",
+                "condition": "inputs.stop_at_step : 5",
+                "steps": [
+                  {
+                    "name": "start_case_process5",
+                    "type": "http",
+                    "with": {
+                      "url": "{{ consts.kbn_host }}/api/workflows/{{ steps.get_case_process_id.output.data._source.workflow_id }}/run",
+                      "method": "POST",
+                      "headers": {
+                        "x-elastic-internal-origin": "kibana",
+                        "kbn-xsrf": true,
+                        "Content-Type": "application/json",
+                        "Authorization": "{{ consts.kbn_auth }}"
+                      },
+                      "body": {
+                        "inputs": {
+                          "case_id": "{{ inputs.case_id }}",
+                          "conversation_id": "{{ inputs.conversation_id }}",
+                          "start_at_step": 5,
+                          "stop_at_step": 6
+                        }
+                      },
+                      "timeout": "30s"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "createdBy": "3473488103",
+      "lastUpdatedBy": "3473488103",
+      "valid": true,
+      "createdAt": "2025-10-24T16:49:56.519Z",
+      "lastUpdatedAt": "2025-10-24T17:06:58.530Z",
+      "history": []
+    },
+    {
+      "id": "workflow-9083f063-3e88-4de7-8d29-35abb53a5567",
+      "name": "automated_triage_setup",
+      "description": "setup state for automated triage",
+      "enabled": true,
+      "yaml": """version: "1"
+name: automated_triage_setup
+description: setup state for automated triage
+enabled: true
+tags:
+  - automated_observability_triage
+triggers:
+  - type: manual
+    enabled: true
+consts:
+  ai_timeout: 10m
+  ai_connector: Elastic-Managed-LLM
+  ai_proxy: https://tbekiares-demo-aiassistant-1059491012611.us-central1.run.app
+  kbn_host: https://581b85187ee040c3bc41f917001ef0b7.us-west2.gcp.elastic-cloud.com
+  es_host: https://eb9be4b1f8e94c2fb951189307a03646.us-west2.gcp.elastic-cloud.com
+  kbn_auth: ApiKey U1ZyZjdaa0I4eVREU3ZXeGx6bm06cnRpNUhkMldyYlQ1NjNaTGt5UExJQQ==
+steps:
+  - name: delete_alert_queue
+    type: http
+    with:
+      url: "{{ consts.es_host }}/workflow_alert_queue"
+      method: DELETE
+      headers:
+        Authorization: "{{ consts.kbn_auth }}"
+    on-failure:
+      continue: true
+  - name: create_alert_queue
+    type: http
+    with:
+      url: "{{ consts.es_host }}/workflow_alert_queue"
+      method: PUT
+      headers:
+        Authorization: "{{ consts.kbn_auth }}"
+      body:
+        settings:
+          number_of_shards: 1
+          number_of_replicas: 0
+        mappings:
+          properties:
+            alerts:
+              type: flattened
+
+  - name: delete_case_queue
+    type: http
+    with:
+      url: "{{ consts.es_host }}/workflow_case_queue"
+      method: DELETE
+      headers:
+        Authorization: "{{ consts.kbn_auth }}"
+    on-failure:
+      continue: true
+  - name: create_case_queue
+    type: http
+    with:
+      url: "{{ consts.es_host }}/workflow_case_queue"
+      method: PUT
+      headers:
+        Authorization: "{{ consts.kbn_auth }}"
+      body:
+        settings:
+          number_of_shards: 1
+          number_of_replicas: 0
+        mappings:
+          properties:
+            case_id:
+              type: keyword
+            conversation_id:
+              type: keyword
+
+  - name: setup_cases
+    type: http
+    with:
+      method: "POST"
+      url: "{{ consts.kbn_host }}/api/cases/configure"
+      headers:
+        x-elastic-internal-origin: kibana
+        kbn-xsrf: true
+        Content-Type: application/json
+        Authorization: "{{ consts.kbn_auth }}"
+      body:
+        owner: observability
+        closure_type: close-by-user
+        connector:
+          fields: null
+          id: none
+          name: none
+          type: .none
+        customFields:
+          - "key": "workflow_execution_id"
+            "type": "text"
+            "label": "workflow_execution_id"
+            "required": false
+            "defaultValue": "not_available"
+          - "key": "ai_conversation_id"
+            "type": "text"
+            "label": "ai_conversation_id"
+            "required": false
+            "defaultValue": "not_available"     
+    on-failure:
+      continue: true
+
+  - name: delete_topology
+    type: http
+    with:
+      url: "{{ consts.es_host }}/workflow_topology"
+      method: DELETE
+      headers:
+        Authorization: "{{ consts.kbn_auth }}"
+    on-failure:
+      continue: true
+  - name: create_topology
+    type: http
+    with:
+      url: "{{ consts.es_host }}/workflow_topology"
+      method: PUT
+      headers:
+        Authorization: "{{ consts.kbn_auth }}"
+      body:
+        settings:
+          number_of_shards: 1
+          number_of_replicas: 0
+        mappings:
+          properties:
+            "@timestamp":
+              type: date
+            system:
+              type: keyword
+            topology:
+              type: flattened
+    on-failure:
+      continue: true
+
+  - name: delete_config
+    type: http
+    with:
+      url: "{{ consts.es_host }}/workflow_config"
+      method: DELETE
+      headers:
+        Authorization: "{{ consts.kbn_auth }}"
+    on-failure:
+      continue: true
+  - name: create_config
+    type: http
+    with:
+      url: "{{ consts.es_host }}/workflow_config"
+      method: PUT
+      headers:
+        Authorization: "{{ consts.kbn_auth }}"
+      body:
+        settings:
+          number_of_shards: 1
+          number_of_replicas: 0
+        mappings:
+          properties:
+            workflow_id:
+              type: keyword
+
+  - name: get_workflows
+    type: http
+    with:
+      url: "{{ consts.kbn_host }}/api/workflows/search"
+      method: POST
+      headers:
+        x-elastic-internal-origin: kibana
+        kbn-xsrf: true
+        Content-Type: application/json
+        Authorization: "{{ consts.kbn_auth }}"
+      body:
+        limit: 20
+        page: 1
+        query: ""
+  - name: foreach_workflow
+    type: foreach
+    foreach: steps.get_workflows.output.data.results
+    steps:
+      - name: is_case_process
+        type: if
+        condition: "foreach.item.name : case_process"
+        steps:
+          - name: save_case_process_id
+            type: http
+            with:
+              url: "{{ consts.es_host }}/workflow_config/_doc/case_process_workflow"
+              method: POST
+              headers:
+                Content-Type: application/json
+                Authorization: "{{ consts.kbn_auth }}"
+              body:
+                workflow_id: "{{ foreach.item.id }}"
+      - name: is_alert_process
+        type: if
+        condition: "foreach.item.name : alert_process"
+        steps:
+          - name: save_alert_process_id
+            type: http
+            with:
+              url: "{{ consts.es_host }}/workflow_config/_doc/alert_process_workflow"
+              method: POST
+              headers:
+                Content-Type: application/json
+                Authorization: "{{ consts.kbn_auth }}"
+              body:
+                workflow_id: "{{ foreach.item.id }}"
+      - name: get_executions
+        type: http
+        with:
+          url: "{{ consts.kbn_host }}/api/workflowExecutions?workflowId={{ foreach.item.id }}"
+          method: "GET"
+          headers:
+            x-elastic-internal-origin: kibana
+            kbn-xsrf: true
+            Content-Type: application/json
+            Authorization: "{{ consts.kbn_auth }}"
+        on-failure:
+          continue: true
+        
+
+
+
+""",
+      "definition": {
+        "version": "1",
+        "name": "automated_triage_setup",
+        "description": "setup state for automated triage",
+        "enabled": true,
+        "tags": [
+          "automated_observability_triage"
+        ],
+        "triggers": [
+          {
+            "type": "manual",
+            "enabled": true
+          }
+        ],
+        "consts": {
+          "ai_timeout": "10m",
+          "ai_connector": "Elastic-Managed-LLM",
+          "ai_proxy": "https://tbekiares-demo-aiassistant-1059491012611.us-central1.run.app",
+          "kbn_host": "https://581b85187ee040c3bc41f917001ef0b7.us-west2.gcp.elastic-cloud.com",
+          "es_host": "https://eb9be4b1f8e94c2fb951189307a03646.us-west2.gcp.elastic-cloud.com",
+          "kbn_auth": "ApiKey U1ZyZjdaa0I4eVREU3ZXeGx6bm06cnRpNUhkMldyYlQ1NjNaTGt5UExJQQ=="
+        },
+        "steps": [
+          {
+            "name": "delete_alert_queue",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.es_host }}/workflow_alert_queue",
+              "method": "DELETE",
+              "headers": {
+                "Authorization": "{{ consts.kbn_auth }}"
+              },
+              "timeout": "30s"
+            },
+            "on-failure": {
+              "continue": true
+            }
+          },
+          {
+            "name": "create_alert_queue",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.es_host }}/workflow_alert_queue",
+              "method": "PUT",
+              "headers": {
+                "Authorization": "{{ consts.kbn_auth }}"
+              },
+              "body": {
+                "settings": {
+                  "number_of_shards": 1,
+                  "number_of_replicas": 0
+                },
+                "mappings": {
+                  "properties": {
+                    "alerts": {
+                      "type": "flattened"
+                    }
+                  }
+                }
+              },
+              "timeout": "30s"
+            }
+          },
+          {
+            "name": "delete_case_queue",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.es_host }}/workflow_case_queue",
+              "method": "DELETE",
+              "headers": {
+                "Authorization": "{{ consts.kbn_auth }}"
+              },
+              "timeout": "30s"
+            },
+            "on-failure": {
+              "continue": true
+            }
+          },
+          {
+            "name": "create_case_queue",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.es_host }}/workflow_case_queue",
+              "method": "PUT",
+              "headers": {
+                "Authorization": "{{ consts.kbn_auth }}"
+              },
+              "body": {
+                "settings": {
+                  "number_of_shards": 1,
+                  "number_of_replicas": 0
+                },
+                "mappings": {
+                  "properties": {
+                    "case_id": {
+                      "type": "keyword"
+                    },
+                    "conversation_id": {
+                      "type": "keyword"
+                    }
+                  }
+                }
+              },
+              "timeout": "30s"
+            }
+          },
+          {
+            "name": "setup_cases",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.kbn_host }}/api/cases/configure",
+              "method": "POST",
+              "headers": {
+                "x-elastic-internal-origin": "kibana",
+                "kbn-xsrf": true,
+                "Content-Type": "application/json",
+                "Authorization": "{{ consts.kbn_auth }}"
+              },
+              "body": {
+                "owner": "observability",
+                "closure_type": "close-by-user",
+                "connector": {
+                  "fields": null,
+                  "id": "none",
+                  "name": "none",
+                  "type": ".none"
+                },
+                "customFields": [
+                  {
+                    "key": "workflow_execution_id",
+                    "type": "text",
+                    "label": "workflow_execution_id",
+                    "required": false,
+                    "defaultValue": "not_available"
+                  },
+                  {
+                    "key": "ai_conversation_id",
+                    "type": "text",
+                    "label": "ai_conversation_id",
+                    "required": false,
+                    "defaultValue": "not_available"
+                  }
+                ]
+              },
+              "timeout": "30s"
+            },
+            "on-failure": {
+              "continue": true
+            }
+          },
+          {
+            "name": "delete_topology",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.es_host }}/workflow_topology",
+              "method": "DELETE",
+              "headers": {
+                "Authorization": "{{ consts.kbn_auth }}"
+              },
+              "timeout": "30s"
+            },
+            "on-failure": {
+              "continue": true
+            }
+          },
+          {
+            "name": "create_topology",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.es_host }}/workflow_topology",
+              "method": "PUT",
+              "headers": {
+                "Authorization": "{{ consts.kbn_auth }}"
+              },
+              "body": {
+                "settings": {
+                  "number_of_shards": 1,
+                  "number_of_replicas": 0
+                },
+                "mappings": {
+                  "properties": {
+                    "@timestamp": {
+                      "type": "date"
+                    },
+                    "system": {
+                      "type": "keyword"
+                    },
+                    "topology": {
+                      "type": "flattened"
+                    }
+                  }
+                }
+              },
+              "timeout": "30s"
+            },
+            "on-failure": {
+              "continue": true
+            }
+          },
+          {
+            "name": "delete_config",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.es_host }}/workflow_config",
+              "method": "DELETE",
+              "headers": {
+                "Authorization": "{{ consts.kbn_auth }}"
+              },
+              "timeout": "30s"
+            },
+            "on-failure": {
+              "continue": true
+            }
+          },
+          {
+            "name": "create_config",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.es_host }}/workflow_config",
+              "method": "PUT",
+              "headers": {
+                "Authorization": "{{ consts.kbn_auth }}"
+              },
+              "body": {
+                "settings": {
+                  "number_of_shards": 1,
+                  "number_of_replicas": 0
+                },
+                "mappings": {
+                  "properties": {
+                    "workflow_id": {
+                      "type": "keyword"
+                    }
+                  }
+                }
+              },
+              "timeout": "30s"
+            }
+          },
+          {
+            "name": "get_workflows",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.kbn_host }}/api/workflows/search",
+              "method": "POST",
+              "headers": {
+                "x-elastic-internal-origin": "kibana",
+                "kbn-xsrf": true,
+                "Content-Type": "application/json",
+                "Authorization": "{{ consts.kbn_auth }}"
+              },
+              "body": {
+                "limit": 20,
+                "page": 1,
+                "query": ""
+              },
+              "timeout": "30s"
+            }
+          },
+          {
+            "name": "foreach_workflow",
+            "type": "foreach",
+            "foreach": "steps.get_workflows.output.data.results",
+            "steps": [
+              {
+                "name": "is_case_process",
+                "type": "if",
+                "condition": "foreach.item.name : case_process",
+                "steps": [
+                  {
+                    "name": "save_case_process_id",
+                    "type": "http",
+                    "with": {
+                      "url": "{{ consts.es_host }}/workflow_config/_doc/case_process_workflow",
+                      "method": "POST",
+                      "headers": {
+                        "Content-Type": "application/json",
+                        "Authorization": "{{ consts.kbn_auth }}"
+                      },
+                      "body": {
+                        "workflow_id": "{{ foreach.item.id }}"
+                      },
+                      "timeout": "30s"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "is_alert_process",
+                "type": "if",
+                "condition": "foreach.item.name : alert_process",
+                "steps": [
+                  {
+                    "name": "save_alert_process_id",
+                    "type": "http",
+                    "with": {
+                      "url": "{{ consts.es_host }}/workflow_config/_doc/alert_process_workflow",
+                      "method": "POST",
+                      "headers": {
+                        "Content-Type": "application/json",
+                        "Authorization": "{{ consts.kbn_auth }}"
+                      },
+                      "body": {
+                        "workflow_id": "{{ foreach.item.id }}"
+                      },
+                      "timeout": "30s"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "get_executions",
+                "type": "http",
+                "with": {
+                  "url": "{{ consts.kbn_host }}/api/workflowExecutions?workflowId={{ foreach.item.id }}",
+                  "method": "GET",
+                  "headers": {
+                    "x-elastic-internal-origin": "kibana",
+                    "kbn-xsrf": true,
+                    "Content-Type": "application/json",
+                    "Authorization": "{{ consts.kbn_auth }}"
+                  },
+                  "timeout": "30s"
+                },
+                "on-failure": {
+                  "continue": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "createdBy": "3473488103",
+      "lastUpdatedBy": "3473488103",
+      "valid": true,
+      "createdAt": "2025-10-21T16:32:06.231Z",
+      "lastUpdatedAt": "2025-10-24T17:03:03.948Z",
+      "history": []
+    },
+    {
+      "id": "workflow-a5960934-c78e-489b-8f9d-66b011b2ac00",
+      "name": "case_dequeue",
+      "description": "dequeue cases serially and start processing",
+      "enabled": true,
+      "yaml": "name: case_dequeue\ndescription: dequeue cases serially and start processing\nenabled: true\ntags:\n  - automated_observability_triage\ntriggers:\n  - type: manual\nsteps:\n  - name: get_case_process_id\n    type: http\n    with:\n      url: \"{{ consts.es_host }}/workflow_config/_doc/case_process_workflow\"\n      method: GET\n      headers:\n        Content-Type: application/json\n        Authorization: \"{{ consts.kbn_auth }}\"\n      timeout: 30s\n  - name: case_process_status\n    type: http\n    with:\n      url: \"{{ consts.kbn_host }}/api/workflowExecutions?workflowId={{ steps.get_case_process_id.output.data._source.workflow_id }}\"\n      method: \"GET\"\n      headers:\n        x-elastic-internal-origin: kibana\n        kbn-xsrf: true\n        Content-Type: application/json\n        Authorization: \"{{ consts.kbn_auth }}\"\n  - name: is_case_process_running\n    type: if\n    condition: \"steps.case_process_status.output.status : completed\"\n    # found\n    steps:\n      - name: is_case_process_running_debug1\n        type: console\n        with:\n          message: \"workflow_alert_process running\"\n    else:\n      - name: is_case_process_running_debug2\n        type: console\n        with:\n          message: \"workflow_alert_process not running\"\n\n      - name: dequeue_case\n        type: http\n        with:\n          url: \"{{ consts.es_host }}/workflow_case_queue/_search\"\n          method: \"GET\"\n          body:\n            \"size\": 1, \n            \"query\":\n              \"match_all\":\n            \"_source\": true\n          headers:\n            Content-Type: application/json\n            Authorization: \"{{ consts.kbn_auth }}\"\n\n      - name: start_case_process\n        type: http\n        with:\n          url: \"{{ consts.kbn_host }}/api/workflows/{{ steps.get_case_process_id.output.data._source.workflow_id }}/run\"\n          method: \"POST\"\n          body: '{ \"inputs\": {\"event\": {{steps.dequeue_case.output.data.hits.hits[0]._source | json() }} } }'\n          headers:\n            x-elastic-internal-origin: kibana\n            kbn-xsrf: true\n            Content-Type: application/json\n            Authorization: \"{{ consts.kbn_auth }}\"\n\n      - name: mark_case_handled\n        type: http\n        with:\n          url: \"{{ consts.es_host }}/workflow_case_queue/_doc/{{steps.dequeue_case.output.data.hits.hits[0]._id}}\"\n          method: \"DELETE\"\n          headers:\n            Content-Type: application/json\n            Authorization: \"{{ consts.kbn_auth }}\"\n\nconsts:\n  ai_timeout: 10m\n  ai_connector: \"Elastic-Managed-LLM\"\n  ai_proxy: https://tbekiares-demo-aiassistant-1059491012611.us-central1.run.app\n  kbn_host: https://581b85187ee040c3bc41f917001ef0b7.us-west2.gcp.elastic-cloud.com\n  es_host: https://eb9be4b1f8e94c2fb951189307a03646.us-west2.gcp.elastic-cloud.com\n  kbn_auth: ApiKey U1ZyZjdaa0I4eVREU3ZXeGx6bm06cnRpNUhkMldyYlQ1NjNaTGt5UExJQQ==\"\"\"",
+      "definition": {
+        "version": "1",
+        "name": "case_dequeue",
+        "description": "dequeue cases serially and start processing",
+        "enabled": true,
+        "tags": [
+          "automated_observability_triage"
+        ],
+        "triggers": [
+          {
+            "type": "manual",
+            "enabled": true
+          }
+        ],
+        "consts": {
+          "ai_timeout": "10m",
+          "ai_connector": "Elastic-Managed-LLM",
+          "ai_proxy": "https://tbekiares-demo-aiassistant-1059491012611.us-central1.run.app",
+          "kbn_host": "https://581b85187ee040c3bc41f917001ef0b7.us-west2.gcp.elastic-cloud.com",
+          "es_host": "https://eb9be4b1f8e94c2fb951189307a03646.us-west2.gcp.elastic-cloud.com",
+          "kbn_auth": "ApiKey U1ZyZjdaa0I4eVREU3ZXeGx6bm06cnRpNUhkMldyYlQ1NjNaTGt5UExJQQ==\"\"\""
+        },
+        "steps": [
+          {
+            "name": "get_case_process_id",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.es_host }}/workflow_config/_doc/case_process_workflow",
+              "method": "GET",
+              "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "{{ consts.kbn_auth }}"
+              },
+              "timeout": "30s"
+            }
+          },
+          {
+            "name": "case_process_status",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.kbn_host }}/api/workflowExecutions?workflowId={{ steps.get_case_process_id.output.data._source.workflow_id }}",
+              "method": "GET",
+              "headers": {
+                "x-elastic-internal-origin": "kibana",
+                "kbn-xsrf": true,
+                "Content-Type": "application/json",
+                "Authorization": "{{ consts.kbn_auth }}"
+              },
+              "timeout": "30s"
+            }
+          },
+          {
+            "name": "is_case_process_running",
+            "type": "if",
+            "condition": "steps.case_process_status.output.status : completed",
+            "steps": [
+              {
+                "name": "is_case_process_running_debug1",
+                "type": "console",
+                "with": {
+                  "message": "workflow_alert_process running"
+                }
+              }
+            ],
+            "else": [
+              {
+                "name": "is_case_process_running_debug2",
+                "type": "console",
+                "with": {
+                  "message": "workflow_alert_process not running"
+                }
+              },
+              {
+                "name": "dequeue_case",
+                "type": "http",
+                "with": {
+                  "url": "{{ consts.es_host }}/workflow_case_queue/_search",
+                  "method": "GET",
+                  "headers": {
+                    "Content-Type": "application/json",
+                    "Authorization": "{{ consts.kbn_auth }}"
+                  },
+                  "body": {
+                    "size": "1,",
+                    "query": {
+                      "match_all": null
+                    },
+                    "_source": true
+                  },
+                  "timeout": "30s"
+                }
+              },
+              {
+                "name": "start_case_process",
+                "type": "http",
+                "with": {
+                  "url": "{{ consts.kbn_host }}/api/workflows/{{ steps.get_case_process_id.output.data._source.workflow_id }}/run",
+                  "method": "POST",
+                  "headers": {
+                    "x-elastic-internal-origin": "kibana",
+                    "kbn-xsrf": true,
+                    "Content-Type": "application/json",
+                    "Authorization": "{{ consts.kbn_auth }}"
+                  },
+                  "body": """{ "inputs": {"event": {{steps.dequeue_case.output.data.hits.hits[0]._source | json() }} } }""",
+                  "timeout": "30s"
+                }
+              },
+              {
+                "name": "mark_case_handled",
+                "type": "http",
+                "with": {
+                  "url": "{{ consts.es_host }}/workflow_case_queue/_doc/{{steps.dequeue_case.output.data.hits.hits[0]._id}}",
+                  "method": "DELETE",
+                  "headers": {
+                    "Content-Type": "application/json",
+                    "Authorization": "{{ consts.kbn_auth }}"
+                  },
+                  "timeout": "30s"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "createdBy": "3473488103",
+      "lastUpdatedBy": "3473488103",
+      "valid": true,
+      "createdAt": "2025-10-24T16:54:00.641Z",
+      "lastUpdatedAt": "2025-10-24T16:54:05.579Z",
+      "history": []
+    },
+    {
+      "id": "workflow-db17d497-3fff-4324-980a-54689561fd08",
+      "name": "alert_process",
+      "description": "Process o11y alerts and correlate to cases",
+      "enabled": true,
+      "yaml": """version: "1"
+name: alert_process
+description: Process o11y alerts and correlate to cases
+enabled: true
+tags:
+  - automated_observability_triage
+triggers:
+  - type: alert
+    enabled: true
+steps:
+  - name: debug1
+    type: console
+    with:
+      message: "{{ event | json(2)}}"
+
+  - name: foreach_alert_in_event
+    type: foreach
+    foreach: event.alerts
+    steps:
+    - name: foreach_alert_in_event_debug
+      type: console
+      with:
+        message: "{{ foreach.item | json(2)}}"
+
+    # always try to get a topology to help with dependencies in RCA
+    - name: get_topology
+      type: http
+      with:
+        url: "{{ consts.es_host }}/workflow_topology/_search"
+        method: GET
+        headers:
+          Content-Type: application/json
+          Authorization: "{{ consts.kbn_auth }}"
+        body:
+          size: 0
+          aggs:
+            unique_field_buckets:
+              terms:
+                field: system.keyword
+                size: 100
+              aggs:
+                latest_document:
+                  top_hits:
+                    size: 1
+                    sort:
+                      - "@timestamp":
+                        order: "desc"
+                    "_source":
+                      "includes": ["system", "topology"]
+        timeout: 30s
+    # get open cases
+    - name: get_cases
+      type: kibana.request
+      with:
+        method: GET
+        path: /api/cases/_find?status=open
+        headers:
+          Authorization: "{{ consts.kbn_auth }}"
+
+    - name: correlate_to_case
+      type: http
+      with:
+        url: "{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete"
+        method: "POST"
+        timeout: "{{ consts.ai_timeout }}"
+        headers:
+          Content-Type: application/json
+          kibana-host: "{{ consts.kbn_host }}"
+          kibana-auth: "{{ consts.kbn_auth }}"
+        body:
+          persist: false
+          connectorId: "{{ consts.ai_connector }}"
+          instructions: 
+            - "Look at each case provided, consider the comments, any attached alerts (including correlating factors like time, host, system), and the provided system topology. Decide which case, if any, this new alert is likely related to. If it is related, output a field 'case_id' with the value of the related case and a field 'relation' with a summary of how it is related. If it is not related to any open case, output only a field 'case_id' with a value of 'NONE'."
+          messages:
+            - "@timestamp": "now"
+              message:
+                role: "user"
+                content: |
+                  <cases>
+                    {{ steps.get_cases.output.cases | json(2) }}
+                  </cases>
+                  <alert>
+                    {{ foreach.item | json(2)}}
+                  </alert>
+                  <topology>
+                    {{ steps.get_topology.output.data.hits.hits | json(2) }}
+                  </topology
+
+    - name: "new_or_update_case"
+      type: if
+      condition: "steps.correlate_to_case.output.data.case_id : NONE"
+      # new case
+      steps:
+        - name: create_alert_details
+          type: http
+          with:
+            url: "{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete"
+            method: "POST"
+            timeout: "{{ consts.ai_timeout }}"
+            headers:
+              Content-Type: application/json
+              kibana-host: "{{ consts.kbn_host }}"
+              kibana-auth: "{{ consts.kbn_auth }}"
+            body:
+              persist: true
+              connectorId: "{{ consts.ai_connector }}"
+              instructions: 
+                - "We will be creating an incident case for handling this new alert. Output a field called 'title' that summarizes the alert in a few words, a field called 'trigger' that provides a detailed summary of the alert, and a field called 'severity' with a value of 'low', 'medium', 'high', or 'critical' based on your analysis?"
+              messages:
+                - "@timestamp": "now"
+                  message:
+                    role: "user"
+                    content: |
+                      <alert>
+                        {{ foreach.item | json(2)}}
+                      </alert>
+        - name: create_case
+          type: kibana.request
+          with:
+            method: POST
+            path: /api/cases
+            body:
+              owner: observability
+              title: "{{ steps.create_alert_details.output.data.title }}"
+              description: |
+                {{ steps.create_alert_details.output.data.trigger }}
+              tags:
+                - "automated_observability_triage"
+              settings:
+                syncAlerts: true
+              severity: "{{ steps.create_alert_details.output.data.severity }}"
+              connector:
+                fields: null
+                id: none
+                name: none
+                type: .none
+              customFields:
+                - "key": "workflow_execution_id"
+                  "type": "text"
+                  "value": "not_available"
+                - "key": "ai_conversation_id"
+                  "type": "text"
+                  "value": "{{ steps.create_alert_details.output.data.conversation_id }}" 
+        - name: add_alert_to_case
+          type: kibana.request
+          with:
+            method: POST
+            path: /api/cases/{{ steps.create_case.output.id }}/comments
+            body:
+              type: alert
+              alertId: "{{ foreach.item.id }}"
+              index: .alerts-security.alerts-default
+              rule:
+                name: "{{ foreach.item.rule.name }}"
+                id: "{{ foreach.item.rule.uuid }}"
+              owner: observability
+            headers:
+              kbn-xsrf: true
+              Content-Type: application/json
+              Authorization: "{{ consts.kbn_auth }}"
+        - name: queue_new_case
+          type: http
+          with:
+            url: "{{ consts.es_host }}/workflow_case_queue/_doc"
+            method: "POST"
+            headers:
+              Content-Type: application/json
+              Authorization: "{{ consts.kbn_auth }}"
+            body:
+              case_id: "{{ steps.create_case.output.id }}"
+      else:
+        - name: add_alert_to_existing_case
+          type: kibana.request
+          with:
+            method: POST
+            path: /api/cases/{{ steps.correlate_to_case.output.data.case_id }}/comments
+            body:
+              type: alert
+              alertId: "{{ foreach.item.id }}"
+              index: .alerts-security.alerts-default
+              rule:
+                name: "{{ foreach.item.rule.name }}"
+                id: "{{ foreach.item.rule.uuid }}"
+              owner: observability
+            headers:
+              kbn-xsrf: true
+              Content-Type: application/json
+              Authorization: "{{ consts.kbn_auth }}"
+        - name: add_comment_to_existing_case
+          type: kibana.request
+          with:
+            method: POST
+            path: /api/cases/{{ steps.correlate_to_case.output.data.case_id }}/comments
+            body:
+              type: user
+              owner: observability
+              comment: "correlated alert '{{ foreach.item.reason }}'. {{ steps.correlate_to_case.output.data.relation }}"
+            headers:
+              kbn-xsrf: true
+              Content-Type: application/json
+              Authorization: "{{ consts.kbn_auth }}"
+        - name: queue_existing_case
+          type: http
+          with:
+            url: "{{ consts.es_host }}/workflow_case_queue/_doc"
+            method: "POST"
+            headers:
+              Content-Type: application/json
+              Authorization: "{{ consts.kbn_auth }}"
+            body:
+              case_id: "{{ steps.correlate_to_case.output.data.case_id }}"
+    - name: mute_alert
+      type: kibana.request
+      with:
+        method: POST
+        path: "/api/alerting/rule/{{ foreach.item.rule.uuid }}/alert/{{ foreach.item.id }}/_mute"
+        body:
+        headers:
+          kbn-xsrf: string
+          Content-Type: application/json
+          Authorization: "{{ consts.kbn_auth }}"
+      on-failure:
+        continue: true
+consts:
+  ai_timeout: 10m
+  ai_connector: "Elastic-Managed-LLM"
+  ai_proxy: https://tbekiares-demo-aiassistant-1059491012611.us-central1.run.app
+  kbn_host: https://581b85187ee040c3bc41f917001ef0b7.us-west2.gcp.elastic-cloud.com
+  es_host: https://eb9be4b1f8e94c2fb951189307a03646.us-west2.gcp.elastic-cloud.com
+  kbn_auth: ApiKey U1ZyZjdaa0I4eVREU3ZXeGx6bm06cnRpNUhkMldyYlQ1NjNaTGt5UExJQQ==""",
+      "definition": {
+        "version": "1",
+        "name": "alert_process",
+        "description": "Process o11y alerts and correlate to cases",
+        "enabled": true,
+        "tags": [
+          "automated_observability_triage"
+        ],
+        "triggers": [
+          {
+            "type": "alert",
+            "enabled": true
+          }
+        ],
+        "consts": {
+          "ai_timeout": "10m",
+          "ai_connector": "Elastic-Managed-LLM",
+          "ai_proxy": "https://tbekiares-demo-aiassistant-1059491012611.us-central1.run.app",
+          "kbn_host": "https://581b85187ee040c3bc41f917001ef0b7.us-west2.gcp.elastic-cloud.com",
+          "es_host": "https://eb9be4b1f8e94c2fb951189307a03646.us-west2.gcp.elastic-cloud.com",
+          "kbn_auth": "ApiKey U1ZyZjdaa0I4eVREU3ZXeGx6bm06cnRpNUhkMldyYlQ1NjNaTGt5UExJQQ=="
+        },
+        "steps": [
+          {
+            "name": "debug1",
+            "type": "console",
+            "with": {
+              "message": "{{ event | json(2)}}"
+            }
+          },
+          {
+            "name": "foreach_alert_in_event",
+            "type": "foreach",
+            "foreach": "event.alerts",
+            "steps": [
+              {
+                "name": "foreach_alert_in_event_debug",
+                "type": "console",
+                "with": {
+                  "message": "{{ foreach.item | json(2)}}"
+                }
+              },
+              {
+                "name": "get_topology",
+                "type": "http",
+                "with": {
+                  "url": "{{ consts.es_host }}/workflow_topology/_search",
+                  "method": "GET",
+                  "headers": {
+                    "Content-Type": "application/json",
+                    "Authorization": "{{ consts.kbn_auth }}"
+                  },
+                  "body": {
+                    "size": 0,
+                    "aggs": {
+                      "unique_field_buckets": {
+                        "terms": {
+                          "field": "system.keyword",
+                          "size": 100
+                        },
+                        "aggs": {
+                          "latest_document": {
+                            "top_hits": {
+                              "size": 1,
+                              "sort": [
+                                {
+                                  "@timestamp": null,
+                                  "order": "desc"
+                                }
+                              ],
+                              "_source": {
+                                "includes": [
+                                  "system",
+                                  "topology"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "timeout": "30s"
+                }
+              },
+              {
+                "name": "get_cases",
+                "type": "kibana.request",
+                "with": {
+                  "method": "GET",
+                  "path": "/api/cases/_find?status=open",
+                  "headers": {
+                    "Authorization": "{{ consts.kbn_auth }}"
+                  }
+                }
+              },
+              {
+                "name": "correlate_to_case",
+                "type": "http",
+                "with": {
+                  "url": "{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete",
+                  "method": "POST",
+                  "headers": {
+                    "Content-Type": "application/json",
+                    "kibana-host": "{{ consts.kbn_host }}",
+                    "kibana-auth": "{{ consts.kbn_auth }}"
+                  },
+                  "body": {
+                    "persist": false,
+                    "connectorId": "{{ consts.ai_connector }}",
+                    "instructions": [
+                      "Look at each case provided, consider the comments, any attached alerts (including correlating factors like time, host, system), and the provided system topology. Decide which case, if any, this new alert is likely related to. If it is related, output a field 'case_id' with the value of the related case and a field 'relation' with a summary of how it is related. If it is not related to any open case, output only a field 'case_id' with a value of 'NONE'."
+                    ],
+                    "messages": [
+                      {
+                        "@timestamp": "now",
+                        "message": {
+                          "role": "user",
+                          "content": """<cases>
+  {{ steps.get_cases.output.cases | json(2) }}
+</cases>
+<alert>
+  {{ foreach.item | json(2)}}
+</alert>
+<topology>
+  {{ steps.get_topology.output.data.hits.hits | json(2) }}
+</topology
+"""
+                        }
+                      }
+                    ]
+                  },
+                  "timeout": "{{ consts.ai_timeout }}"
+                }
+              },
+              {
+                "name": "new_or_update_case",
+                "type": "if",
+                "condition": "steps.correlate_to_case.output.data.case_id : NONE",
+                "steps": [
+                  {
+                    "name": "create_alert_details",
+                    "type": "http",
+                    "with": {
+                      "url": "{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete",
+                      "method": "POST",
+                      "headers": {
+                        "Content-Type": "application/json",
+                        "kibana-host": "{{ consts.kbn_host }}",
+                        "kibana-auth": "{{ consts.kbn_auth }}"
+                      },
+                      "body": {
+                        "persist": true,
+                        "connectorId": "{{ consts.ai_connector }}",
+                        "instructions": [
+                          "We will be creating an incident case for handling this new alert. Output a field called 'title' that summarizes the alert in a few words, a field called 'trigger' that provides a detailed summary of the alert, and a field called 'severity' with a value of 'low', 'medium', 'high', or 'critical' based on your analysis?"
+                        ],
+                        "messages": [
+                          {
+                            "@timestamp": "now",
+                            "message": {
+                              "role": "user",
+                              "content": """<alert>
+  {{ foreach.item | json(2)}}
+</alert>
+"""
+                            }
+                          }
+                        ]
+                      },
+                      "timeout": "{{ consts.ai_timeout }}"
+                    }
+                  },
+                  {
+                    "name": "create_case",
+                    "type": "kibana.request",
+                    "with": {
+                      "method": "POST",
+                      "path": "/api/cases",
+                      "body": {
+                        "owner": "observability",
+                        "title": "{{ steps.create_alert_details.output.data.title }}",
+                        "description": """{{ steps.create_alert_details.output.data.trigger }}
+""",
+                        "tags": [
+                          "automated_observability_triage"
+                        ],
+                        "settings": {
+                          "syncAlerts": true
+                        },
+                        "severity": "{{ steps.create_alert_details.output.data.severity }}",
+                        "connector": {
+                          "fields": null,
+                          "id": "none",
+                          "name": "none",
+                          "type": ".none"
+                        },
+                        "customFields": [
+                          {
+                            "key": "workflow_execution_id",
+                            "type": "text",
+                            "value": "not_available"
+                          },
+                          {
+                            "key": "ai_conversation_id",
+                            "type": "text",
+                            "value": "{{ steps.create_alert_details.output.data.conversation_id }}"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "name": "add_alert_to_case",
+                    "type": "kibana.request",
+                    "with": {
+                      "method": "POST",
+                      "path": "/api/cases/{{ steps.create_case.output.id }}/comments",
+                      "body": {
+                        "type": "alert",
+                        "alertId": "{{ foreach.item.id }}",
+                        "index": ".alerts-security.alerts-default",
+                        "rule": {
+                          "name": "{{ foreach.item.rule.name }}",
+                          "id": "{{ foreach.item.rule.uuid }}"
+                        },
+                        "owner": "observability"
+                      },
+                      "headers": {
+                        "kbn-xsrf": true,
+                        "Content-Type": "application/json",
+                        "Authorization": "{{ consts.kbn_auth }}"
+                      }
+                    }
+                  },
+                  {
+                    "name": "queue_new_case",
+                    "type": "http",
+                    "with": {
+                      "url": "{{ consts.es_host }}/workflow_case_queue/_doc",
+                      "method": "POST",
+                      "headers": {
+                        "Content-Type": "application/json",
+                        "Authorization": "{{ consts.kbn_auth }}"
+                      },
+                      "body": {
+                        "case_id": "{{ steps.create_case.output.id }}"
+                      },
+                      "timeout": "30s"
+                    }
+                  }
+                ],
+                "else": [
+                  {
+                    "name": "add_alert_to_existing_case",
+                    "type": "kibana.request",
+                    "with": {
+                      "method": "POST",
+                      "path": "/api/cases/{{ steps.correlate_to_case.output.data.case_id }}/comments",
+                      "body": {
+                        "type": "alert",
+                        "alertId": "{{ foreach.item.id }}",
+                        "index": ".alerts-security.alerts-default",
+                        "rule": {
+                          "name": "{{ foreach.item.rule.name }}",
+                          "id": "{{ foreach.item.rule.uuid }}"
+                        },
+                        "owner": "observability"
+                      },
+                      "headers": {
+                        "kbn-xsrf": true,
+                        "Content-Type": "application/json",
+                        "Authorization": "{{ consts.kbn_auth }}"
+                      }
+                    }
+                  },
+                  {
+                    "name": "add_comment_to_existing_case",
+                    "type": "kibana.request",
+                    "with": {
+                      "method": "POST",
+                      "path": "/api/cases/{{ steps.correlate_to_case.output.data.case_id }}/comments",
+                      "body": {
+                        "type": "user",
+                        "owner": "observability",
+                        "comment": "correlated alert '{{ foreach.item.reason }}'. {{ steps.correlate_to_case.output.data.relation }}"
+                      },
+                      "headers": {
+                        "kbn-xsrf": true,
+                        "Content-Type": "application/json",
+                        "Authorization": "{{ consts.kbn_auth }}"
+                      }
+                    }
+                  },
+                  {
+                    "name": "queue_existing_case",
+                    "type": "http",
+                    "with": {
+                      "url": "{{ consts.es_host }}/workflow_case_queue/_doc",
+                      "method": "POST",
+                      "headers": {
+                        "Content-Type": "application/json",
+                        "Authorization": "{{ consts.kbn_auth }}"
+                      },
+                      "body": {
+                        "case_id": "{{ steps.correlate_to_case.output.data.case_id }}"
+                      },
+                      "timeout": "30s"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "mute_alert",
+                "type": "kibana.request",
+                "with": {
+                  "method": "POST",
+                  "path": "/api/alerting/rule/{{ foreach.item.rule.uuid }}/alert/{{ foreach.item.id }}/_mute",
+                  "body": null,
+                  "headers": {
+                    "kbn-xsrf": "string",
+                    "Content-Type": "application/json",
+                    "Authorization": "{{ consts.kbn_auth }}"
+                  }
+                },
+                "on-failure": {
+                  "continue": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "createdBy": "3473488103",
+      "lastUpdatedBy": "3473488103",
+      "valid": true,
+      "createdAt": "2025-10-09T21:51:05.247Z",
+      "lastUpdatedAt": "2025-10-22T19:22:02.132Z",
+      "history": [
+        {
+          "id": "681a7269-86e6-4caa-abef-51b0c444a89e",
+          "workflowId": "workflow-db17d497-3fff-4324-980a-54689561fd08",
+          "workflowName": "alert_process",
+          "status": "failed",
+          "startedAt": "2025-10-22T13:41:31.816Z",
+          "finishedAt": "2025-10-22T13:43:59.286Z",
+          "duration": 147470
+        }
+      ]
+    },
+    {
+      "id": "workflow-7b18fe66-f434-473b-81e0-670f272a72df",
+      "name": "topology",
+      "description": "build topology to help with correlation and RCA",
+      "enabled": true,
+      "yaml": """version: "1"
+name: topology
+description: build topology to help with correlation and RCA
+enabled: true
+tags:
+  - automated_observability_triage
+triggers:
+  - type: manual
+    enabled: true
+steps:
+
+  - name: get_end_time
+    type: http
+    with:
+      url: "{{ consts.es_host }}/_query"
+      method: POST
+      headers:
+        Content-Type: application/json
+        Authorization: "{{ consts.kbn_auth }}"
+      body:
+        query: "ROW current_date = NOW()"
+  - name: get_start_time
+    type: http
+    with:
+      url: "{{ consts.es_host }}/_query"
+      method: POST
+      headers:
+        Content-Type: application/json
+        Authorization: "{{ consts.kbn_auth }}"
+      body:
+        query: "ROW current_date = NOW() - 1 hour"
+
+
+  - name: get_service_map
+    type: http
+    with:
+      url: "{{ consts.kbn_host }}/internal/apm/service-map?start={{ steps.get_start_time.output.data.values[0] }}&end={{ steps.get_end_time.output.data.values[0] }}&environment=ENVIRONMENT_ALL&serviceGroup=&kuery="
+      method: GET
+      headers:
+        x-elastic-internal-origin: kibana
+        kbn-xsrf: true
+        Content-Type: application/json
+        Authorization: "{{ consts.kbn_auth }}"
+
+  - name: get_topology
+    type: http
+    with:
+      url: "{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete"
+      method: POST
+      headers:
+        Content-Type: application/json
+        kibana-host: "{{ consts.kbn_host }}"
+        kibana-auth: "{{ consts.kbn_auth }}"
+      body:
+        connectorId: "{{ consts.ai_connector }}"
+        instructions:
+          - Use the provided <service_map> data to help determine topology from APM data; never query trace/span data directly.
+          - You can also look at logs, which can be helpful to detect proxies in the system.
+          - Output a field 'topologies' which is an array of topology objects, with each object having a field 'system' which is the system/namespace the topology is applicable to and a field 'topology' which is a JSON object in node-link format.
+        messages:
+          - "@timestamp": now
+            message:
+              role: user
+              content: |
+                Try to determine the topology of each system observed over only the last hour, where a system is defined by a namespace.
+                <service_map>
+                  {{ steps.get_service_map.output.data | json(2) }}
+                </service_map>
+      timeout: "{{ consts.ai_timeout }}"
+
+
+  - name: foreach_system
+    type: foreach
+    foreach: steps.get_topology.output.data.topologies
+    steps:
+    - name: store_topology
+      type: http
+      with:
+        url: "{{ consts.es_host }}/workflow_topology/_doc"
+        method: POST
+        headers:
+          Content-Type: application/json
+          Authorization: "{{ consts.kbn_auth }}"
+        body: '{"@timestamp":"{{ steps.get_end_time.output.data.values[0] }}", "system":"{{ foreach.item.system }}", "topology": {{ foreach.item.topology | json() }} }'
+        timeout: 30s
+consts:
+  ai_timeout: 10m
+  ai_connector: "Elastic-Managed-LLM"
+  ai_proxy: https://tbekiares-demo-aiassistant-1059491012611.us-central1.run.app
+  kbn_host: https://581b85187ee040c3bc41f917001ef0b7.us-west2.gcp.elastic-cloud.com
+  es_host: https://eb9be4b1f8e94c2fb951189307a03646.us-west2.gcp.elastic-cloud.com
+  kbn_auth: ApiKey U1ZyZjdaa0I4eVREU3ZXeGx6bm06cnRpNUhkMldyYlQ1NjNaTGt5UExJQQ==""",
+      "definition": {
+        "version": "1",
+        "name": "topology",
+        "description": "build topology to help with correlation and RCA",
+        "enabled": true,
+        "tags": [
+          "automated_observability_triage"
+        ],
+        "triggers": [
+          {
+            "type": "manual",
+            "enabled": true
+          }
+        ],
+        "consts": {
+          "ai_timeout": "10m",
+          "ai_connector": "Elastic-Managed-LLM",
+          "ai_proxy": "https://tbekiares-demo-aiassistant-1059491012611.us-central1.run.app",
+          "kbn_host": "https://581b85187ee040c3bc41f917001ef0b7.us-west2.gcp.elastic-cloud.com",
+          "es_host": "https://eb9be4b1f8e94c2fb951189307a03646.us-west2.gcp.elastic-cloud.com",
+          "kbn_auth": "ApiKey U1ZyZjdaa0I4eVREU3ZXeGx6bm06cnRpNUhkMldyYlQ1NjNaTGt5UExJQQ=="
+        },
+        "steps": [
+          {
+            "name": "get_end_time",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.es_host }}/_query",
+              "method": "POST",
+              "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "{{ consts.kbn_auth }}"
+              },
+              "body": {
+                "query": "ROW current_date = NOW()"
+              },
+              "timeout": "30s"
+            }
+          },
+          {
+            "name": "get_start_time",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.es_host }}/_query",
+              "method": "POST",
+              "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "{{ consts.kbn_auth }}"
+              },
+              "body": {
+                "query": "ROW current_date = NOW() - 1 hour"
+              },
+              "timeout": "30s"
+            }
+          },
+          {
+            "name": "get_service_map",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.kbn_host }}/internal/apm/service-map?start={{ steps.get_start_time.output.data.values[0] }}&end={{ steps.get_end_time.output.data.values[0] }}&environment=ENVIRONMENT_ALL&serviceGroup=&kuery=",
+              "method": "GET",
+              "headers": {
+                "x-elastic-internal-origin": "kibana",
+                "kbn-xsrf": true,
+                "Content-Type": "application/json",
+                "Authorization": "{{ consts.kbn_auth }}"
+              },
+              "timeout": "30s"
+            }
+          },
+          {
+            "name": "get_topology",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete",
+              "method": "POST",
+              "headers": {
+                "Content-Type": "application/json",
+                "kibana-host": "{{ consts.kbn_host }}",
+                "kibana-auth": "{{ consts.kbn_auth }}"
+              },
+              "body": {
+                "connectorId": "{{ consts.ai_connector }}",
+                "instructions": [
+                  "Use the provided <service_map> data to help determine topology from APM data; never query trace/span data directly.",
+                  "You can also look at logs, which can be helpful to detect proxies in the system.",
+                  "Output a field 'topologies' which is an array of topology objects, with each object having a field 'system' which is the system/namespace the topology is applicable to and a field 'topology' which is a JSON object in node-link format."
+                ],
+                "messages": [
+                  {
+                    "@timestamp": "now",
+                    "message": {
+                      "role": "user",
+                      "content": """Try to determine the topology of each system observed over only the last hour, where a system is defined by a namespace.
+<service_map>
+  {{ steps.get_service_map.output.data | json(2) }}
+</service_map>
+"""
+                    }
+                  }
+                ]
+              },
+              "timeout": "{{ consts.ai_timeout }}"
+            }
+          },
+          {
+            "name": "foreach_system",
+            "type": "foreach",
+            "foreach": "steps.get_topology.output.data.topologies",
+            "steps": [
+              {
+                "name": "store_topology",
+                "type": "http",
+                "with": {
+                  "url": "{{ consts.es_host }}/workflow_topology/_doc",
+                  "method": "POST",
+                  "headers": {
+                    "Content-Type": "application/json",
+                    "Authorization": "{{ consts.kbn_auth }}"
+                  },
+                  "body": """{"@timestamp":"{{ steps.get_end_time.output.data.values[0] }}", "system":"{{ foreach.item.system }}", "topology": {{ foreach.item.topology | json() }} }""",
+                  "timeout": "30s"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "createdBy": "3473488103",
+      "lastUpdatedBy": "3473488103",
+      "valid": true,
+      "createdAt": "2025-10-22T14:46:36.005Z",
+      "lastUpdatedAt": "2025-10-22T18:49:40.488Z",
+      "history": []
+    },
+    {
+      "id": "workflow-1fc19336-9467-434f-ae9f-b919c57558cf",
+      "name": "alert_queue",
+      "description": "ingest alerts",
+      "enabled": false,
+      "yaml": """version: "1"
+name: alert_queue
+description: ingest alerts
+enabled: false
+tags:
+  - automated_observability_triage
+triggers:
+  - type: alert
+    enabled: true
+consts:
+  ai_timeout: 10m
+  ai_connector: Elastic-Managed-LLM
+  ai_proxy: https://tbekiares-demo-aiassistant-1059491012611.us-central1.run.app
+  kbn_host: https://581b85187ee040c3bc41f917001ef0b7.us-west2.gcp.elastic-cloud.com
+  es_host: https://eb9be4b1f8e94c2fb951189307a03646.us-west2.gcp.elastic-cloud.com
+  kbn_auth: ApiKey U1ZyZjdaa0I4eVREU3ZXeGx6bm06cnRpNUhkMldyYlQ1NjNaTGt5UExJQQ==
+steps:
+  - name: alert_debug
+    type: console
+    with:
+      message: "{{ event | json(2) }}"
+  - name: queue_alert
+    type: http
+    with:
+      url: "{{ consts.es_host }}/workflow_alert_queue/_doc"
+      method: POST
+      headers:
+        Content-Type: application/json
+        Authorization: "{{ consts.kbn_auth }}"
+      body: "{{event | json}}"
+      timeout: 30s
+""",
+      "definition": {
+        "version": "1",
+        "name": "alert_queue",
+        "description": "ingest alerts",
+        "enabled": true,
+        "tags": [
+          "automated_observability_triage"
+        ],
+        "triggers": [
+          {
+            "type": "alert",
+            "enabled": true
+          }
+        ],
+        "consts": {
+          "ai_timeout": "10m",
+          "ai_connector": "Elastic-Managed-LLM",
+          "ai_proxy": "https://tbekiares-demo-aiassistant-1059491012611.us-central1.run.app",
+          "kbn_host": "https://581b85187ee040c3bc41f917001ef0b7.us-west2.gcp.elastic-cloud.com",
+          "es_host": "https://eb9be4b1f8e94c2fb951189307a03646.us-west2.gcp.elastic-cloud.com",
+          "kbn_auth": "ApiKey U1ZyZjdaa0I4eVREU3ZXeGx6bm06cnRpNUhkMldyYlQ1NjNaTGt5UExJQQ=="
+        },
+        "steps": [
+          {
+            "name": "alert_debug",
+            "type": "console",
+            "with": {
+              "message": "{{ event | json(2) }}"
+            }
+          },
+          {
+            "name": "queue_alert",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.es_host }}/workflow_alert_queue/_doc",
+              "method": "POST",
+              "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "{{ consts.kbn_auth }}"
+              },
+              "body": "{{event | json}}",
+              "timeout": "30s"
+            }
+          }
+        ]
+      },
+      "createdBy": "3473488103",
+      "lastUpdatedBy": "3473488103",
+      "valid": true,
+      "createdAt": "2025-10-19T14:57:52.913Z",
+      "lastUpdatedAt": "2025-10-22T14:25:48.065Z",
+      "history": [
+        {
+          "id": "7fc84896-6bc9-4b28-8f06-631f5bbea04b",
+          "workflowId": "workflow-1fc19336-9467-434f-ae9f-b919c57558cf",
+          "workflowName": "alert_queue",
+          "status": "completed",
+          "startedAt": "2025-10-22T13:40:22.820Z",
+          "finishedAt": "2025-10-22T13:40:23.237Z",
+          "duration": 417
+        }
+      ]
+    },
+    {
+      "id": "workflow-5141dc78-2938-40cf-b797-92b86fae7479",
+      "name": "alert_dequeue",
+      "description": "dequeue alerts serially and start processing",
+      "enabled": true,
+      "yaml": """name: alert_dequeue
+description: dequeue alerts serially and start processing
+enabled: true
+tags:
+  - automated_observability_triage
+triggers:
+  - type: manual
+steps:
+  - name: get_alert_process_id
+    type: http
+    with:
+      url: "{{ consts.es_host }}/workflow_config/_doc/alert_process_workflow"
+      method: GET
+      headers:
+        Content-Type: application/json
+        Authorization: "{{ consts.kbn_auth }}"
+      timeout: 30s
+  - name: alert_process_status
+    type: http
+    with:
+      url: "{{ consts.kbn_host }}/api/workflowExecutions?workflowId={{ steps.get_alert_process_id.output.data._source.workflow_id }}"
+      method: "GET"
+      headers:
+        x-elastic-internal-origin: kibana
+        kbn-xsrf: true
+        Content-Type: application/json
+        Authorization: "{{ consts.kbn_auth }}"
+  - name: is_alert_process_running
+    type: if
+    condition: "steps.alert_process_status.output.status : completed"
+    # found
+    steps:
+      - name: is_alert_process_running_debug1
+        type: console
+        with:
+          message: "workflow_alert_process running"
+    else:
+      - name: is_alert_process_running_debug2
+        type: console
+        with:
+          message: "workflow_alert_process not running"
+
+      - name: dequeue_alerts
+        type: http
+        with:
+          url: "{{ consts.es_host }}/workflow_alert_queue/_search"
+          method: "GET"
+          body:
+            "size": 1, 
+            "query":
+              "match_all":
+            "_source": true
+          headers:
+            Content-Type: application/json
+            Authorization: "{{ consts.kbn_auth }}"
+
+      - name: is_new_alert
+        type: if
+        condition: "steps.dequeue_alerts.output.data.hits.hits[0]._source.alerts.new.count : *"
+        steps:
+        - name: start_alert_process
+          type: http
+          with:
+            url: "{{ consts.kbn_host }}/api/workflows/{{ steps.get_alert_process_id.output.data._source.workflow_id }}/run"
+            method: "POST"
+            body: '{ "inputs": {"event": {"alerts": {{steps.dequeue_alerts.output.data.hits.hits[0]._source.alerts.new.data | json() }} } } }'
+            headers:
+              x-elastic-internal-origin: kibana
+              kbn-xsrf: true
+              Content-Type: application/json
+              Authorization: "{{ consts.kbn_auth }}"
+        else:
+        - name: start_alert_process2
+          type: http
+          with:
+            url: "{{ consts.kbn_host }}/api/workflows/{{ steps.get_alert_process_id.output.data._source.workflow_id }}/run"
+            method: "POST"
+            body: '{ "inputs": {"event": {{steps.dequeue_alerts.output.data.hits.hits[0]._source | json() }} } }'
+            headers:
+              x-elastic-internal-origin: kibana
+              kbn-xsrf: true
+              Content-Type: application/json
+              Authorization: "{{ consts.kbn_auth }}"
+
+      - name: mark_alert_handled
+        type: http
+        with:
+          url: "{{ consts.es_host }}/workflow_alert_queue/_doc/{{steps.dequeue_alerts.output.data.hits.hits[0]._id}}"
+          method: "DELETE"
+          headers:
+            Content-Type: application/json
+            Authorization: "{{ consts.kbn_auth }}"
+
+consts:
+  ai_timeout: 10m
+  ai_connector: "Elastic-Managed-LLM"
+  ai_proxy: https://tbekiares-demo-aiassistant-1059491012611.us-central1.run.app
+  kbn_host: https://581b85187ee040c3bc41f917001ef0b7.us-west2.gcp.elastic-cloud.com
+  es_host: https://eb9be4b1f8e94c2fb951189307a03646.us-west2.gcp.elastic-cloud.com
+  kbn_auth: ApiKey U1ZyZjdaa0I4eVREU3ZXeGx6bm06cnRpNUhkMldyYlQ1NjNaTGt5UExJQQ==""",
+      "definition": {
+        "version": "1",
+        "name": "alert_dequeue",
+        "description": "dequeue alerts serially and start processing",
+        "enabled": true,
+        "tags": [
+          "automated_observability_triage"
+        ],
+        "triggers": [
+          {
+            "type": "manual",
+            "enabled": true
+          }
+        ],
+        "consts": {
+          "ai_timeout": "10m",
+          "ai_connector": "Elastic-Managed-LLM",
+          "ai_proxy": "https://tbekiares-demo-aiassistant-1059491012611.us-central1.run.app",
+          "kbn_host": "https://581b85187ee040c3bc41f917001ef0b7.us-west2.gcp.elastic-cloud.com",
+          "es_host": "https://eb9be4b1f8e94c2fb951189307a03646.us-west2.gcp.elastic-cloud.com",
+          "kbn_auth": "ApiKey U1ZyZjdaa0I4eVREU3ZXeGx6bm06cnRpNUhkMldyYlQ1NjNaTGt5UExJQQ=="
+        },
+        "steps": [
+          {
+            "name": "get_alert_process_id",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.es_host }}/workflow_config/_doc/alert_process_workflow",
+              "method": "GET",
+              "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "{{ consts.kbn_auth }}"
+              },
+              "timeout": "30s"
+            }
+          },
+          {
+            "name": "alert_process_status",
+            "type": "http",
+            "with": {
+              "url": "{{ consts.kbn_host }}/api/workflowExecutions?workflowId={{ steps.get_alert_process_id.output.data._source.workflow_id }}",
+              "method": "GET",
+              "headers": {
+                "x-elastic-internal-origin": "kibana",
+                "kbn-xsrf": true,
+                "Content-Type": "application/json",
+                "Authorization": "{{ consts.kbn_auth }}"
+              },
+              "timeout": "30s"
+            }
+          },
+          {
+            "name": "is_alert_process_running",
+            "type": "if",
+            "condition": "steps.alert_process_status.output.status : completed",
+            "steps": [
+              {
+                "name": "is_alert_process_running_debug1",
+                "type": "console",
+                "with": {
+                  "message": "workflow_alert_process running"
+                }
+              }
+            ],
+            "else": [
+              {
+                "name": "is_alert_process_running_debug2",
+                "type": "console",
+                "with": {
+                  "message": "workflow_alert_process not running"
+                }
+              },
+              {
+                "name": "dequeue_alerts",
+                "type": "http",
+                "with": {
+                  "url": "{{ consts.es_host }}/workflow_alert_queue/_search",
+                  "method": "GET",
+                  "headers": {
+                    "Content-Type": "application/json",
+                    "Authorization": "{{ consts.kbn_auth }}"
+                  },
+                  "body": {
+                    "size": "1,",
+                    "query": {
+                      "match_all": null
+                    },
+                    "_source": true
+                  },
+                  "timeout": "30s"
+                }
+              },
+              {
+                "name": "is_new_alert",
+                "type": "if",
+                "condition": "steps.dequeue_alerts.output.data.hits.hits[0]._source.alerts.new.count : *",
+                "steps": [
+                  {
+                    "name": "start_alert_process",
+                    "type": "http",
+                    "with": {
+                      "url": "{{ consts.kbn_host }}/api/workflows/{{ steps.get_alert_process_id.output.data._source.workflow_id }}/run",
+                      "method": "POST",
+                      "headers": {
+                        "x-elastic-internal-origin": "kibana",
+                        "kbn-xsrf": true,
+                        "Content-Type": "application/json",
+                        "Authorization": "{{ consts.kbn_auth }}"
+                      },
+                      "body": """{ "inputs": {"event": {"alerts": {{steps.dequeue_alerts.output.data.hits.hits[0]._source.alerts.new.data | json() }} } } }""",
+                      "timeout": "30s"
+                    }
+                  }
+                ],
+                "else": [
+                  {
+                    "name": "start_alert_process2",
+                    "type": "http",
+                    "with": {
+                      "url": "{{ consts.kbn_host }}/api/workflows/{{ steps.get_alert_process_id.output.data._source.workflow_id }}/run",
+                      "method": "POST",
+                      "headers": {
+                        "x-elastic-internal-origin": "kibana",
+                        "kbn-xsrf": true,
+                        "Content-Type": "application/json",
+                        "Authorization": "{{ consts.kbn_auth }}"
+                      },
+                      "body": """{ "inputs": {"event": {{steps.dequeue_alerts.output.data.hits.hits[0]._source | json() }} } }""",
+                      "timeout": "30s"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "mark_alert_handled",
+                "type": "http",
+                "with": {
+                  "url": "{{ consts.es_host }}/workflow_alert_queue/_doc/{{steps.dequeue_alerts.output.data.hits.hits[0]._id}}",
+                  "method": "DELETE",
+                  "headers": {
+                    "Content-Type": "application/json",
+                    "Authorization": "{{ consts.kbn_auth }}"
+                  },
+                  "timeout": "30s"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "createdBy": "3473488103",
+      "lastUpdatedBy": "3473488103",
+      "valid": true,
+      "createdAt": "2025-10-18T21:13:16.297Z",
+      "lastUpdatedAt": "2025-10-21T23:16:59.268Z",
+      "history": [
+        {
+          "id": "1a6f4a80-4f9f-4894-8263-6fbff2eab887",
+          "workflowId": "workflow-5141dc78-2938-40cf-b797-92b86fae7479",
+          "workflowName": "alert_dequeue",
+          "status": "completed",
+          "startedAt": "2025-10-20T15:16:09.195Z",
+          "finishedAt": "2025-10-20T15:16:10.464Z",
+          "duration": 1269
+        }
+      ]
+    }
+  ]
+}

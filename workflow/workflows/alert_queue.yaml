@@ -1,0 +1,31 @@
+version: "1"
+name: alert_queue
+description: ingest alerts
+enabled: false
+tags:
+  - automated_observability_triage
+triggers:
+  - type: alert
+    enabled: true
+consts:
+  ai_timeout: 10m
+  ai_connector: Elastic-Managed-LLM
+  ai_proxy: https://tbekiares-demo-aiassistant-1059491012611.us-central1.run.app
+  kbn_host: https://581b85187ee040c3bc41f917001ef0b7.us-west2.gcp.elastic-cloud.com
+  es_host: https://eb9be4b1f8e94c2fb951189307a03646.us-west2.gcp.elastic-cloud.com
+  kbn_auth: ApiKey U1ZyZjdaa0I4eVREU3ZXeGx6bm06cnRpNUhkMldyYlQ1NjNaTGt5UExJQQ==
+steps:
+  - name: alert_debug
+    type: console
+    with:
+      message: "{{ event | json(2) }}"
+  - name: queue_alert
+    type: http
+    with:
+      url: "{{ consts.es_host }}/workflow_alert_queue/_doc"
+      method: POST
+      headers:
+        Content-Type: application/json
+        Authorization: "{{ consts.kbn_auth }}"
+      body: "{{event | json}}"
+      timeout: 30s

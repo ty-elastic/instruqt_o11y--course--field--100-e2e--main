@@ -1,0 +1,349 @@
+version: "1"
+name: case_process
+description: Process o11y cases
+enabled: true
+tags:
+  - automated_observability_triage
+triggers:
+  - type: manual
+    enabled: true
+inputs:
+  - name: case_id
+    type: string
+  - name: conversation_id
+    type: string
+  - name: start_at_step
+    type: number
+  - name: stop_at_step
+    type: number
+steps:
+  - name: debug2
+    type: console
+    with:
+      message: "{{ inputs | json(2)}}"
+
+  - name: get_case_process_id
+    type: http
+    with:
+      url: "{{ consts.es_host }}/workflow_config/_doc/case_process_workflow"
+      method: GET
+      headers:
+        Authorization: "{{ consts.kbn_auth }}"
+
+    # get open cases
+  - name: get_case
+    type: kibana.request
+    with:
+      method: GET
+      path: /api/cases/{{ inputs.case_id }}
+      headers:
+        Authorization: "{{ consts.kbn_auth }}"
+
+  - name: get_case_alerts
+    type: kibana.request
+    with:
+      method: GET
+      path: /api/cases/{{ inputs.case_id }}/alerts
+      headers:
+        Authorization: "{{ consts.kbn_auth }}"
+
+  - name: debug3
+    type: console
+    with:
+      message: "{{ steps.get_case_alerts.output | json(2)}}"
+
+  - name: get_case_comments
+    type: kibana.request
+    with:
+      method: GET
+      path: /api/cases/{{ inputs.case_id }}/comments/_find
+      headers:
+        Authorization: "{{ consts.kbn_auth }}"
+
+  - name: debug1
+    type: console
+    with:
+      message: "{{ steps.get_case.output | json(2)}}"
+
+  # always try to get a topology to help with dependencies in RCA
+  - name: get_topology
+    type: http
+    with:
+      url: "{{ consts.es_host }}/workflow_topology/_search"
+      method: GET
+      headers:
+        Content-Type: application/json
+        Authorization: "{{ consts.kbn_auth }}"
+      body:
+        size: 0
+        aggs:
+          unique_field_buckets:
+            terms:
+              field: system.keyword
+              size: 100
+            aggs:
+              latest_document:
+                top_hits:
+                  size: 1
+                  sort:
+                    - "@timestamp":
+                      order: "desc"
+                  "_source":
+                    "includes": ["system", "topology"]
+
+  - name: rca1
+    type: http
+    with:
+      url: "{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete"
+      method: "POST"
+      timeout: "{{ consts.ai_timeout }}"
+      headers:
+        Content-Type: application/json
+        kibana-host: "{{ consts.kbn_host }}"
+        kibana-auth: "{{ consts.kbn_auth }}"
+      body:
+        output: false
+        persist: true
+        connectorId: "{{ consts.ai_connector }}"
+        messages:
+          - "@timestamp": "now"
+            message:
+              role: "user"
+              content: |
+                We will be performing a multi-step Root Cause Analysis. During your analysis, use the provided incident/case, consider the alerts attached to the case and any comments in the case, and the attached topology to understand dependencies. When looking for problems, always start at the service which is closest to or is a leaf node and is alerting. Do not start the RCA analysis; we will be doing it together step-by-step.
+
+                First, can you identify the service from the topology which is both closet to being a leaf node AND has an active alert associated with it? Additionally, what is a good time window to search for problems before and after the associated active alert?
+                <case>
+                  {{ steps.get_case.output | json(2) }}
+                </case>
+                <alerts>
+                  {{ steps.get_case_alerts.output | json(2) }}
+                </alerts>
+                <comments>
+                  {{ steps.get_case_comments.output | json(2) }}
+                </comments>
+                <topology>
+                  {{ steps.get_topology.output.data.hits.hits | json(2) }}
+                </topology
+
+  - name: "exec_test_2_start"
+    type: if
+    condition: "inputs.start_at_step <= 2 and inputs.stop_at_step > 2"
+    steps:
+      - name: rca2
+        type: http
+        with:
+          url: "{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete"
+          method: "POST"
+          timeout: "{{ consts.ai_timeout }}"
+          headers:
+            Content-Type: application/json
+            kibana-host: "{{ consts.kbn_host }}"
+            kibana-auth: "{{ consts.kbn_auth }}"
+          body:
+            conversationId: "{{ inputs.conversation_id }}"
+            persist: true
+            output: false
+            connectorId: "{{ consts.ai_connector }}"
+            messages:
+              - "@timestamp": "now"
+                message:
+                  role: "user"
+                  content: |
+                    Second, look at the logs for the identified service with the recommended time window. In particular, focus on logs with warning, error, or fatal severity. Does the log rate or log content suggest a problem?
+    else:
+        - name: "exec_test_2_stop"
+          type: if
+          condition: "inputs.stop_at_step : 2"
+          steps:
+            - name: start_case_process2
+              type: http
+              with:
+                url: "{{ consts.kbn_host }}/api/workflows/{{ steps.get_case_process_id.output.data._source.workflow_id }}/run"
+                method: "POST"
+                body: 
+                  inputs:
+                    case_id: "{{ inputs.case_id }}"
+                    conversation_id: "{{ steps.rca1.output.data.conversationId }}"
+                    start_at_step: 2
+                    stop_at_step: 3
+                headers:
+                  x-elastic-internal-origin: kibana
+                  kbn-xsrf: true
+                  Content-Type: application/json
+                  Authorization: "{{ consts.kbn_auth }}"
+
+  - name: "exec_test_3_start"
+    type: if
+    condition: "inputs.start_at_step <= 3 and inputs.stop_at_step > 3"
+    steps:
+      - name: rca3
+        type: http
+        with:
+          url: "{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete"
+          method: "POST"
+          timeout: "{{ consts.ai_timeout }}"
+          headers:
+            Content-Type: application/json
+            kibana-host: "{{ consts.kbn_host }}"
+            kibana-auth: "{{ consts.kbn_auth }}"
+          body:
+            conversationId: "{{ inputs.conversation_id }}"
+            persist: true
+            output: false
+            connectorId: "{{ consts.ai_connector }}"
+            messages:
+              - "@timestamp": "now"
+                message:
+                  role: "user"
+                  content: |
+                    Third, look at the metrics for the identified service with the recommended time window. Is there anything in the metric data that would suggest a problem?
+    else:
+        - name: "exec_test_3_stop"
+          type: if
+          condition: "inputs.stop_at_step : 3"
+          steps:
+            - name: start_case_process3
+              type: http
+              with:
+                url: "{{ consts.kbn_host }}/api/workflows/{{ steps.get_case_process_id.output.data._source.workflow_id }}/run"
+                method: "POST"
+                body: 
+                  inputs:
+                    case_id: "{{ inputs.case_id }}"
+                    conversation_id: "{{ inputs.conversation_id }}"
+                    start_at_step: 3
+                    stop_at_step: 4
+                headers:
+                  x-elastic-internal-origin: kibana
+                  kbn-xsrf: true
+                  Content-Type: application/json
+                  Authorization: "{{ consts.kbn_auth }}"
+
+  - name: "exec_test_4_start"
+    type: if
+    condition: "inputs.start_at_step <= 4 and inputs.stop_at_step > 4"
+    steps:
+      - name: rca4
+        type: http
+        with:
+          url: "{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete"
+          method: "POST"
+          timeout: "{{ consts.ai_timeout }}"
+          headers:
+            Content-Type: application/json
+            kibana-host: "{{ consts.kbn_host }}"
+            kibana-auth: "{{ consts.kbn_auth }}"
+          body:
+            conversationId: "{{ inputs.conversation_id }}"
+            persist: true
+            output: false
+            connectorId: "{{ consts.ai_connector }}"
+            messages:
+              - "@timestamp": "now"
+                message:
+                  role: "user"
+                  content: |
+                    Fourth, look at the traces for the identified service with the recommended time window. Look in particular for failed traces and associated exceptions. Is there anything in the trace data that would suggest a problem?
+    else:
+        - name: "exec_test_4_stop"
+          type: if
+          condition: "inputs.stop_at_step : 4"
+          steps:
+            - name: start_case_process4
+              type: http
+              with:
+                url: "{{ consts.kbn_host }}/api/workflows/{{ steps.get_case_process_id.output.data._source.workflow_id }}/run"
+                method: "POST"
+                body: 
+                  inputs:
+                    case_id: "{{ inputs.case_id }}"
+                    conversation_id: "{{ inputs.conversation_id }}"
+                    start_at_step: 4
+                    stop_at_step: 5
+                headers:
+                  x-elastic-internal-origin: kibana
+                  kbn-xsrf: true
+                  Content-Type: application/json
+                  Authorization: "{{ consts.kbn_auth }}"
+
+  - name: "exec_test_5_start"
+    type: if
+    condition: "inputs.start_at_step <= 5 and inputs.stop_at_step > 5"
+    steps:
+      - name: rca5
+        type: http
+        with:
+          url: "{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete"
+          method: "POST"
+          timeout: "{{ consts.ai_timeout }}"
+          headers:
+            Content-Type: application/json
+            kibana-host: "{{ consts.kbn_host }}"
+            kibana-auth: "{{ consts.kbn_auth }}"
+          body:
+            conversationId: "{{ inputs.conversation_id }}"
+            persist: true
+            output: true
+            connectorId: "{{ consts.ai_connector }}"
+            messages:
+              - "@timestamp": "now"
+                message:
+                  role: "user"
+                  content: |
+                    Considing the provided topology, the analysis, and the attached alerts, please output a detailed Root Cause Analysis in a field called "rca".
+      - name: add_comment_to_existing_case
+        type: kibana.request
+        with:
+          method: POST
+          path: /api/cases/{{ inputs.case_id }}/comments
+          body:
+            type: user
+            owner: observability
+            comment: "{{ steps.rca5.output.data.rca }}"
+          headers:
+            kbn-xsrf: true
+            Content-Type: application/json
+            Authorization: "{{ consts.kbn_auth }}"
+      - name: add_conversation_to_existing_case
+        type: kibana.request
+        with:
+          method: POST
+          path: /api/cases/{{ inputs.case_id }}/comments
+          body:
+            type: user
+            owner: observability
+            comment: 'You can continue your investigation <a href="/app/observabilityAIAssistant/conversations/{{ inputs.conversation_id }} target="_blank">here</a>.'
+          headers:
+            kbn-xsrf: true
+            Content-Type: application/json
+            Authorization: "{{ consts.kbn_auth }}"
+    else:
+        - name: "exec_test_5_stop"
+          type: if
+          condition: "inputs.stop_at_step : 5"
+          steps:
+            - name: start_case_process5
+              type: http
+              with:
+                url: "{{ consts.kbn_host }}/api/workflows/{{ steps.get_case_process_id.output.data._source.workflow_id }}/run"
+                method: "POST"
+                body: 
+                  inputs:
+                    case_id: "{{ inputs.case_id }}"
+                    conversation_id: "{{ inputs.conversation_id }}"
+                    start_at_step: 5
+                    stop_at_step: 6
+                headers:
+                  x-elastic-internal-origin: kibana
+                  kbn-xsrf: true
+                  Content-Type: application/json
+                  Authorization: "{{ consts.kbn_auth }}"
+
+consts:
+  ai_timeout: 10m
+  ai_connector: "Elastic-Managed-LLM"
+  ai_proxy: https://tbekiares-demo-aiassistant-1059491012611.us-central1.run.app
+  kbn_host: https://581b85187ee040c3bc41f917001ef0b7.us-west2.gcp.elastic-cloud.com
+  es_host: https://eb9be4b1f8e94c2fb951189307a03646.us-west2.gcp.elastic-cloud.com
+  kbn_auth: ApiKey U1ZyZjdaa0I4eVREU3ZXeGx6bm06cnRpNUhkMldyYlQ1NjNaTGt5UExJQQ=="""

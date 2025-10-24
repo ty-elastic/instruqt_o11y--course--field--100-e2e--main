@@ -63,7 +63,9 @@ IFS="$OIFS"
 for current_region in "${regions[@]}"; do
     echo "setup for region=$current_region"
     
-    export $(cat ./.env | xargs)
+    if [ -f "./.env" ]; then
+        export $(cat ./.env | xargs)
+    fi
 
     namespace=$namespace_base-$current_region
     echo $namespace
@@ -137,20 +139,24 @@ for current_region in "${regions[@]}"; do
                             kubectl -n $namespace rollout restart deployment/$current_service
                         fi
 
-                        echo "adding deployment annotation"
-                        ts=$(date -z utc +%FT%TZ)
-                        curl -X POST "$elasticsearch_kibana_endpoint/api/apm/services/$current_service/annotation" \
-                            -H 'Content-Type: application/json' \
-                            -H 'kbn-xsrf: true' \
-                            -H "Authorization: ApiKey ${elasticsearch_api_key}" \
-                            -d '{
-                                "@timestamp": "'$ts'",
-                                "service": {
-                                    "environment": "'$namespace'",
-                                    "version": "'$SERVICE_VERSION'"
-                                },
-                                "message": "service_deployment='$SERVICE_VERSION'"
-                            }'
+                        if [ -z "$elasticsearch_kibana_endpoint" ]; then
+                            echo "skipping deployment annotation"
+                        else
+                            echo "adding deployment annotation"
+                            ts=$(date -z utc +%FT%TZ)
+                            curl -X POST "$elasticsearch_kibana_endpoint/api/apm/services/$current_service/annotation" \
+                                -H 'Content-Type: application/json' \
+                                -H 'kbn-xsrf: true' \
+                                -H "Authorization: ApiKey ${elasticsearch_api_key}" \
+                                -d '{
+                                    "@timestamp": "'$ts'",
+                                    "service": {
+                                        "environment": "'$namespace'",
+                                        "version": "'$SERVICE_VERSION'"
+                                    },
+                                    "message": "service_deployment='$SERVICE_VERSION'"
+                                }'
+                        fi
                     fi
                 fi
             done
