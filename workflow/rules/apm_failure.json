@@ -1,0 +1,36 @@
+{
+  "name": "Failed transaction rate threshold rule",
+  "tags": [],
+  "schedule": {
+    "interval": "1m"
+  },
+  "params": {
+    "threshold": 10,
+    "windowSize": 5,
+    "windowUnit": "m",
+    "environment": "ENVIRONMENT_ALL"
+  },
+  "artifacts": {
+    "dashboards": [],
+    "investigation_guide": {
+      "blob": ""
+    }
+  },
+  "actions": [
+    {
+      "id": "system-connector-.workflows",
+      "params": {
+        "subActionParams": {
+          "workflowId": "workflow-1fc19336-9467-434f-ae9f-b919c57558cf"
+        },
+        "subAction": "run"
+      },
+      "uuid": "ccaa5d94-6332-42b6-a947-042d502bfe53"
+    }
+  ],
+  "alert_delay": {
+    "active": 1
+  },
+  "rule_type_id": "apm.transaction_error_rate",
+  "consumer": "alerts"
+}

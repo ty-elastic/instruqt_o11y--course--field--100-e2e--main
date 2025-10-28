@@ -1,84 +1,82 @@
-name: case_dequeue
+consts:
+  ai_connector: Elastic-Managed-LLM
+  ai_proxy: 
+    https://tbekiares-demo-aiassistantv2-1059491012611.us-central1.run.app
+  ai_timeout: 10m
+  es_host: https://snap-ae8a92.es.us-west2.gcp.elastic-cloud.com
+  kbn_auth: ApiKey OEpsYkY1b0JyVktacWxPV1VITGo6Z2d2MmRZYXdTQkpOZ1dhMmVXYmo0Zw==
+  kbn_host: https://snap-ae8a92.kb.us-west2.gcp.elastic-cloud.com
 description: dequeue cases serially and start processing
 enabled: true
+name: case_dequeue
 tags:
-  - automated_observability_triage
+- automated_observability_triage
 triggers:
-  - type: manual
+- type: manual
 steps:
-  - name: get_case_process_id
+- name: get_case_process_id
+  type: http
+  with:
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
+      Content-Type: application/json
+    method: GET
+    timeout: 30s
+    url: '{{ consts.es_host }}/workflow_config/_doc/case_process_workflow'
+- name: case_process_status
+  type: http
+  with:
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
+      Content-Type: application/json
+      kbn-xsrf: true
+      x-elastic-internal-origin: kibana
+    method: GET
+    url: '{{ consts.kbn_host }}/api/workflowExecutions?workflowId={{ steps.get_case_process_id.output.data._source.workflow_id}}'
+- name: is_case_process_running
+  type: if
+  condition: 'steps.case_process_status.output.status : completed'
+  steps:
+  - name: is_case_process_running_debug1
+    type: console
+    with:
+      message: workflow_alert_process running
+  else:
+  - name: is_case_process_running_debug2
+    type: console
+    with:
+      message: workflow_alert_process not running
+  - name: dequeue_case
     type: http
     with:
-      url: "{{ consts.es_host }}/workflow_config/_doc/case_process_workflow"
+      body:
+        _source: true
+        query:
+          match_all:
+        size: 1
+      headers:
+        Authorization: '{{ consts.kbn_auth }}'
+        Content-Type: application/json
       method: GET
-      headers:
-        Content-Type: application/json
-        Authorization: "{{ consts.kbn_auth }}"
-      timeout: 30s
-  - name: case_process_status
+      url: '{{ consts.es_host }}/workflow_case_queue/_search'
+  - name: start_case_process
     type: http
     with:
-      url: "{{ consts.kbn_host }}/api/workflowExecutions?workflowId={{ steps.get_case_process_id.output.data._source.workflow_id }}"
-      method: "GET"
+      body: '{ "inputs": {"event": {{steps.dequeue_case.output.data.hits.hits[0]._source
+        | json }} } }'
       headers:
-        x-elastic-internal-origin: kibana
-        kbn-xsrf: true
+        Authorization: '{{ consts.kbn_auth }}'
         Content-Type: application/json
-        Authorization: "{{ consts.kbn_auth }}"
-  - name: is_case_process_running
-    type: if
-    condition: "steps.case_process_status.output.status : completed"
-    # found
-    steps:
-      - name: is_case_process_running_debug1
-        type: console
-        with:
-          message: "workflow_alert_process running"
-    else:
-      - name: is_case_process_running_debug2
-        type: console
-        with:
-          message: "workflow_alert_process not running"
+        kbn-xsrf: true
+        x-elastic-internal-origin: kibana
+      method: POST
+      url: '{{ consts.kbn_host }}/api/workflows/{{ steps.get_case_process_id.output.data._source.workflow_id}}/run'
+  - name: mark_case_handled
+    type: http
+    with:
+      headers:
+        Authorization: '{{ consts.kbn_auth }}'
+        Content-Type: application/json
+      method: DELETE
+      url: '{{ consts.es_host }}/workflow_case_queue/_doc/{{steps.dequeue_case.output.data.hits.hits[0]._id}}'
 
-      - name: dequeue_case
-        type: http
-        with:
-          url: "{{ consts.es_host }}/workflow_case_queue/_search"
-          method: "GET"
-          body:
-            "size": 1, 
-            "query":
-              "match_all":
-            "_source": true
-          headers:
-            Content-Type: application/json
-            Authorization: "{{ consts.kbn_auth }}"
-
-      - name: start_case_process
-        type: http
-        with:
-          url: "{{ consts.kbn_host }}/api/workflows/{{ steps.get_case_process_id.output.data._source.workflow_id }}/run"
-          method: "POST"
-          body: '{ "inputs": {"event": {{steps.dequeue_case.output.data.hits.hits[0]._source | json() }} } }'
-          headers:
-            x-elastic-internal-origin: kibana
-            kbn-xsrf: true
-            Content-Type: application/json
-            Authorization: "{{ consts.kbn_auth }}"
-
-      - name: mark_case_handled
-        type: http
-        with:
-          url: "{{ consts.es_host }}/workflow_case_queue/_doc/{{steps.dequeue_case.output.data.hits.hits[0]._id}}"
-          method: "DELETE"
-          headers:
-            Content-Type: application/json
-            Authorization: "{{ consts.kbn_auth }}"
-
-consts:
-  ai_timeout: 10m
-  ai_connector: "Elastic-Managed-LLM"
-  ai_proxy: https://tbekiares-demo-aiassistant-1059491012611.us-central1.run.app
-  kbn_host: https://581b85187ee040c3bc41f917001ef0b7.us-west2.gcp.elastic-cloud.com
-  es_host: https://eb9be4b1f8e94c2fb951189307a03646.us-west2.gcp.elastic-cloud.com
-  kbn_auth: ApiKey U1ZyZjdaa0I4eVREU3ZXeGx6bm06cnRpNUhkMldyYlQ1NjNaTGt5UExJQQ=="""

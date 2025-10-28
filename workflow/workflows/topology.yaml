@@ -1,92 +1,91 @@
-version: "1"
-name: topology
-description: build topology to help with correlation and RCA
-enabled: true
-tags:
-  - automated_observability_triage
-triggers:
-  - type: manual
-    enabled: true
-steps:
-
-  - name: get_end_time
-    type: http
-    with:
-      url: "{{ consts.es_host }}/_query"
-      method: POST
-      headers:
-        Content-Type: application/json
-        Authorization: "{{ consts.kbn_auth }}"
-      body:
-        query: "ROW current_date = NOW()"
-  - name: get_start_time
-    type: http
-    with:
-      url: "{{ consts.es_host }}/_query"
-      method: POST
-      headers:
-        Content-Type: application/json
-        Authorization: "{{ consts.kbn_auth }}"
-      body:
-        query: "ROW current_date = NOW() - 1 hour"
-
-
-  - name: get_service_map
-    type: http
-    with:
-      url: "{{ consts.kbn_host }}/internal/apm/service-map?start={{ steps.get_start_time.output.data.values[0] }}&end={{ steps.get_end_time.output.data.values[0] }}&environment=ENVIRONMENT_ALL&serviceGroup=&kuery="
-      method: GET
-      headers:
-        x-elastic-internal-origin: kibana
-        kbn-xsrf: true
-        Content-Type: application/json
-        Authorization: "{{ consts.kbn_auth }}"
-
-  - name: get_topology
-    type: http
-    with:
-      url: "{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete"
-      method: POST
-      headers:
-        Content-Type: application/json
-        kibana-host: "{{ consts.kbn_host }}"
-        kibana-auth: "{{ consts.kbn_auth }}"
-      body:
-        connectorId: "{{ consts.ai_connector }}"
-        instructions:
-          - Use the provided <service_map> data to help determine topology from APM data; never query trace/span data directly.
-          - You can also look at logs, which can be helpful to detect proxies in the system.
-          - Output a field 'topologies' which is an array of topology objects, with each object having a field 'system' which is the system/namespace the topology is applicable to and a field 'topology' which is a JSON object in node-link format.
-        messages:
-          - "@timestamp": now
-            message:
-              role: user
-              content: |
-                Try to determine the topology of each system observed over only the last hour, where a system is defined by a namespace.
-                <service_map>
-                  {{ steps.get_service_map.output.data | json(2) }}
-                </service_map>
-      timeout: "{{ consts.ai_timeout }}"
-
-
-  - name: foreach_system
-    type: foreach
-    foreach: steps.get_topology.output.data.topologies
-    steps:
-    - name: store_topology
-      type: http
-      with:
-        url: "{{ consts.es_host }}/workflow_topology/_doc"
-        method: POST
-        headers:
-          Content-Type: application/json
-          Authorization: "{{ consts.kbn_auth }}"
-        body: '{"@timestamp":"{{ steps.get_end_time.output.data.values[0] }}", "system":"{{ foreach.item.system }}", "topology": {{ foreach.item.topology | json() }} }'
-        timeout: 30s
 consts:
+  ai_connector: Elastic-Managed-LLM
+  ai_proxy: 
+    https://tbekiares-demo-aiassistantv2-1059491012611.us-central1.run.app
   ai_timeout: 10m
-  ai_connector: "Elastic-Managed-LLM"
-  ai_proxy: https://tbekiares-demo-aiassistant-1059491012611.us-central1.run.app
-  kbn_host: https://581b85187ee040c3bc41f917001ef0b7.us-west2.gcp.elastic-cloud.com
-  es_host: https://eb9be4b1f8e94c2fb951189307a03646.us-west2.gcp.elastic-cloud.com
-  kbn_auth: ApiKey U1ZyZjdaa0I4eVREU3ZXeGx6bm06cnRpNUhkMldyYlQ1NjNaTGt5UExJQQ==
+  es_host: https://snap-ae8a92.es.us-west2.gcp.elastic-cloud.com
+  kbn_auth: ApiKey OEpsYkY1b0JyVktacWxPV1VITGo6Z2d2MmRZYXdTQkpOZ1dhMmVXYmo0Zw==
+  kbn_host: https://snap-ae8a92.kb.us-west2.gcp.elastic-cloud.com
+  topology_lookback_time: 1h
+name: topology
+enabled: true
+version: '1'
+description: build topology to help with correlation and RCA
+tags:
+- automated_observability_triage
+triggers:
+- enabled: true
+  type: scheduled
+  with:
+    every: 1h
+steps:
+- name: get_end_time
+  type: http
+  with:
+    body:
+      query: ROW current_date = NOW()
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
+      Content-Type: application/json
+    method: POST
+    url: '{{ consts.es_host }}/_query'
+- name: get_start_time
+  type: http
+  with:
+    body:
+      query: ROW current_date = NOW() - {{ consts.topology_lookback_time }}
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
+      Content-Type: application/json
+    method: POST
+    url: '{{ consts.es_host }}/_query'
+- name: get_service_map
+  type: http
+  with:
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
+      Content-Type: application/json
+      kbn-xsrf: true
+      x-elastic-internal-origin: kibana
+    method: GET
+    url: '{{ consts.kbn_host }}/internal/apm/service-map?start={{ steps.get_start_time.output.data.values[0] }}&end={{ steps.get_end_time.output.data.values[0] }}&environment=ENVIRONMENT_ALL&serviceGroup=&kuery='
+- name: get_topology
+  type: http
+  with:
+    body:
+      connectorId: '{{ consts.ai_connector }}'
+      instructions:
+      - Use the provided <service_map> data to help determine topology from APM data; never query trace/span data directly.
+      - You can also look at logs, which can be helpful to detect proxies in the system.
+      - Output a field 'topologies' which is an array of topology objects, with each object having a field 'system' which is the system/namespace the topology is applicable to and a field 'topology' which is a JSON object in node-link format.
+      messages:
+      - '@timestamp': now
+        message:
+          content: |
+            "Try to determine the topology of each system observed over only the last hour, where a system is defined by a namespace.
+            <service_map>
+              {{ steps.get_service_map.output.data | json }}
+            </service_map>"
+          role: user
+    headers:
+      Content-Type: application/json
+      kibana-auth: '{{ consts.kbn_auth }}'
+      kibana-host: '{{ consts.kbn_host }}'
+    method: POST
+    timeout: '{{ consts.ai_timeout }}'
+    url: '{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete'
+- name: foreach_system
+  type: foreach
+  foreach: '{{ steps.get_topology.output.data.result.topologies | json }}'
+  steps:
+  - name: store_topology
+    type: http
+    with:
+      body: '{"@timestamp":"{{ steps.get_end_time.output.data.values[0] }}", "system":"{{ foreach.item.system }}", "topology": {{ foreach.item.topology | json }} }'
+      headers:
+        Authorization: '{{ consts.kbn_auth }}'
+        Content-Type: application/json
+      method: POST
+      timeout: 30s
+      url: '{{ consts.es_host }}/workflow_topology/_doc'
+
