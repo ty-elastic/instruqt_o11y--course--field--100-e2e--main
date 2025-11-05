@@ -1,11 +1,10 @@
 consts:
   ai_connector: Elastic-Managed-LLM
-  ai_proxy: 
-    https://tbekiares-demo-aiassistantv2-1059491012611.us-central1.run.app
+  ai_proxy: https://tbekiares-demo-aiassistantv2-1059491012611.us-central1.run.app
   ai_timeout: 10m
-  es_host: https://snap-ae8a92.es.us-west2.gcp.elastic-cloud.com
-  kbn_auth: ApiKey OEpsYkY1b0JyVktacWxPV1VITGo6Z2d2MmRZYXdTQkpOZ1dhMmVXYmo0Zw==
-  kbn_host: https://snap-ae8a92.kb.us-west2.gcp.elastic-cloud.com
+  es_host: https://snap2-96da6f.es.us-west2.gcp.elastic-cloud.com
+  kbn_auth: ApiKey SVdFNU81b0J4Wi1oTDdBWnR5Q3I6RmhNY0pub2pwOHFwTEFfa0d4SWtldw==
+  kbn_host: https://snap2-96da6f.kb.us-west2.gcp.elastic-cloud.com
 description: Process o11y alerts and correlate to cases
 enabled: true
 name: alert_process
@@ -14,6 +13,8 @@ tags:
 triggers:
 - enabled: true
   type: alert
+settings:
+  timeout: 10m
 version: '1'
 steps:
 - name: debug1
@@ -32,28 +33,30 @@ steps:
     type: http
     with:
       body:
+        size: 0
         aggs:
           unique_field_buckets:
+            terms:
+              field: system
+              size: 100
+              order:
+                _key: asc
             aggs:
               latest_document:
                 top_hits:
-                  _source:
-                    includes:
-                    - system
-                    - topology
                   size: 1
                   sort:
-                  - '@timestamp':
-                    order: desc
-            terms:
-              field: system.keyword
-              size: 100
-        size: 0
+                    - '@timestamp':
+                        order: desc
+                  _source:
+                    includes:
+                    - '@timestamp'
+                    - system
+                    - topology
       headers:
         Authorization: '{{ consts.kbn_auth }}'
         Content-Type: application/json
-      method: GET
-      timeout: 30s
+      method: POST
       url: '{{ consts.es_host }}/workflow_topology/_search'
   - name: get_cases
     type: kibana.request
@@ -68,20 +71,23 @@ steps:
       body:
         connectorId: '{{ consts.ai_connector }}'
         instructions:
-        - "Look at each case provided, consider the comments, any attached alerts (including correlating factors like time, host, system), and the provided system topology. Decide which case, if any, this new alert is likely related to. If it is related, output a field 'case_id' with the value of the related case and a field 'relation' with a summary of how it is related. If it is not related to any open case, output only a field 'case_id' with a value of 'NONE'."
+        - Look at each case provided, consider the comments, any attached alerts (including correlating factors like time, host, system), and the provided system topologies. Decide which case, if any, this new alert is likely related to. If it is related, output a field 'case_id' with the value of the related case and a field 'relation' with a summary of how it is related. If it is not related to any open case, output a field 'case_id' with a value of 'NONE'. If, from the topologies, you can identify a system associated with this alert, output a field 'system' with a value of the name of the system.
         messages:
         - '@timestamp': now
           message:
             content: |
-              "<cases>
-                {{ steps.get_cases.output.cases | json }}
-              </cases>
-              <alert>
-                {{ foreach.item | json }}
-              </alert>
-              <topology>
-                {{ steps.get_topology.output.data.hits.hits | json }}
-              </topology>"
+              Cases
+              ```
+              {{ steps.get_cases.output.cases | json }}
+              ```
+              Alerts
+              ```
+              {{ foreach.item | json }}
+              ```
+              Topologies
+              ```
+              {{ steps.get_topology.output.data.aggregations.unique_field_buckets.buckets | json }}
+              ```
             role: user
         persist: false
       headers:
@@ -93,7 +99,7 @@ steps:
       url: '{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete'
   - name: new_or_update_case
     type: if
-    condition: 'steps.correlate_to_case.output.data.output.case_id : NONE'
+    condition: 'steps.correlate_to_case.output.data.result.case_id : NONE'
     steps:
     - name: create_alert_details
       type: http
@@ -101,14 +107,15 @@ steps:
         body:
           connectorId: '{{ consts.ai_connector }}'
           instructions:
-          - "We will be creating an incident case for handling this new alert. Output a field called 'title' that summarizes the alert in a few words, a field called 'trigger' that provides a detailed summary of the alert, and a field called 'severity' with a value of 'low', 'medium', 'high', or 'critical' based on your analysis?"
+          - We will be creating an incident case for handling this new alert. Output a field called 'title' that summarizes the alert in a few words, a field called 'trigger' that provides a detailed summary of the alert, and a field called 'severity' with a value of 'low', 'medium', 'high', or 'critical' based on your analysis?
           messages:
           - '@timestamp': now
             message:
               content: |
-                "<alert>
+                Alert
+                ```
                   {{ foreach.item | json }}
-                </alert>"
+                ```
               role: user
           persist: true
         headers:
@@ -128,20 +135,17 @@ steps:
             name: none
             type: .none
           customFields:
-          - key: workflow_execution_id
+          - key: system
             type: text
-            value: not_available
-          - key: ai_conversation_id
-            type: text
-            value: '{{ steps.create_alert_details.output.data.conversationId }}'
-          description: '{{ steps.create_alert_details.output.data.output.trigger }}'
+            value: '{{ steps.correlate_to_case.output.data.result.system}}'
+          description: '{{ steps.create_alert_details.output.data.result.trigger }}'
           owner: observability
           settings:
             syncAlerts: true
-          severity: '{{ steps.create_alert_details.output.data.output.severity }}'
+          severity: '{{ steps.create_alert_details.output.data.result.severity }}'
           tags:
           - automated_observability_triage
-          title: '{{ steps.create_alert_details.output.data.output.title }}'
+          title: '{{ steps.create_alert_details.output.data.result.title }}'
         method: POST
         path: /api/cases
     - name: add_alert_to_case
@@ -193,7 +197,10 @@ steps:
       type: kibana.request
       with:
         body:
-          comment: correlated alert '{{ foreach.item.reason }}'. {{ steps.correlate_to_case.output.data.result.relation }}
+          comment: |
+            # Related Alert
+            * Reason: '{{ foreach.item.reason }}'
+            * Relationship to Case: {{ steps.correlate_to_case.output.data.result.relation }}
           owner: observability
           type: user
         headers:
@@ -206,7 +213,7 @@ steps:
       type: http
       with:
         body:
-          case_id: '{{ steps.correlate_to_case.output.data.output.case_id }}'
+          case_id: '{{ steps.correlate_to_case.output.data.result.case_id }}'
         headers:
           Authorization: '{{ consts.kbn_auth }}'
           Content-Type: application/json

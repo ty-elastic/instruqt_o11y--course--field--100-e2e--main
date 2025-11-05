@@ -220,7 +220,7 @@ def generate_trade_requests():
 
             if region in model_error_per_region:
                 error_model = True if random.randint(0, 100) > (100-model_error_per_region[region]['amount']) else False
-                if time.time() - model_error_per_region[region]['start'] >= ERROR_TIMEOUT_S:
+                if model_error_per_region[region]['oneshot'] and time.time() - model_error_per_region[region]['start'] >= ERROR_TIMEOUT_S:
                     app.logger.info(f"db_error_per_region[{region}] timeout")
                     err_model_region_delete(region)
             else:
@@ -426,8 +426,9 @@ def latency_region_delete(region):
 def err_db_region(region, amount):
     global db_error_per_region
     err_db_service = request.args.get('err_db_service', default=None, type=str)
+    err_db_oneshot = request.args.get('err_db_oneshot', default=True, type=conform_request_bool)
     if region in REGIONS:     
-        db_error_per_region[region] = {'service': err_db_service, 'amount': int(amount), 'start': time.time()}
+        db_error_per_region[region] = {'service': err_db_service, 'amount': int(amount), 'start': time.time(), 'oneshot': err_db_oneshot}
         high_tput_per_region[region] = HIGH_TPUT_PCT
     return db_error_per_region
 @app.delete('/err/db/region/<region>')

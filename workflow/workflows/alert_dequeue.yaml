@@ -1,18 +1,20 @@
 consts:
   ai_connector: Elastic-Managed-LLM
-  ai_proxy: 
-    https://tbekiares-demo-aiassistantv2-1059491012611.us-central1.run.app
+  ai_proxy: https://tbekiares-demo-aiassistantv2-1059491012611.us-central1.run.app
   ai_timeout: 10m
-  es_host: https://snap-ae8a92.es.us-west2.gcp.elastic-cloud.com
-  kbn_auth: ApiKey OEpsYkY1b0JyVktacWxPV1VITGo6Z2d2MmRZYXdTQkpOZ1dhMmVXYmo0Zw==
-  kbn_host: https://snap-ae8a92.kb.us-west2.gcp.elastic-cloud.com
+  es_host: https://snap2-96da6f.es.us-west2.gcp.elastic-cloud.com
+  kbn_auth: ApiKey SVdFNU81b0J4Wi1oTDdBWnR5Q3I6RmhNY0pub2pwOHFwTEFfa0d4SWtldw==
+  kbn_host: https://snap2-96da6f.kb.us-west2.gcp.elastic-cloud.com
 name: alert_dequeue
 enabled: true
 description: dequeue alerts serially and start processing
 tags:
 - automated_observability_triage
 triggers:
-- type: manual
+- enabled: true
+  type: scheduled
+  with:
+    every: 30s
 steps:
 - name: get_alert_process_id
   type: http
@@ -59,38 +61,42 @@ steps:
         Content-Type: application/json
       method: GET
       url: '{{ consts.es_host }}/workflow_alert_queue/_search'
-  - name: is_new_alert
+  - name: is_queue_empty
     type: if
-    condition: 'steps.dequeue_alerts.output.data.hits.hits[0]._source.alerts.new.count : *'
+    condition: 'steps.dequeue_alerts.output.data.hits.total.value > 0'
     steps:
-    - name: start_alert_process
-      type: http
-      with:
-        body: '{ "inputs": {"event": {"alerts": {{steps.dequeue_alerts.output.data.hits.hits[0]._source.alerts.new.data | json }} } } }'
-        headers:
-          Authorization: '{{ consts.kbn_auth }}'
-          Content-Type: application/json
-          kbn-xsrf: true
-          x-elastic-internal-origin: kibana
-        method: POST
-        url: '{{ consts.kbn_host }}/api/workflows/{{ steps.get_alert_process_id.output.data._source.workflow_id }}/run'
-    else:
-    - name: start_alert_process2
-      type: http
-      with:
-        body: '{ "inputs": {"event": {{ steps.dequeue_alerts.output.data.hits.hits[0]._source | json }} } }'
-        headers:
-          Authorization: '{{ consts.kbn_auth }}'
-          Content-Type: application/json
-          kbn-xsrf: true
-          x-elastic-internal-origin: kibana
-        method: POST
-        url: '{{ consts.kbn_host }}/api/workflows/{{ steps.get_alert_process_id.output.data._source.workflow_id }}/run'
-  - name: mark_alert_handled
-    type: http
-    with:
-      headers:
-        Authorization: '{{ consts.kbn_auth }}'
-        Content-Type: application/json
-      method: DELETE
-      url: '{{ consts.es_host }}/workflow_alert_queue/_doc/{{ steps.dequeue_alerts.output.data.hits.hits[0]._id }}'
+      - name: is_new_alert
+        type: if
+        condition: 'steps.dequeue_alerts.output.data.hits.hits[0]._source.alerts.new.count : *'
+        steps:
+        - name: start_alert_process
+          type: http
+          with:
+            body: '{ "inputs": {"event": {"alerts": {{steps.dequeue_alerts.output.data.hits.hits[0]._source.alerts.new.data | json }} } } }'
+            headers:
+              Authorization: '{{ consts.kbn_auth }}'
+              Content-Type: application/json
+              kbn-xsrf: true
+              x-elastic-internal-origin: kibana
+            method: POST
+            url: '{{ consts.kbn_host }}/api/workflows/{{ steps.get_alert_process_id.output.data._source.workflow_id }}/run'
+        else:
+        - name: start_alert_process2
+          type: http
+          with:
+            body: '{ "inputs": {"event": {{ steps.dequeue_alerts.output.data.hits.hits[0]._source | json }} } }'
+            headers:
+              Authorization: '{{ consts.kbn_auth }}'
+              Content-Type: application/json
+              kbn-xsrf: true
+              x-elastic-internal-origin: kibana
+            method: POST
+            url: '{{ consts.kbn_host }}/api/workflows/{{ steps.get_alert_process_id.output.data._source.workflow_id }}/run'
+      - name: mark_alert_handled
+        type: http
+        with:
+          headers:
+            Authorization: '{{ consts.kbn_auth }}'
+            Content-Type: application/json
+          method: DELETE
+          url: '{{ consts.es_host }}/workflow_alert_queue/_doc/{{ steps.dequeue_alerts.output.data.hits.hits[0]._id }}'

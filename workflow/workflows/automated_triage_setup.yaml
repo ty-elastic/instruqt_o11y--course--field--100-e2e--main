@@ -1,70 +1,76 @@
-consts:
-  ai_connector: Elastic-Managed-LLM
-  ai_proxy: 
-    https://tbekiares-demo-aiassistantv2-1059491012611.us-central1.run.app
-  ai_timeout: 10m
-  es_host: https://snap-ae8a92.es.us-west2.gcp.elastic-cloud.com
-  kbn_auth: ApiKey OEpsYkY1b0JyVktacWxPV1VITGo6Z2d2MmRZYXdTQkpOZ1dhMmVXYmo0Zw==
-  kbn_host: https://snap-ae8a92.kb.us-west2.gcp.elastic-cloud.com
+version: '1'
+name: automated_triage_setup
 description: setup state for automated triage
 enabled: true
-name: automated_triage_setup
 tags:
 - automated_observability_triage
 triggers:
-- enabled: true
-  type: manual
-version: '1'
+- type: manual
+  enabled: true
+consts:
+  ai_connector: Elastic-Managed-LLM
+  ai_proxy: https://tbekiares-demo-aiassistantv2-1059491012611.us-central1.run.app
+  ai_timeout: 10m
+  es_host: https://snap2-96da6f.es.us-west2.gcp.elastic-cloud.com
+  kbn_auth: ApiKey SVdFNU81b0J4Wi1oTDdBWnR5Q3I6RmhNY0pub2pwOHFwTEFfa0d4SWtldw==
+  kbn_host: https://snap2-96da6f.kb.us-west2.gcp.elastic-cloud.com
 steps:
 - name: delete_alert_queue
-  on-failure:
-    continue: true
   type: http
   with:
+    url: '{{ consts.es_host }}/workflow_alert_queue'
+    method: DELETE
     headers:
       Authorization: '{{ consts.kbn_auth }}'
-    method: DELETE
-    url: '{{ consts.es_host }}/workflow_alert_queue'
+    timeout: 30s
+  on-failure:
+    continue: true
 - name: create_alert_queue
   type: http
   with:
+    url: '{{ consts.es_host }}/workflow_alert_queue'
+    method: PUT
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
     body:
       mappings:
         properties:
           alerts:
             type: flattened
-    headers:
-      Authorization: '{{ consts.kbn_auth }}'
-    method: PUT
-    url: '{{ consts.es_host }}/workflow_alert_queue'
+    timeout: 30s
 - name: delete_case_queue
-  on-failure:
-    continue: true
   type: http
   with:
+    url: '{{ consts.es_host }}/workflow_case_queue'
+    method: DELETE
     headers:
       Authorization: '{{ consts.kbn_auth }}'
-    method: DELETE
-    url: '{{ consts.es_host }}/workflow_case_queue'
+    timeout: 30s
+  on-failure:
+    continue: true
 - name: create_case_queue
   type: http
   with:
+    url: '{{ consts.es_host }}/workflow_case_queue'
+    method: PUT
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
     body:
       mappings:
         properties:
           case_id:
             type: keyword
-          conversation_id:
-            type: keyword
-    headers:
-      Authorization: '{{ consts.kbn_auth }}'
-    method: PUT
-    url: '{{ consts.es_host }}/workflow_case_queue'
+    timeout: 30s
 - name: setup_cases
-  on-failure:
-    continue: true
   type: http
   with:
+    url: '{{ consts.kbn_host }}/api/cases/configure'
+    method: POST
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
+      Content-Type: application/json
+      kbn-xsrf: true
+      x-elastic-internal-origin: kibana
     body:
       closure_type: close-by-user
       connector:
@@ -74,8 +80,8 @@ steps:
         type: .none
       customFields:
       - defaultValue: not_available
-        key: workflow_execution_id
-        label: workflow_execution_id
+        key: system
+        label: system
         required: false
         type: text
       - defaultValue: not_available
@@ -84,27 +90,26 @@ steps:
         required: false
         type: text
       owner: observability
-    headers:
-      Authorization: '{{ consts.kbn_auth }}'
-      Content-Type: application/json
-      kbn-xsrf: true
-      x-elastic-internal-origin: kibana
-    method: POST
-    url: '{{ consts.kbn_host }}/api/cases/configure'
+    timeout: 30s
+  on-failure:
+    continue: true
 - name: delete_topology
-  on-failure:
-    continue: true
   type: http
   with:
+    url: '{{ consts.es_host }}/workflow_topology'
+    method: DELETE
     headers:
       Authorization: '{{ consts.kbn_auth }}'
-    method: DELETE
-    url: '{{ consts.es_host }}/workflow_topology'
-- name: create_topology
+    timeout: 30s
   on-failure:
     continue: true
+- name: create_topology
   type: http
   with:
+    url: '{{ consts.es_host }}/workflow_topology'
+    method: PUT
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
     body:
       mappings:
         properties:
@@ -114,45 +119,47 @@ steps:
             type: keyword
           topology:
             type: flattened
-    headers:
-      Authorization: '{{ consts.kbn_auth }}'
-    method: PUT
-    url: '{{ consts.es_host }}/workflow_topology'
-- name: delete_config
+    timeout: 30s
   on-failure:
     continue: true
+- name: delete_config
   type: http
   with:
+    url: '{{ consts.es_host }}/workflow_config'
+    method: DELETE
     headers:
       Authorization: '{{ consts.kbn_auth }}'
-    method: DELETE
-    url: '{{ consts.es_host }}/workflow_config'
+    timeout: 30s
+  on-failure:
+    continue: true
 - name: create_config
   type: http
   with:
+    url: '{{ consts.es_host }}/workflow_config'
+    method: PUT
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
     body:
       mappings:
         properties:
           workflow_id:
             type: keyword
-    headers:
-      Authorization: '{{ consts.kbn_auth }}'
-    method: PUT
-    url: '{{ consts.es_host }}/workflow_config'
+    timeout: 30s
 - name: get_workflows
   type: http
   with:
-    body:
-      limit: 20
-      page: 1
-      query: ''
+    url: '{{ consts.kbn_host }}/api/workflows/search'
+    method: POST
     headers:
       Authorization: '{{ consts.kbn_auth }}'
       Content-Type: application/json
       kbn-xsrf: true
       x-elastic-internal-origin: kibana
-    method: POST
-    url: '{{ consts.kbn_host }}/api/workflows/search'
+    body:
+      limit: 20
+      page: 1
+      query: ''
+    timeout: 30s
 - name: foreach_workflow
   type: foreach
   foreach: '{{ steps.get_workflows.output.data.results | json }}'
@@ -164,13 +171,14 @@ steps:
     - name: save_case_process_id
       type: http
       with:
-        body:
-          workflow_id: '{{ foreach.item.id }}'
+        url: '{{ consts.es_host }}/workflow_config/_doc/case_process_workflow'
+        method: POST
         headers:
           Authorization: '{{ consts.kbn_auth }}'
           Content-Type: application/json
-        method: POST
-        url: '{{ consts.es_host }}/workflow_config/_doc/case_process_workflow'
+        body:
+          workflow_id: '{{ foreach.item.id }}'
+        timeout: 30s
   - name: is_alert_process
     type: if
     condition: 'foreach.item.name : alert_process'
@@ -178,43 +186,12 @@ steps:
     - name: save_alert_process_id
       type: http
       with:
+        url: '{{ consts.es_host }}/workflow_config/_doc/alert_process_workflow'
+        method: POST
+        headers:
+          Authorization: '{{ consts.kbn_auth }}'
+          Content-Type: application/json
         body:
           workflow_id: '{{ foreach.item.id }}'
-        headers:
-          Authorization: '{{ consts.kbn_auth }}'
-          Content-Type: application/json
-        method: POST
-        url: '{{ consts.es_host }}/workflow_config/_doc/alert_process_workflow'
-  - name: is_not_setup_workflow
-    type: if
-    condition: 'not foreach.item.name : automated_triage_setup'
-    steps:
-    - name: get_executions
-      on-failure:
-        continue: true
-      type: http
-      with:
-        headers:
-          Authorization: '{{ consts.kbn_auth }}'
-          Content-Type: application/json
-          kbn-xsrf: true
-          x-elastic-internal-origin: kibana
-        method: GET
-        url: '{{ consts.kbn_host }}/api/workflowExecutions?workflowId={{ foreach.item.id }}'
-    - name: foreach_execution
-      type: foreach
-      foreach: '{{steps.get_executions.output.data.results | json}}'
-      steps:
-      - name: cancel_execution
-        on-failure:
-          continue: true
-        type: http
-        with:
-          headers:
-            Authorization: '{{ consts.kbn_auth }}'
-            Content-Type: application/json
-            kbn-xsrf: true
-            x-elastic-internal-origin: kibana
-          method: POST
-          url: '{{ consts.kbn_host }}/api/workflowExecutions/{{ foreach.item.id }}/cancel'
+        timeout: 30s
 

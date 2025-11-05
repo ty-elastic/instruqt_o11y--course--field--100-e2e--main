@@ -1,20 +1,19 @@
-consts:
-  ai_connector: Elastic-Managed-LLM
-  ai_proxy: 
-    https://tbekiares-demo-aiassistantv2-1059491012611.us-central1.run.app
-  ai_timeout: 10m
-  es_host: https://snap-ae8a92.es.us-west2.gcp.elastic-cloud.com
-  kbn_auth: ApiKey OEpsYkY1b0JyVktacWxPV1VITGo6Z2d2MmRZYXdTQkpOZ1dhMmVXYmo0Zw==
-  kbn_host: https://snap-ae8a92.kb.us-west2.gcp.elastic-cloud.com
-name: alert_queue
-enabled: true
 version: '1'
+name: alert_queue
 description: ingest alerts
+enabled: true
 tags:
 - automated_observability_triage
 triggers:
 - type: alert
   enabled: true
+consts:
+  ai_connector: Elastic-Managed-LLM
+  ai_proxy: https://tbekiares-demo-aiassistantv2-1059491012611.us-central1.run.app
+  ai_timeout: 10m
+  es_host: https://snap2-96da6f.es.us-west2.gcp.elastic-cloud.com
+  kbn_auth: ApiKey SVdFNU81b0J4Wi1oTDdBWnR5Q3I6RmhNY0pub2pwOHFwTEFfa0d4SWtldw==
+  kbn_host: https://snap2-96da6f.kb.us-west2.gcp.elastic-cloud.com
 steps:
 - name: alert_debug
   type: console

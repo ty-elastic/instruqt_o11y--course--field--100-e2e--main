@@ -198,6 +198,8 @@ def run_setup(kibana_server, kibana_auth, es_host):
 def main(kibana_host, es_host, es_apikey, ai_connector, ai_proxy, action):
     
     config = dotenv_values()
+    for key, value in config.items():
+        print(f"{key}: {value}")
 
     if kibana_host == "":
         kibana_host = config['elasticsearch_kibana_endpoint']
@@ -207,7 +209,8 @@ def main(kibana_host, es_host, es_apikey, ai_connector, ai_proxy, action):
         es_apikey = config['elasticsearch_api_key']
         
     auth = f"ApiKey {es_apikey}"
-       
+    
+
     if action == 'load_workflows':
         load_workflows(kibana_host, auth, es_host, ai_connector, ai_proxy)
         run_setup(kibana_host, auth, es_host)
