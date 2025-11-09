@@ -86,24 +86,6 @@ steps:
     body:
       connectorId: '{{ consts.ai_connector }}'
       messages:
-      - '@timestamp': now
-        message:
-          role: user
-          content: |
-            We will be performing a multi-step Root Cause Analysis. 
-            During your analysis, use the provided incident/case, consider the alerts attached to the case and any comments in the case, and the attached topology to understand dependencies. 
-            When looking for problems, always start at the service which is closest to or is a leaf node and is alerting. 
-            Do not start the RCA analysis; we will be doing it together step-by-step.
-            First, I will be providing you with related information you can use during this analysis. Do not take any further action until directed.
-
-      - '@timestamp': now
-        message:
-          role: user
-          content: |
-            # Related Case
-            ```
-            {{ steps.get_case.output | json }}
-            ```
 
       - '@timestamp': now
         message:
@@ -118,16 +100,7 @@ steps:
         message:
           role: user
           content: |
-            # Related Comments
-            ```
-            {{ steps.get_case_comments.output | json }}
-            ```
-
-      - '@timestamp': now
-        message:
-          role: user
-          content: |
-            # System Topologies
+            # System Topology
             ```
             {{ steps.get_topology.output.data.hits.hits[0]._source | json }}
             ```
@@ -136,10 +109,8 @@ steps:
         message:
           role: user
           content: |
-            Using the toplogies, can you identify the service which is both closet to being a leaf node AND has an active alert associated with it? Output a field 'service_name' with the determined service name. Output a field 'host_name' with the name of the host that the service is running on.
-            Additionally, what is a good time window to search for problems before and after the associated active alert? Output a field 'start_time' with the determined start time in ISO format and a field 'end_time' with the determined end time in ISO format.
-      output: false
-      persist: true
+            Using the provided system topology and the related alerts, identify the service which is both closet to being a leaf node AND has a related alert associated with it. Output a field 'service_name' with the determined service name. Output a field 'host_name' with the name of the host that the service is running on.
+            Additionally, identify a time window to search for problems before and after the associated active alert. Output a field 'start_time' with the determined start time in ISO format and a field 'end_time' with the determined end time in ISO format.
     headers:
       Content-Type: application/json
       kibana-auth: '{{ consts.kbn_auth }}'
@@ -155,7 +126,7 @@ steps:
       query: |
         FROM logs-*
         | WHERE @timestamp >= "{{ steps.rca1.output.data.result.start_time}}" AND @timestamp <= "{{ steps.rca1.output.data.result.end_time}}"
-        | WHERE service.name == "{{ steps.rca1.output.data.result.service_name}}"
+        | WHERE k8s.namespace.name == "{{ steps.get_topology.output.data.hits.hits[0]._source.system }}"
         | WHERE TO_UPPER(log.level) IN ("WARN", "WARNING", "SEVERE", "FATAL", "ERROR") 
         | STATS pattern = COUNT() BY CATEGORIZE(message), BUCKET(@timestamp, 10m)
         | LIMIT 1000
@@ -173,19 +144,38 @@ steps:
         FROM metrics-* 
         | WHERE @timestamp >= "{{ steps.rca1.output.data.result.start_time}}" AND @timestamp <= "{{ steps.rca1.output.data.result.end_time}}"
         | WHERE host.name == "{{ steps.rca1.output.data.result.host_name}}"
-        | WHERE system.cpu.utilization IS NOT NULL OR `system.cpu.load_average.1m` IS NOT NULL OR system.memory.utilization IS NOT NULL OR system.cpu.logical.count IS NOT NULL OR system.filesystem.usage IS NOT NULL
+        | WHERE system.cpu.utilization IS NOT NULL OR `system.cpu.load_average.1m` IS NOT NULL OR system.memory.utilization IS NOT NULL OR system.cpu.logical.count IS NOT NULL OR system.filesystem.utilization IS NOT NULL
         | STATS 
           mem_used = AVG(system.memory.utilization) WHERE state == "used", mem_buffered = AVG(system.memory.utilization) WHERE state == "buffered", mem_reclaimable = AVG(system.memory.utilization) WHERE state == "slab_reclaimable", mem_unreclaimable = AVG(system.memory.utilization) WHERE state == "slab_unreclaimable", 
           load_1m = AVG(`metrics.system.cpu.load_average.1m`), cpucount = MAX(system.cpu.logical.count), 
           cpu_idle = AVG(system.cpu.utilization) WHERE state == "idle", cpu_wait = AVG(system.cpu.utilization) WHERE state == "wait",
-          free_fs = SUM(system.filesystem.usage) WHERE state == "free", total_fs = SUM(system.filesystem.usage)
+          max_disk_usage = MAX(system.filesystem.utilization)
           BY BUCKET(@timestamp, 1m)
         | EVAL cpu_usage = (1 - (cpu_idle + cpu_wait)) * 100
         | EVAL normalized_load = (TO_DOUBLE(load_1m) / TO_DOUBLE(cpucount)) * 100
         | EVAL mem_usage = (mem_used + mem_buffered + mem_reclaimable + mem_unreclaimable) * 100
-        | EVAL disk_usage = (1 - TO_DOUBLE(free_fs) / TO_DOUBLE(total_fs)) * 100
+        | EVAL disk_usage = max_disk_usage * 100
         | KEEP cpu_usage, normalized_load, mem_usage, disk_usage, `BUCKET(@timestamp, 1m)`
         | LIMIT 1000
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
+      Content-Type: application/json
+    method: POST
+    url: '{{ consts.es_host }}/_query?format=txt'
+
+- name: relevant_pod_metrics
+  type: http
+  with:
+    body:
+      query: |
+        FROM metrics-*
+        | WHERE @timestamp >= "{{ steps.rca1.output.data.result.start_time}}" AND @timestamp <= "{{ steps.rca1.output.data.result.end_time}}"
+        | WHERE k8s.namespace.name == "{{ steps.get_topology.output.data.hits.hits[0]._source.system }}"
+        | WHERE metrics.k8s.pod.cpu.node.utilization IS NOT NULL AND metrics.k8s.pod.memory.node.utilization IS NOT NULL
+        | STATS pod_cpu = AVG(metrics.k8s.pod.cpu.node.utilization) * 100, 
+        pod_mem = AVG(metrics.k8s.pod.memory.node.utilization) * 100
+        BY k8s.pod.name, BUCKET(@timestamp, 10m)
+        | KEEP pod_cpu, pod_mem, k8s.pod.name, `BUCKET(@timestamp, 10m)`
     headers:
       Authorization: '{{ consts.kbn_auth }}'
       Content-Type: application/json
@@ -199,7 +189,7 @@ steps:
       query: |
         FROM traces-*
         | WHERE @timestamp >= "{{ steps.rca1.output.data.result.start_time}}" AND @timestamp <= "{{ steps.rca1.output.data.result.end_time}}"
-        | WHERE service.name == "{{ steps.rca1.output.data.result.service_name}}"
+        | WHERE k8s.namespace.name == "{{ steps.get_topology.output.data.hits.hits[0]._source.system }}"
         | STATS 
           spans = COUNT(), 
           failed_spans = COUNT() WHERE event.outcome != "success",
@@ -218,14 +208,45 @@ steps:
   with:
     body:
       result: False
+      persist: True
       connectorId: '{{ consts.ai_connector }}'
-      conversationId: '{{ steps.rca1.output.data.conversationId }}'
       messages:
+
       - '@timestamp': now
         message:
           role: user
           content: |
-            I will now be providing you with related telemetry you can use when asked to perform Root Cause Analysis. Do not take any further action until directed.
+            # Related Alerts
+            ```
+            {{ steps.get_case_alerts.output | json }}
+            ```
+
+      - '@timestamp': now
+        message:
+          role: user
+          content: |
+            # System Topology
+            ```
+            {{ steps.get_topology.output.data.hits.hits[0]._source | json }}
+            ```
+
+      - '@timestamp': now
+        message:
+          role: user
+          content: |
+            # Related Case
+            ```
+            {{ steps.get_case.output | json }}
+            ```
+
+      - '@timestamp': now
+        message:
+          role: user
+          content: |
+            # Related Comments
+            ```
+            {{ steps.get_case_comments.output | json }}
+            ```
 
       - '@timestamp': now
         message:
@@ -243,6 +264,16 @@ steps:
             ```
             {{ steps.relevant_host_metrics.output.data }}
             ```
+
+      - '@timestamp': now
+        message:
+          role: user
+          content: |
+            # Relevant Pod Metrics
+            ```
+            {{ steps.relevant_pod_metrics.output.data }}
+            ```
+
       - '@timestamp': now
         message:
           role: user
@@ -251,13 +282,13 @@ steps:
             ```
             {{ steps.relevant_trace_metrics.output.data }}
             ```
+
       - '@timestamp': now
         message:
           role: user
           content: |
-            Considering the provided topology, the provided alerts, and the provided relevant telemetry, please output a detailed Root Cause Analysis.
-      output: true
-      persist: true
+            Using only the provided telemetry data, please output a detailed Root Cause Analysis. Your analysis should explain how the alerts are related (using the toplogy to understand dependencies), it should visualize the dependencies in a simple ASCII graph, and it should conclude what is the root cause of these related alerts.
+
     headers:
       Content-Type: application/json
       kibana-auth: '{{ consts.kbn_auth }}'
@@ -276,7 +307,7 @@ steps:
           customFields:
             - key: "ai_conversation_id"
               type: "text"
-              value: '{{ steps.rca1.output.data.conversationId }}'
+              value: '{{ steps.rca5.output.data.conversationId }}'
             - key: "system"
               type: "text"
               value: '{{ steps.get_topology.output.data.hits.hits[0]._source.system }}'
@@ -305,7 +336,7 @@ steps:
   type: kibana.request
   with:
     body:
-      comment: You can continue your investigation [here](/app/observabilityAIAssistant/conversations/{{ steps.rca1.output.data.conversationId }}).
+      comment: You can continue your investigation [here](/app/observabilityAIAssistant/conversations/{{ steps.rca5.output.data.conversationId }}).
       owner: observability
       type: user
     headers:

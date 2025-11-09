@@ -15,6 +15,24 @@ consts:
   kbn_auth: ApiKey SVdFNU81b0J4Wi1oTDdBWnR5Q3I6RmhNY0pub2pwOHFwTEFfa0d4SWtldw==
   kbn_host: https://snap2-96da6f.kb.us-west2.gcp.elastic-cloud.com
 steps:
+
+- name: create_pipeline
+  type: http
+  with:
+    url: '{{ consts.es_host }}/_ingest/pipeline/add_timestamp_pipeline'
+    method: PUT
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
+    body:
+      description: "Adds a timestamp to documents"
+      processors:
+        - set:
+            field: "@timestamp"
+            "value": "{% raw %}{{ _ingest.timestamp }}{% endraw %}"
+    timeout: 30s
+  on-failure:
+    continue: true
+
 - name: delete_alert_queue
   type: http
   with:
@@ -33,10 +51,14 @@ steps:
     headers:
       Authorization: '{{ consts.kbn_auth }}'
     body:
+      settings:
+        index.default_pipeline: "add_timestamp_pipeline"
       mappings:
         properties:
-          alerts:
+          alert:
             type: flattened
+          '@timestamp':
+            type: date
     timeout: 30s
 - name: delete_case_queue
   type: http
@@ -56,10 +78,14 @@ steps:
     headers:
       Authorization: '{{ consts.kbn_auth }}'
     body:
+      settings:
+        index.default_pipeline: "add_timestamp_pipeline"
       mappings:
         properties:
           case_id:
             type: keyword
+          '@timestamp':
+            type: date
     timeout: 30s
 - name: setup_cases
   type: http
@@ -111,6 +137,8 @@ steps:
     headers:
       Authorization: '{{ consts.kbn_auth }}'
     body:
+      settings:
+        index.default_pipeline: "add_timestamp_pipeline"
       mappings:
         properties:
           '@timestamp':

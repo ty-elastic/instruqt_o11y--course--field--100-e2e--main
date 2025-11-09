@@ -19,7 +19,7 @@ import Button from '@mui/material/Button';
 
 // set sessionId on OTel baggage
 var sessionId = uuidv4();
-axios.defaults.headers.common['baggage'] = `com.example.session_id=${sessionId}`;
+axios.defaults.headers.common['baggage'] = `com.example.client_session_id=${sessionId}`;
 
 function App() {
   return (

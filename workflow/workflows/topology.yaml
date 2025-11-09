@@ -40,7 +40,8 @@ steps:
       Content-Type: application/json
     method: POST
     url: '{{ consts.es_host }}/_query'
-- name: get_service_map
+
+- name: get_service_environments
   type: http
   with:
     headers:
@@ -49,98 +50,79 @@ steps:
       kbn-xsrf: true
       x-elastic-internal-origin: kibana
     method: GET
-    url: '{{ consts.kbn_host }}/internal/apm/service-map?start={{ steps.get_start_time.output.data.values[0] }}&end={{ steps.get_end_time.output.data.values[0] }}&environment=ENVIRONMENT_ALL&serviceGroup=&kuery='
+    url: '{{ consts.kbn_host }}/internal/apm/environments?start={{ steps.get_start_time.output.data.values[0] }}&end={{ steps.get_end_time.output.data.values[0] }}'
 
-- name: get_topology1
-  type: http
-  with:
-    body:
-      connectorId: '{{ consts.ai_connector }}'
-      persist: false
-      instructions:
-        - Output a field 'topologies' which is an array of topology objects, with each object having a field 'system' which is the system the topology is applicable to and a field 'topology' which is a JSON object in node-link format.
-        - A system is defined by a namespace.
-        - Only consider observability data from the previous hour.
-      messages:
-      - '@timestamp': now
-        message:
-          content: |
-            "We will use a multi-step process to build a topology. First, build a topology from the attached service_map.
-            <service_map>
-              {{ steps.get_service_map.output.data | json }}
-            </service_map>"
-          role: user
-    headers:
-      Content-Type: application/json
-      kibana-auth: '{{ consts.kbn_auth }}'
-      kibana-host: '{{ consts.kbn_host }}'
-    method: POST
-    timeout: '{{ consts.ai_timeout }}'
-    url: '{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete'
-
-- name: get_topology2
-  type: http
-  with:
-    body:
-      connectorId: '{{ consts.ai_connector }}'
-      persist: false
-      conversationHistory: '{{ steps.get_topology1.output.data.conversationHistory | json }}'
-      retries: 1
-      instructions:
-        - Output a field 'topologies' which is an array of topology objects, with each object having a field 'system' which is the system the topology is applicable to and a field 'topology' which is a JSON object in node-link format.
-        - A system is defined by a namespace.
-        - Only consider observability data from the previous hour.
-      messages:
-      - '@timestamp': now
-        message:
-          content: |
-            "Next, examine only log data to determine if any proxies exist between services. If they do, augment the topology from the previous step with any proxies discovered."
-          role: user
-    headers:
-      Content-Type: application/json
-      kibana-auth: '{{ consts.kbn_auth }}'
-      kibana-host: '{{ consts.kbn_host }}'
-    method: POST
-    timeout: '{{ consts.ai_timeout }}'
-    url: '{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete'
-
-- name: get_topology3
-  type: http
-  with:
-    body:
-      connectorId: '{{ consts.ai_connector }}'
-      persist: false
-      conversationHistory: '{{ steps.get_topology2.output.data.conversationHistory | json }}'
-      retries: 1
-      instructions:
-        - Output a field 'topologies' which is an array of topology objects, with each object having a field 'system' which is the system the topology is applicable to and a field 'topology' which is a JSON object in node-link format.
-        - A system is defined by a namespace.
-        - Only consider observability data from the previous hour.
-      messages:
-      - '@timestamp': now
-        message:
-          content: |
-            "Next, for each node in each topology, add an additional field 'host.name' which is the hostname of the VM or kubernetes node or machine on which the service is running. This can be obtained by searching 'traces-*,logs-*,metrics-*' for 'resource.attributes.host.name' for a given 'service.name', where 'service.name' is the 'id' of the node in the topology."
-          role: user
-    headers:
-      Content-Type: application/json
-      kibana-auth: '{{ consts.kbn_auth }}'
-      kibana-host: '{{ consts.kbn_host }}'
-    method: POST
-    timeout: '{{ consts.ai_timeout }}'
-    url: '{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete'
-
-- name: foreach_system
+- name: foreach_environment
   type: foreach
-  foreach: '{{ steps.get_topology3.output.data.result.topologies | json }}'
+  foreach: '{{ steps.get_service_environments.output.data.environments | json }}'
   steps:
-  - name: store_topology
-    type: http
-    with:
-      body: '{"@timestamp":"{{ steps.get_end_time.output.data.values[0] }}", "system":"{{ foreach.item.system }}", "topology": {{ foreach.item.topology | json }} }'
-      headers:
-        Authorization: '{{ consts.kbn_auth }}'
-        Content-Type: application/json
-      method: POST
-      timeout: 30s
-      url: '{{ consts.es_host }}/workflow_topology/_doc'
+
+    - name: get_service_map
+      type: http
+      with:
+        headers:
+          Authorization: '{{ consts.kbn_auth }}'
+          Content-Type: application/json
+          kbn-xsrf: true
+          x-elastic-internal-origin: kibana
+        method: GET
+        url: '{{ consts.kbn_host }}/internal/apm/service-map?start={{ steps.get_start_time.output.data.values[0] }}&end={{ steps.get_end_time.output.data.values[0] }}&environment={{ foreach.item }}&serviceGroup=&kuery='
+
+    - name: host_names
+      type: http
+      with:
+        body:
+          query: |
+            FROM traces-*
+            | WHERE @timestamp >= "{{ steps.get_start_time.output.data.values[0] }}" AND @timestamp <= "{{ steps.get_end_time.output.data.values[0] }}"
+            | WHERE k8s.namespace.name == "{{ foreach.item }}"
+            | WHERE service.name IS NOT NULL AND host.name IS NOT NULL
+            | STATS count = COUNT() BY service.name, host.name
+            | KEEP service.name, host.name
+        headers:
+          Authorization: '{{ consts.kbn_auth }}'
+          Content-Type: application/json
+        method: POST
+        url: '{{ consts.es_host }}/_query?format=txt'
+
+    - name: get_topology1
+      type: http
+      with:
+        body:
+          connectorId: '{{ consts.ai_connector }}'
+          persist: false
+          instructions:
+            - Output a field 'topology' which is a JSON object in node-link format.
+          messages:
+          - '@timestamp': now
+            message:
+              content: |
+                Build a topology for the attached Service Map.
+                # Service Map
+                ```
+                {{ steps.get_service_map.output.data | json }}
+                ```
+                For each node in the topology, use the attached Service/Host Lookup Table to add an additional field 'host.name' which is the hostname of the VM or kubernetes node or machine on which the service is running.
+                # Service/Host Lookup Table
+                ```
+                {{ steps.host_names.output.data }}
+                ```
+              role: user
+        headers:
+          Content-Type: application/json
+          kibana-auth: '{{ consts.kbn_auth }}'
+          kibana-host: '{{ consts.kbn_host }}'
+        method: POST
+        timeout: '{{ consts.ai_timeout }}'
+        url: '{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete'
+
+    - name: store_topology
+      type: http
+      with:
+        body: '{"system":"{{ foreach.item }}", "topology": {{ steps.get_topology1.output.data.result.topology | json }} }'
+        headers:
+          Authorization: '{{ consts.kbn_auth }}'
+          Content-Type: application/json
+        method: POST
+        timeout: 30s
+        url: '{{ consts.es_host }}/workflow_topology/_doc'

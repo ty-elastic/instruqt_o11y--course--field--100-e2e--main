@@ -40,8 +40,31 @@ def backup_workflows(kibana_server, kibana_auth):
         # with open(f"workflows/{workflow['definition']['name']}.json", "w") as json_file:
         #     json.dump(workflow['definition'], json_file, indent=2)
         with open(f"workflows/{workflow['definition']['name']}.yaml", "w") as yaml_file:
-            yaml_file.write(workflow['yaml'])
+            #yaml_file.write(workflow['yaml'])
             #yaml.dump(workflow['definition'], yaml_file, default_flow_style=False)
+  
+  
+            yaml = MyYAML()
+
+            parsed = yaml.load(workflow['definition'])
+            
+            print(parsed['name'])
+            
+            parsed['consts']['kbn_host'] = 'TBD'
+            parsed['consts']['kbn_auth'] = 'TBD'
+            parsed['consts']['es_host'] = 'TBD'    
+            parsed['consts']['ai_connector'] = 'TBD'   
+            parsed['consts']['ai_proxy'] = 'TBD'  
+                                        
+            yaml = MyYAML()
+            yaml.width = float("inf") # Set the width attribute of the YAML instance
+
+            #yaml.dump(parsed)
+            out = yaml.dump(parsed)
+            body = {
+                "yaml": out
+            }
+            print(out)  
   
   
 def delete_existing(kibana_server, kibana_auth, es_host, workflow_name):

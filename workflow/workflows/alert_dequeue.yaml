@@ -37,7 +37,7 @@ steps:
     url: '{{ consts.kbn_host }}/api/workflowExecutions?workflowId={{ steps.get_alert_process_id.output.data._source.workflow_id }}'
 - name: is_alert_process_running
   type: if
-  condition: 'steps.alert_process_status.output.status : completed'
+  condition: 'steps.alert_process_status.output.data.results[0].status : running'
   steps:
   - name: is_alert_process_running_debug1
     type: console
@@ -54,8 +54,11 @@ steps:
       body:
         _source: true
         query:
-          match_all:
-        size: 1,
+          match_all: {}
+        size: 1
+        sort:
+          - "@timestamp":
+              order: asc
       headers:
         Authorization: '{{ consts.kbn_auth }}'
         Content-Type: application/json
@@ -63,35 +66,19 @@ steps:
       url: '{{ consts.es_host }}/workflow_alert_queue/_search'
   - name: is_queue_empty
     type: if
-    condition: 'steps.dequeue_alerts.output.data.hits.total.value > 0'
+    condition: steps.dequeue_alerts.output.data.hits.total.value > 0
     steps:
-      - name: is_new_alert
-        type: if
-        condition: 'steps.dequeue_alerts.output.data.hits.hits[0]._source.alerts.new.count : *'
-        steps:
-        - name: start_alert_process
-          type: http
-          with:
-            body: '{ "inputs": {"event": {"alerts": {{steps.dequeue_alerts.output.data.hits.hits[0]._source.alerts.new.data | json }} } } }'
-            headers:
-              Authorization: '{{ consts.kbn_auth }}'
-              Content-Type: application/json
-              kbn-xsrf: true
-              x-elastic-internal-origin: kibana
-            method: POST
-            url: '{{ consts.kbn_host }}/api/workflows/{{ steps.get_alert_process_id.output.data._source.workflow_id }}/run'
-        else:
-        - name: start_alert_process2
-          type: http
-          with:
-            body: '{ "inputs": {"event": {{ steps.dequeue_alerts.output.data.hits.hits[0]._source | json }} } }'
-            headers:
-              Authorization: '{{ consts.kbn_auth }}'
-              Content-Type: application/json
-              kbn-xsrf: true
-              x-elastic-internal-origin: kibana
-            method: POST
-            url: '{{ consts.kbn_host }}/api/workflows/{{ steps.get_alert_process_id.output.data._source.workflow_id }}/run'
+      - name: start_alert_process
+        type: http
+        with:
+          body: '{ "inputs": {"event": {"alerts": [{{steps.dequeue_alerts.output.data.hits.hits[0]._source.alert | json }}] } }}'
+          headers:
+            Authorization: '{{ consts.kbn_auth }}'
+            Content-Type: application/json
+            kbn-xsrf: true
+            x-elastic-internal-origin: kibana
+          method: POST
+          url: '{{ consts.kbn_host }}/api/workflows/{{ steps.get_alert_process_id.output.data._source.workflow_id }}/run'
       - name: mark_alert_handled
         type: http
         with:
