@@ -1,0 +1,59 @@
+version: '1'
+name: remediation-block-frontend-version
+enabled: true
+tags:
+- automated_observability_triage
+triggers:
+- type: manual
+inputs:
+- name: frontend_version
+  type: string
+  default: '0.1'
+- name: case_id
+  type: string
+  default: NOT_AVAILABLE
+consts:
+  kestra_auth: Basic dHlAdGI5My5jb206QWRtaW4xMjM0
+  kestra_host: http://34.46.71.86:8080
+  ai_connector: TBD
+  ai_proxy: TBD
+  ai_timeout: 10m
+  es_host: TBD
+  kbn_auth: TBD
+  kbn_host: TBD
+  topology_lookback_time: 1h
+  snow_host: https://dev197057.service-now.com
+  snow_auth: Basic YWRtaW46Tmk4bmZRREcqOGVA
+steps:
+- name: call_kestra
+  type: http
+  with:
+    url: '{{consts.kestra_host}}/api/v1/main/executions/elasticsearch/ansible-block-frontend-version'
+    method: POST
+    headers:
+      Content-Type: multipart/form-data; boundary=----FormBoundary7MA4YWxkTrZu0gW
+      Authorization: '{{ consts.kestra_auth }}'
+    body: |
+      ------FormBoundary7MA4YWxkTrZu0gW
+      Content-Disposition: form-data; name="service_name"
+
+      {{inputs.frontend_version}}
+      ------FormBoundary7MA4YWxkTrZu0gW
+    timeout: 30s
+
+- name: add_comment_to_existing_case
+  type: http
+  with:
+    body:
+      comment: Attempted to block frontend version `{{inputs.frontend_version}}` using `ansible-block-frontend-version`
+      owner: observability
+      type: user
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
+      Content-Type: application/json
+      kbn-xsrf: true
+      x-elastic-internal-origin: kibana
+    method: POST
+    url: '{{ consts.kbn_host }}/api/cases/{{ inputs.case_id }}/comments'
+  on-failure:
+    continue: true

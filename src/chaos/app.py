@@ -5,6 +5,7 @@ from kubernetes import client, config, utils
 import yaml
 import tempfile
 import json
+import datetime
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
 
@@ -69,6 +70,22 @@ def delete_deployment(namespace, name):
 def add_deployment(namespace, body):
     return apps_api.create_namespaced_deployment(body=body, namespace=namespace)
 
+def restart_deployment(namespace, name):
+    now = datetime.datetime.utcnow()
+    now = str(now.isoformat("T") + "Z")
+    body = {
+        'spec': {
+            'template':{
+                'metadata': {
+                    'annotations': {
+                        'kubectl.kubernetes.io/restartedAt': now
+                    }
+                }
+            }
+        }
+    }
+    return apps_api.patch_namespaced_deployment(name, namespace, body, pretty='true')
+
 def add_deployment_from_yaml(namespace, path):
 
     with open(path, 'r') as f:
@@ -112,6 +129,9 @@ def change_service_status(service, state):
             return {'status': 'success'}, 200
         elif state == 'down':
             ret = delete_deployment(os.environ['NAMESPACE'], service)
+            return {'status': 'success'}, 200
+        elif state == 'restart':
+            ret = restart_deployment(os.environ['NAMESPACE'], service)
             return {'status': 'success'}, 200
     except Exception as e:
         return {'status': 'fail', "reason": e.reason}, e.status

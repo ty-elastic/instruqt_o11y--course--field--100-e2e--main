@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kestra-ui-loadbalancer
+  namespace: kestra
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: kestra
+    app.kubernetes.io/component: standalone
+    app.kubernetes.io/instance: kestra
+  ports:
+    - name: kestra-ui
+      port: 10125 # The external port for the load balancer
+      targetPort: 8080 # The port on the Kestra UI pods

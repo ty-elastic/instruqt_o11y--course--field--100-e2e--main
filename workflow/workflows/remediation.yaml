@@ -1,0 +1,38 @@
+name: remediation
+enabled: true
+consts:
+  kestra_auth: Basic dHlyb25lLmJla2lhcmVzQGVsYXN0aWMuY286QXBvbGxvMTk2OQ==
+  kestra_host: http://34.46.71.86:8080
+  kbn_host: TBD
+  kbn_auth: TBD
+  es_host: TBD
+  ai_connector: TBD
+  ai_proxy: TBD
+tags:
+- automated_observability_triage
+inputs:
+- name: service_name
+  type: string
+- name: service_action
+  type: string
+triggers:
+- type: manual
+steps:
+- name: call_kestra
+  type: http
+  with:
+    url: '{{consts.kestra_host}}/api/v1/main/executions/elasticsearch/ansible-remediate'
+    method: POST
+    body: |
+      ------FormBoundary7MA4YWxkTrZu0gW
+      Content-Disposition: form-data; name="service_name"
+
+      {{inputs.service_name}}
+      ------FormBoundary7MA4YWxkTrZu0gW
+      Content-Disposition: form-data; name="service_action"
+
+      {{inputs.service_action}}
+      ------FormBoundary7MA4YWxkTrZu0gW
+    headers:
+      Content-Type: multipart/form-data; boundary=----FormBoundary7MA4YWxkTrZu0gW
+      Authorization: '{{ consts.kestra_auth }}'

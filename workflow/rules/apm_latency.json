@@ -1,11 +1,12 @@
 {
-  "name": "APM Failure Rule",
+  "name": "APM Latency Rule",
   "tags": ["automated_observability_triage"],
   "schedule": {
     "interval": "30s"
   },
   "params": {
-    "threshold": 5,
+    "aggregationType": "95th",
+    "threshold": 10,
     "windowSize": 5,
     "windowUnit": "m",
     "environment": "ENVIRONMENT_ALL",
@@ -28,16 +29,16 @@
       "id": "system-connector-.workflows",
       "params": {
         "subActionParams": {
-          "workflowId": "workflow-1fc19336-9467-434f-ae9f-b919c57558cf"
+          "workflowId": "workflow-c17742ce-3f82-465a-8c0a-2207c2998d23"
         },
         "subAction": "run"
       },
-      "uuid": "ccaa5d94-6332-42b6-a947-042d502bfe53"
+      "uuid": "8a18d05d-92da-49ae-97ec-17678a47f1c1"
     }
   ],
   "alert_delay": {
     "active": 1
   },
-  "rule_type_id": "apm.transaction_error_rate",
+  "rule_type_id": "apm.transaction_duration",
   "consumer": "alerts"
 }

@@ -1,0 +1,14 @@
+name: test_webhook_FROM_github
+enabled: true
+triggers:
+- type: manual
+inputs:
+- name: user_name
+  type: string
+steps:
+- name: first-step
+  type: console
+  with:
+    message: Hello {{ inputs.user_name }}
+
+

@@ -33,8 +33,8 @@ spec:
         - env:
             - name: RECORDER_HOST_1
               value: recorder-java
-            - name: RECORDER_HOST_CANARY
-              value: recorder-go-zero
+            - name: RECORDER_HOST_2
+              value: recorder-go
           image: $REPO/router:$COURSE
           imagePullPolicy: Always
           name: router

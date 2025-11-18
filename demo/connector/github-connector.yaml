@@ -1,0 +1,62 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: elastic-connector
+  labels:
+    name: elastic-connector
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: github-elastic-connector-config
+  namespace: elastic-connector
+data:
+  config.yml: |
+    connectors:
+    - 
+      connector_id: "8PEcfpoBhV9yxq76w-37"
+      service_type: "github"
+      api_key: "OGZFY2Zwb0JoVjl5eHE3NnhPMXg6VjlrUHhjMmlxUnBLTV85S3c3bld1dw=="
+    elasticsearch:
+      host: "https://bdcdd46669324fe4bf014ca076d36cdb.us-west2.gcp.elastic-cloud.com:443"
+      api_key: "OGZFY2Zwb0JoVjl5eHE3NnhPMXg6VjlrUHhjMmlxUnBLTV85S3c3bld1dw=="
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: github-elastic-connector
+  namespace: elastic-connector
+  labels:
+    service: github-elastic-connector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: github-elastic-connector
+  template:
+    metadata:
+      annotations:
+        io.opentelemetry.discovery.logs/enabled: "false"
+      labels:
+        service: github-elastic-connector
+    spec:
+      containers:
+        - name: elastic-connector
+          image: docker.elastic.co/integrations/elastic-connectors:9.3.0-SNAPSHOT
+          imagePullPolicy: Always
+          command:
+            - "/app/bin/elastic-ingest"
+            - "-c"
+            - "/config/config.yml"
+          volumeMounts:
+            - mountPath: /config/config.yml
+              name: data
+              subPath: config.yml
+              readOnly: true
+      restartPolicy: Always
+      volumes:
+        - name: data
+          configMap:
+            name: github-elastic-connector-config
+---

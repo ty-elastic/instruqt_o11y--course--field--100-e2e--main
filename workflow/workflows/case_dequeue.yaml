@@ -4,22 +4,21 @@ enabled: true
 tags:
 - automated_observability_triage
 triggers:
-- enabled: true
-  type: scheduled
+- type: scheduled
   with:
     every: 30s
 consts:
-  ai_connector: Elastic-Managed-LLM
-  ai_proxy: https://tbekiares-demo-aiassistantv2-1059491012611.us-central1.run.app
+  ai_connector: TBD
+  ai_proxy: TBD
   ai_timeout: 10m
-  es_host: https://snap2-96da6f.es.us-west2.gcp.elastic-cloud.com
-  kbn_auth: ApiKey SVdFNU81b0J4Wi1oTDdBWnR5Q3I6RmhNY0pub2pwOHFwTEFfa0d4SWtldw==
-  kbn_host: https://snap2-96da6f.kb.us-west2.gcp.elastic-cloud.com
+  es_host: TBD
+  kbn_auth: TBD
+  kbn_host: TBD
 steps:
 - name: get_case_process_id
   type: http
   with:
-    url: '{{ consts.es_host }}/workflow_config/_doc/case_process_workflow'
+    url: '{{ consts.es_host }}/workflow_config/_doc/case_process'
     method: GET
     headers:
       Authorization: '{{ consts.kbn_auth }}'
@@ -28,7 +27,7 @@ steps:
 - name: case_process_status
   type: http
   with:
-    url: '{{ consts.kbn_host }}/api/workflowExecutions?workflowId={{ steps.get_case_process_id.output.data._source.workflow_id}}'
+    url: '{{ consts.kbn_host }}/api/workflowExecutions?workflowId={{ steps.get_case_process_id.output.data._source.workflowId}}'
     method: GET
     headers:
       Authorization: '{{ consts.kbn_auth }}'
@@ -45,7 +44,7 @@ steps:
       Content-Type: application/json
     method: GET
     timeout: 30s
-    url: '{{ consts.es_host }}/workflow_config/_doc/alert_process_workflow'
+    url: '{{ consts.es_host }}/workflow_config/_doc/alert_process'
 - name: alert_process_status
   type: http
   with:
@@ -55,7 +54,7 @@ steps:
       kbn-xsrf: true
       x-elastic-internal-origin: kibana
     method: GET
-    url: '{{ consts.kbn_host }}/api/workflowExecutions?workflowId={{ steps.get_alert_process_id.output.data._source.workflow_id }}'
+    url: '{{ consts.kbn_host }}/api/workflowExecutions?workflowId={{ steps.get_alert_process_id.output.data._source.workflowId }}'
 
 - name: is_alert_process_running
   type: if
@@ -95,8 +94,8 @@ steps:
             match_all: {}
           size: 1
           sort:
-            - "@timestamp":
-                order: asc
+          - '@timestamp':
+              order: asc
         headers:
           Authorization: '{{ consts.kbn_auth }}'
           Content-Type: application/json
@@ -105,35 +104,35 @@ steps:
       condition: steps.dequeue_case.output.data.hits.total.value > 0
       steps:
 
-        - name: is_case_stable
-          type: if
-          condition: 'steps.dequeue_case.output.data.hits.hits[0]._source.@timestamp < now-15s'
-          steps:
-            - name: mark_case_handled
-              type: http
-              with:
-                url: '{{ consts.es_host }}/workflow_case_queue/_delete_by_query'
-                method: POST
-                body:
-                  query:
-                    match:
-                      "case_id": "{{ steps.dequeue_case.output.data.hits.hits[0]._source.case_id }}"
-                headers:
-                  Authorization: '{{ consts.kbn_auth }}'
-                  Content-Type: application/json
+      - name: is_case_stable
+        type: if
+        condition: steps.dequeue_case.output.data.hits.hits[0]._source.@timestamp < now-15s
+        steps:
+        - name: mark_case_handled
+          type: http
+          with:
+            url: '{{ consts.es_host }}/workflow_case_queue/_delete_by_query'
+            method: POST
+            body:
+              query:
+                match:
+                  case_id: '{{ steps.dequeue_case.output.data.hits.hits[0]._source.case_id }}'
+            headers:
+              Authorization: '{{ consts.kbn_auth }}'
+              Content-Type: application/json
 
-            - name: start_case_process
-              type: http
-              with:
-                url: '{{ consts.kbn_host }}/api/workflows/{{ steps.get_case_process_id.output.data._source.workflow_id}}/run'
-                method: POST
-                headers:
-                  Authorization: '{{ consts.kbn_auth }}'
-                  Content-Type: application/json
-                  kbn-xsrf: true
-                  x-elastic-internal-origin: kibana
-                body: '{ "inputs": {"case_id": "{{ steps.dequeue_case.output.data.hits.hits[0]._source.case_id }}" } }'
-                timeout: 30s
+        - name: start_case_process
+          type: http
+          with:
+            url: '{{ consts.kbn_host }}/api/workflows/{{ steps.get_case_process_id.output.data._source.workflowId}}/run'
+            method: POST
+            headers:
+              Authorization: '{{ consts.kbn_auth }}'
+              Content-Type: application/json
+              kbn-xsrf: true
+              x-elastic-internal-origin: kibana
+            body: '{ "inputs": {"case_id": "{{ steps.dequeue_case.output.data.hits.hits[0]._source.case_id }}" } }'
+            timeout: 30s
 
 
 

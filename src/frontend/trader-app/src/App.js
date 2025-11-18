@@ -14,9 +14,6 @@ import { Route, NavLink, HashRouter, BrowserRouter, Routes } from "react-router-
 
 import { ApmRoutes } from '@elastic/apm-rum-react'
 
-import * as React from 'react';
-import Button from '@mui/material/Button';
-
 // set sessionId on OTel baggage
 var sessionId = uuidv4();
 axios.defaults.headers.common['baggage'] = `com.example.client_session_id=${sessionId}`;

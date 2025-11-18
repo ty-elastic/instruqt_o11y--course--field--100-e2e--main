@@ -1,10 +1,10 @@
 consts:
-  ai_connector: Elastic-Managed-LLM
-  ai_proxy: https://tbekiares-demo-aiassistantv2-1059491012611.us-central1.run.app
+  ai_connector: TBD
+  ai_proxy: TBD
   ai_timeout: 10m
-  es_host: https://snap2-96da6f.es.us-west2.gcp.elastic-cloud.com
-  kbn_auth: ApiKey SVdFNU81b0J4Wi1oTDdBWnR5Q3I6RmhNY0pub2pwOHFwTEFfa0d4SWtldw==
-  kbn_host: https://snap2-96da6f.kb.us-west2.gcp.elastic-cloud.com
+  es_host: TBD
+  kbn_auth: TBD
+  kbn_host: TBD
 description: Process o11y alerts and correlate to cases
 enabled: true
 name: alert_process
@@ -23,12 +23,15 @@ steps:
     message: '{{ event | json }}'
 
 - name: get_cases
-  type: kibana.request
+  type: http
   with:
     headers:
       Authorization: '{{ consts.kbn_auth }}'
+      Content-Type: application/json
+      kbn-xsrf: true
+      x-elastic-internal-origin: kibana
     method: GET
-    path: /api/cases/_find?status=open
+    url: '{{ consts.kbn_host }}/api/cases/_find?status=open'
 
 - name: delete_temp_alert_queue
   type: http
@@ -61,33 +64,39 @@ steps:
 
 - name: foreach_case
   type: foreach
-  foreach: '{{ steps.get_cases.output.cases | json }}'
+  foreach: '{{ steps.get_cases.output.data.cases | json }}'
   steps:
-    - name: get_case
-      type: kibana.request
-      with:
-        headers:
-          Authorization: '{{ consts.kbn_auth }}'
-        method: GET
-        path: /api/cases/{{ foreach.item.id }}
-    - name: get_case_alerts
-      type: kibana.request
-      with:
-        headers:
-          Authorization: '{{ consts.kbn_auth }}'
-        method: GET
-        path: /api/cases/{{ foreach.item.id }}/alerts
+  - name: get_case
+    type: http
+    with:
+      headers:
+        Authorization: '{{ consts.kbn_auth }}'
+        Content-Type: application/json
+        kbn-xsrf: true
+        x-elastic-internal-origin: kibana
+      method: GET
+      url: '{{ consts.kbn_host }}/api/cases/{{ foreach.item.id }}'
+  - name: get_case_alerts
+    type: http
+    with:
+      headers:
+        Authorization: '{{ consts.kbn_auth }}'
+        Content-Type: application/json
+        kbn-xsrf: true
+        x-elastic-internal-origin: kibana
+      method: GET
+      url: '{{ consts.kbn_host }}/api/cases/{{ foreach.item.id }}/alerts'
 
-    - name: write_temp_alert_queue
-      type: http
-      with:
-        url: '{{ consts.es_host }}/temp_alert_queue/_doc?refresh=wait_for'
-        method: POST
-        headers:
-          Authorization: '{{ consts.kbn_auth }}'
-          Content-Type: application/json
-        body: '{ "alerts": {{ steps.get_case_alerts.output | json}}, "case": {{ steps.get_case.output | json}}, "case_id": "{{ steps.get_case.output.id}}"}'
-        timeout: 30s
+  - name: write_temp_alert_queue
+    type: http
+    with:
+      url: '{{ consts.es_host }}/temp_alert_queue/_doc?refresh=wait_for'
+      method: POST
+      headers:
+        Authorization: '{{ consts.kbn_auth }}'
+        Content-Type: application/json
+      body: '{ "alerts": {{ steps.get_case_alerts.output.data | json}}, "case": {{ steps.get_case.output.data | json}}, "case_id": "{{ steps.get_case.output.data.id}}"}'
+      timeout: 30s
 
 - name: get_temp_alert_queue
   type: http
@@ -116,8 +125,8 @@ steps:
               top_hits:
                 size: 1
                 sort:
-                  - '@timestamp':
-                      order: desc
+                - '@timestamp':
+                    order: desc
                 _source:
                   includes:
                   - '@timestamp'
@@ -210,15 +219,29 @@ steps:
       method: POST
       timeout: '{{ consts.ai_timeout }}'
       url: '{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete'
+
+
+  - name: get_case_settings
+    type: http
+    with:
+      method: GET
+      headers:
+        Authorization: '{{ consts.kbn_auth }}'
+        Content-Type: application/json
+        kbn-xsrf: true
+        x-elastic-internal-origin: kibana
+      url: '{{ consts.kbn_host }}/api/cases/configure'
+
   - name: create_case
-    type: kibana.request
+    type: http
     with:
       body:
         connector:
           fields:
-          id: none
-          name: none
-          type: .none
+          id: '{{ steps.get_case_settings.output.data[0].connector.id }}'
+          name: '{{ steps.get_case_settings.output.data[0].connector.name }}'
+          type: '{{ steps.get_case_settings.output.data[0].connector.type }}'
+
         customFields:
         - key: system
           type: text
@@ -232,9 +255,14 @@ steps:
         - automated_observability_triage
         title: '{{ steps.create_alert_details.output.data.result.title }}'
       method: POST
-      path: /api/cases
+      headers:
+        Authorization: '{{ consts.kbn_auth }}'
+        Content-Type: application/json
+        kbn-xsrf: true
+        x-elastic-internal-origin: kibana
+      url: '{{ consts.kbn_host }}/api/cases'
   - name: add_alert_to_case
-    type: kibana.request
+    type: http
     with:
       body:
         alertId: '{{ event.alerts[0]._id }}'
@@ -248,13 +276,15 @@ steps:
         Authorization: '{{ consts.kbn_auth }}'
         Content-Type: application/json
         kbn-xsrf: true
+        x-elastic-internal-origin: kibana
       method: POST
-      path: /api/cases/{{ steps.create_case.output.id }}/comments
+      url: '{{ consts.kbn_host }}/api/cases/{{ steps.create_case.output.data.id }}/comments'
+
   - name: queue_new_case
     type: http
     with:
       body:
-        case_id: '{{ steps.create_case.output.id }}'
+        case_id: '{{ steps.create_case.output.data.id }}'
       headers:
         Authorization: '{{ consts.kbn_auth }}'
         Content-Type: application/json
@@ -262,7 +292,7 @@ steps:
       url: '{{ consts.es_host }}/workflow_case_queue/_doc?refresh=wait_for'
   else:
   - name: add_alert_to_existing_case
-    type: kibana.request
+    type: http
     with:
       body:
         alertId: '{{ event.alerts[0]._id }}'
@@ -276,10 +306,11 @@ steps:
         Authorization: '{{ consts.kbn_auth }}'
         Content-Type: application/json
         kbn-xsrf: true
+        x-elastic-internal-origin: kibana
       method: POST
-      path: /api/cases/{{ steps.correlate_to_case.output.data.result.case_id }}/comments
+      url: '{{ consts.kbn_host }}/api/cases/{{ steps.correlate_to_case.output.data.result.case_id }}/comments'
   - name: add_comment_to_existing_case
-    type: kibana.request
+    type: http
     with:
       body:
         comment: |
@@ -292,8 +323,9 @@ steps:
         Authorization: '{{ consts.kbn_auth }}'
         Content-Type: application/json
         kbn-xsrf: true
+        x-elastic-internal-origin: kibana
       method: POST
-      path: /api/cases/{{ steps.correlate_to_case.output.data.result.case_id }}/comments
+      url: '{{ consts.kbn_host }}/api/cases/{{ steps.correlate_to_case.output.data.result.case_id }}/comments'
 
   - name: queue_existing_case
     type: http
@@ -309,14 +341,14 @@ steps:
 # - name: mute_alert
 #   on-failure:
 #     continue: true
-#   type: kibana.request
+#   type: http
 #   with:
 #     body: {}
 #     headers:
 #       Authorization: '{{ consts.kbn_auth }}'
 #       Content-Type: application/json
-#       kbn-xsrf: string
+#       kbn-xsrf: true
+#       x-elastic-internal-origin: kibana
 #     method: POST
-#     path: /api/alerting/rule/{{ event.alerts[0].kibana.alert.rule.uuid }}/alert/{{ event.alerts[0].kibana.alert.instance.id }}/_mute
-
+#     url: '{{ consts.es_host }}/api/alerting/rule/{{ event.alerts[0].kibana.alert.rule.uuid }}/alert/{{ event.alerts[0].kibana.alert.instance.id }}/_mute'
 

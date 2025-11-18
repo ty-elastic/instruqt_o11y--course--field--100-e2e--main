@@ -9,7 +9,7 @@ data:
     receivers:
       sqlserver:
         collection_interval: 10s                     # interval for overall collection
-        datasource: sqlserver://sa:$POSTGRESQL_PASSWORD@127.0.0.1:1433/trades?integratedSecurity=false&encrypt=false&trustServerCertificate=true
+        datasource: sqlserver://sa:$MSSQL_PASSWORD@127.0.0.1:1433/trades?integratedSecurity=false&encrypt=false&trustServerCertificate=true
 
         top_query_collection:                        # this collection exports the most expensive queries as logs
           lookback_time: 60                          # which time window should we look for the top queries
@@ -198,9 +198,9 @@ data:
     GO
   start.sh: |
     echo "--------- wait"
-    sleep 20 # Wait for SQL Server to start
+    sleep 60 # Wait for SQL Server to start
     echo "--------- start"
-    /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U SA -P $POSTGRESQL_PASSWORD -i /opt/scripts/init.sql
+    /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U SA -P $MSSQL_PASSWORD -i /opt/scripts/init.sql
     echo "--------- done"
 ---
 apiVersion: apps/v1
@@ -223,9 +223,14 @@ spec:
         app: trading
         service: mssql
         type: mssql
-        dbName: $POSTGRESQL_DBNAME
       annotations:
         io.opentelemetry.discovery.logs/enabled: "true"
+        io.opentelemetry.discovery.logs/config: |
+          operators:
+            - id: es_index
+              type: add
+              field: attributes["elasticsearch.index"]
+              value: logs
     spec:
       tolerations:
       - key: "REGION"
@@ -256,7 +261,7 @@ spec:
             - name: ACCEPT_EULA
               value: "Y"
             - name: SA_PASSWORD
-              value: $POSTGRESQL_PASSWORD
+              value: $MSSQL_PASSWORD
           volumeMounts:
             - name: init-scripts-volume
               mountPath: /opt/scripts

@@ -8,12 +8,12 @@ triggers:
 - type: manual
   enabled: true
 consts:
-  ai_connector: Elastic-Managed-LLM
-  ai_proxy: https://tbekiares-demo-aiassistantv2-1059491012611.us-central1.run.app
+  ai_connector: TBD
+  ai_proxy: TBD
   ai_timeout: 10m
-  es_host: https://snap2-96da6f.es.us-west2.gcp.elastic-cloud.com
-  kbn_auth: ApiKey SVdFNU81b0J4Wi1oTDdBWnR5Q3I6RmhNY0pub2pwOHFwTEFfa0d4SWtldw==
-  kbn_host: https://snap2-96da6f.kb.us-west2.gcp.elastic-cloud.com
+  es_host: TBD
+  kbn_auth: TBD
+  kbn_host: TBD
 steps:
 
 - name: create_pipeline
@@ -24,11 +24,11 @@ steps:
     headers:
       Authorization: '{{ consts.kbn_auth }}'
     body:
-      description: "Adds a timestamp to documents"
+      description: Adds a timestamp to documents
       processors:
-        - set:
-            field: "@timestamp"
-            "value": "{% raw %}{{ _ingest.timestamp }}{% endraw %}"
+      - set:
+          field: '@timestamp'
+          value: '{% raw %}{{ _ingest.timestamp }}{% endraw %}'
     timeout: 30s
   on-failure:
     continue: true
@@ -52,7 +52,7 @@ steps:
       Authorization: '{{ consts.kbn_auth }}'
     body:
       settings:
-        index.default_pipeline: "add_timestamp_pipeline"
+        index.default_pipeline: add_timestamp_pipeline
       mappings:
         properties:
           alert:
@@ -79,7 +79,7 @@ steps:
       Authorization: '{{ consts.kbn_auth }}'
     body:
       settings:
-        index.default_pipeline: "add_timestamp_pipeline"
+        index.default_pipeline: add_timestamp_pipeline
       mappings:
         properties:
           case_id:
@@ -87,6 +87,7 @@ steps:
           '@timestamp':
             type: date
     timeout: 30s
+
 - name: setup_cases
   type: http
   with:
@@ -115,10 +116,76 @@ steps:
         label: ai_conversation_id
         required: false
         type: text
+
+      - defaultValue: not_available
+        key: service
+        label: service
+        required: false
+        type: text
+
+      - defaultValue: not_available
+        key: cmdb_owner
+        label: cmdb_owner
+        required: false
+        type: text
+
+      - defaultValue: not_available
+        key: cmdb_support_group
+        label: cmdb_support_group
+        required: false
+        type: text
+
+      - defaultValue: not_available
+        key: cmdb_id
+        label: cmdb_id
+        required: false
+        type: text
+
       owner: observability
     timeout: 30s
   on-failure:
     continue: true
+
+- name: get_connectors
+  type: http
+  with:
+    url: '{{ consts.kbn_host }}/api/actions/connectors'
+    method: GET
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
+      Content-Type: application/json
+      kbn-xsrf: true
+      x-elastic-internal-origin: kibana
+
+- name: foreach_connector
+  type: foreach
+  foreach: '{{ steps.get_connectors.output.data | json }}'
+  steps:
+  - name: is_snow
+    type: if
+    condition: 'foreach.item.connector_type_id : .servicenow'
+    steps:
+    - name: setup_cases2
+      type: http
+      with:
+        url: '{{ consts.kbn_host }}/api/cases/configure/{{steps.setup_cases.output.data.id}}'
+        method: PATCH
+        headers:
+          Authorization: '{{ consts.kbn_auth }}'
+          Content-Type: application/json
+          kbn-xsrf: true
+          x-elastic-internal-origin: kibana
+        body:
+          version: '{{ steps.setup_cases.output.data.version}}'
+          connector:
+            fields:
+            id: '{{ foreach.item.id }}'
+            name: '{{ foreach.item.name }}'
+            type: '{{ foreach.item.connector_type_id }}'
+        timeout: 30s
+      on-failure:
+        continue: true
+
 - name: delete_topology
   type: http
   with:
@@ -138,7 +205,7 @@ steps:
       Authorization: '{{ consts.kbn_auth }}'
     body:
       settings:
-        index.default_pipeline: "add_timestamp_pipeline"
+        index.default_pipeline: add_timestamp_pipeline
       mappings:
         properties:
           '@timestamp':
@@ -150,6 +217,45 @@ steps:
     timeout: 30s
   on-failure:
     continue: true
+
+- name: delete_cmdb
+  type: http
+  with:
+    url: '{{ consts.es_host }}/workflow_cmdb'
+    method: DELETE
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
+    timeout: 30s
+  on-failure:
+    continue: true
+- name: create_cmdb
+  type: http
+  with:
+    url: '{{ consts.es_host }}/workflow_cmdb'
+    method: PUT
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
+    body:
+      settings:
+        index.default_pipeline: add_timestamp_pipeline
+      mappings:
+        properties:
+          '@timestamp':
+            type: date
+          service.environment:
+            type: keyword
+          service.name:
+            type: keyword
+          cmdb_id:
+            type: keyword
+          cmdb_owner:
+            type: keyword
+          cmdb_support_group:
+            type: keyword
+    timeout: 30s
+  on-failure:
+    continue: true
+
 - name: delete_config
   type: http
   with:
@@ -168,9 +274,15 @@ steps:
     headers:
       Authorization: '{{ consts.kbn_auth }}'
     body:
+      settings:
+        index.mode: lookup
       mappings:
         properties:
-          workflow_id:
+          workflowId:
+            type: keyword
+          id:
+            type: keyword
+          name:
             type: keyword
     timeout: 30s
 - name: get_workflows
@@ -192,34 +304,17 @@ steps:
   type: foreach
   foreach: '{{ steps.get_workflows.output.data.results | json }}'
   steps:
-  - name: is_case_process
-    type: if
-    condition: 'foreach.item.name : case_process'
-    steps:
-    - name: save_case_process_id
-      type: http
-      with:
-        url: '{{ consts.es_host }}/workflow_config/_doc/case_process_workflow'
-        method: POST
-        headers:
-          Authorization: '{{ consts.kbn_auth }}'
-          Content-Type: application/json
-        body:
-          workflow_id: '{{ foreach.item.id }}'
-        timeout: 30s
-  - name: is_alert_process
-    type: if
-    condition: 'foreach.item.name : alert_process'
-    steps:
-    - name: save_alert_process_id
-      type: http
-      with:
-        url: '{{ consts.es_host }}/workflow_config/_doc/alert_process_workflow'
-        method: POST
-        headers:
-          Authorization: '{{ consts.kbn_auth }}'
-          Content-Type: application/json
-        body:
-          workflow_id: '{{ foreach.item.id }}'
-        timeout: 30s
+  - name: save_id
+    type: http
+    with:
+      url: '{{ consts.es_host }}/workflow_config/_doc/{{ foreach.item.name }}'
+      method: POST
+      headers:
+        Authorization: '{{ consts.kbn_auth }}'
+        Content-Type: application/json
+      body:
+        workflowId: '{{ foreach.item.id }}'
+        id: '{{ foreach.item.id }}'
+        name: '{{ foreach.item.name }}'
+      timeout: 30s
 

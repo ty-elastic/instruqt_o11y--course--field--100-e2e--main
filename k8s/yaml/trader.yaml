@@ -38,6 +38,8 @@ spec:
           env:
             - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
               value: "true"
+            - name: SERVICE_VERSION
+              value: "$SERVICE_VERSION"
       restartPolicy: Always
 ---
 apiVersion: v1

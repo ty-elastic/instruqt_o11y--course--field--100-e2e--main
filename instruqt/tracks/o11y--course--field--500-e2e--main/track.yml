@@ -13,7 +13,7 @@ timelimit: 7200
 sandbox_preset: managed-vm-elastic-9-2-0
 lab_config:
   extend_ttl: 3600
-  sidebar_enabled: true
+  sidebar_enabled: false
   feedback_recap_enabled: true
   feedback_tab_enabled: false
   loadingMessages:

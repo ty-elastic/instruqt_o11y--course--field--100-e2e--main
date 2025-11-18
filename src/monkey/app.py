@@ -36,7 +36,7 @@ HIGH_TPUT_PCT = 95
 LATENCY_SWING_MS = 10
 HIGH_TPUT_SLEEP_MS = [2,3]
 NORMAL_TPUT_SLEEP_MS = [200,300]
-ERROR_TIMEOUT_S = 60
+ERROR_TIMEOUT_S = 60*60*12
 CONCURRENT_TRADE_REQUESTS = 20
 NUM_CUSTOMERS_PER_REGION = 10
 
@@ -249,7 +249,7 @@ def generate_trade_requests():
                     error_db_service = db_error_per_region[region]['service']
                 else:
                     error_db_service = None
-                if time.time() - db_error_per_region[region]['start'] >= ERROR_TIMEOUT_S:
+                if db_error_per_region[region]['oneshot'] and time.time() - db_error_per_region[region]['start'] >= ERROR_TIMEOUT_S:
                     app.logger.info(f"db_error_per_region[{region}] timeout")
                     err_db_region_delete(region)
             else:
@@ -437,6 +437,15 @@ def err_db_region_delete(region):
     if region in db_error_per_region:
         del db_error_per_region[region]
     if region in high_tput_per_region:
+        del high_tput_per_region[region]
+    return db_error_per_region
+
+@app.delete('/version/frontend/<version>')
+def version_delete(version):
+    global db_error_per_region
+    for region in db_error_per_region:
+        del db_error_per_region[region]
+    for region in high_tput_per_region:
         del high_tput_per_region[region]
     return db_error_per_region
 

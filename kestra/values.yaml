@@ -1,0 +1,7 @@
+configuration:
+  kestra:
+    server:
+      basic-auth:
+        enabled: true
+        username: some@email.com
+        password: myPassword123

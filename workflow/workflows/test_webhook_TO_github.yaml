@@ -1,0 +1,19 @@
+version: '1'
+name: test_webhook_TO_github
+enabled: true
+triggers:
+- type: manual
+steps:
+- name: call_github_action
+  type: http
+  with:
+    url: https://api.github.com/repos/ty-elastic/instruqt_o11y--course--field--100-e2e--main/actions/workflows/webhook_FROM_es.yml/dispatches
+    method: POST
+    headers:
+      Accept: application/vnd.github+json
+      Authorization: Bearer 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
+    body:
+      ref: main
+      inputs:
+        message: hello world
+    timeout: 30s

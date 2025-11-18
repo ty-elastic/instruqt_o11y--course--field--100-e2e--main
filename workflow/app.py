@@ -12,6 +12,7 @@ import sys
 from ruamel.yaml import YAML
 from ruamel.yaml.compat import StringIO
 from dotenv import dotenv_values
+from io import StringIO
 
 class MyYAML(YAML):
     def dump(self, data, stream=None, **kw):
@@ -46,25 +47,28 @@ def backup_workflows(kibana_server, kibana_auth):
   
             yaml = MyYAML()
 
-            parsed = yaml.load(workflow['definition'])
+            yaml_stream = StringIO(workflow['yaml'])
+            parsed = yaml.load(yaml_stream)
             
             print(parsed['name'])
             
-            parsed['consts']['kbn_host'] = 'TBD'
-            parsed['consts']['kbn_auth'] = 'TBD'
-            parsed['consts']['es_host'] = 'TBD'    
-            parsed['consts']['ai_connector'] = 'TBD'   
-            parsed['consts']['ai_proxy'] = 'TBD'  
+            if 'consts' in parsed:
+                if 'kbn_host' in parsed['consts']:
+                    parsed['consts']['kbn_host'] = 'TBD'
+                if 'kbn_auth' in parsed['consts']:
+                    parsed['consts']['kbn_auth'] = 'TBD'
+                if 'es_host' in parsed['consts']:
+                    parsed['consts']['es_host'] = 'TBD'   
+                if 'ai_connector' in parsed['consts']:
+                    parsed['consts']['ai_connector'] = 'TBD'   
+                if 'ai_proxy' in parsed['consts']:
+                    parsed['consts']['ai_proxy'] = 'TBD'  
                                         
             yaml = MyYAML()
             yaml.width = float("inf") # Set the width attribute of the YAML instance
 
             #yaml.dump(parsed)
-            out = yaml.dump(parsed)
-            body = {
-                "yaml": out
-            }
-            print(out)  
+            yaml.dump(parsed, yaml_file)
   
   
 def delete_existing(kibana_server, kibana_auth, es_host, workflow_name):
@@ -215,10 +219,11 @@ def run_setup(kibana_server, kibana_auth, es_host):
 @click.option('--kibana_host', default="", help='address of kibana server')
 @click.option('--es_host', default="", help='address of elasticsearch server')
 @click.option('--es_apikey', default="", help='apikey for auth')
+@click.option('--es_authbasic', default="", help='basic for auth')
 @click.option('--ai_connector', default="Elastic-Managed-LLM", help='ai connector id')
 @click.option('--ai_proxy', default="https://tbekiares-demo-aiassistantv2-1059491012611.us-central1.run.app", help='ai proxy host')
 @click.argument('action')
-def main(kibana_host, es_host, es_apikey, ai_connector, ai_proxy, action):
+def main(kibana_host, es_host, es_apikey, es_authbasic, ai_connector, ai_proxy, action):
     
     config = dotenv_values()
     for key, value in config.items():
@@ -228,13 +233,16 @@ def main(kibana_host, es_host, es_apikey, ai_connector, ai_proxy, action):
         kibana_host = config['elasticsearch_kibana_endpoint']
     if es_host == "":
         es_host = config['elasticsearch_es_endpoint']
-    if es_apikey == "":
+    if es_apikey == "" and es_authbasic == "":
         es_apikey = config['elasticsearch_api_key']
-        
-    auth = f"ApiKey {es_apikey}"
+       
+    if es_authbasic != "":
+        auth = f"Basic {es_authbasic}"
+    else:
+        auth = f"ApiKey {es_apikey}"
     
-
     if action == 'load_workflows':
+        print("LOADING WORKFLOWS")
         load_workflows(kibana_host, auth, es_host, ai_connector, ai_proxy)
         run_setup(kibana_host, auth, es_host)
     elif action == 'load_alerts':

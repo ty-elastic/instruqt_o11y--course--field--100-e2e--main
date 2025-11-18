@@ -8,12 +8,12 @@ triggers:
 - type: alert
   enabled: true
 consts:
-  ai_connector: Elastic-Managed-LLM
-  ai_proxy: https://tbekiares-demo-aiassistantv2-1059491012611.us-central1.run.app
+  ai_connector: TBD
+  ai_proxy: TBD
   ai_timeout: 10m
-  es_host: https://snap2-96da6f.es.us-west2.gcp.elastic-cloud.com
-  kbn_auth: ApiKey SVdFNU81b0J4Wi1oTDdBWnR5Q3I6RmhNY0pub2pwOHFwTEFfa0d4SWtldw==
-  kbn_host: https://snap2-96da6f.kb.us-west2.gcp.elastic-cloud.com
+  es_host: TBD
+  kbn_auth: TBD
+  kbn_host: TBD
 steps:
 - name: alert_debug
   type: console
@@ -24,47 +24,47 @@ steps:
   type: if
   condition: 'event.alerts.new.data : *'
   steps:
-    - name: foreach_alert1
-      type: foreach
-      foreach: '{{ event.alerts.new.data | json }}'
-      steps:
-        - name: queue_alert1
-          type: http
-          with:
-            url: '{{ consts.es_host }}/workflow_alert_queue/_doc?refresh=wait_for'
-            method: POST
-            headers:
-              Authorization: '{{ consts.kbn_auth }}'
-              Content-Type: application/json
-            body: '{"alert": {{foreach.item | json}} }'
-            timeout: 30s
+  - name: foreach_alert1
+    type: foreach
+    foreach: '{{ event.alerts.new.data | json }}'
+    steps:
+    - name: queue_alert1
+      type: http
+      with:
+        url: '{{ consts.es_host }}/workflow_alert_queue/_doc?refresh=wait_for'
+        method: POST
+        headers:
+          Authorization: '{{ consts.kbn_auth }}'
+          Content-Type: application/json
+        body: '{"alert": {{foreach.item | json}} }'
+        timeout: 30s
   else:
-    - name: foreach_alert2
-      type: foreach
-      foreach: '{{ event.alerts | json }}'
+  - name: foreach_alert2
+    type: foreach
+    foreach: '{{ event.alerts | json }}'
+    steps:
+    - name: is_old_alert1
+      type: if
+      condition: 'foreach.item._index : *'
       steps:
-        - name: is_old_alert1
-          type: if
-          condition: 'foreach.item._index : *'
-          steps:
-            - name: queue_alert2
-              type: http
-              with:
-                url: '{{ consts.es_host }}/workflow_alert_queue/_doc?refresh=wait_for'
-                method: POST
-                headers:
-                  Authorization: '{{ consts.kbn_auth }}'
-                  Content-Type: application/json
-                body: '{"alert": { "_index": "{{ foreach.item._index}}", "_id": "{{ foreach.item._id}}", "kibana": {{ foreach.item.kibana | json }} }}'
-                timeout: 30s
-          else:
-            - name: queue_alert3
-              type: http
-              with:
-                url: '{{ consts.es_host }}/workflow_alert_queue/_doc?refresh=wait_for'
-                method: POST
-                headers:
-                  Authorization: '{{ consts.kbn_auth }}'
-                  Content-Type: application/json
-                body: '{"alert": { "_index": "{{ foreach.item.index}}", "_id": "{{ foreach.item.id}}", "kibana": { "alert": {{ foreach.item | json }} }}}'
-                timeout: 30s
+      - name: queue_alert2
+        type: http
+        with:
+          url: '{{ consts.es_host }}/workflow_alert_queue/_doc?refresh=wait_for'
+          method: POST
+          headers:
+            Authorization: '{{ consts.kbn_auth }}'
+            Content-Type: application/json
+          body: '{"alert": { "_index": "{{ foreach.item._index}}", "_id": "{{ foreach.item._id}}", "kibana": {{ foreach.item.kibana | json }} }}'
+          timeout: 30s
+      else:
+      - name: queue_alert3
+        type: http
+        with:
+          url: '{{ consts.es_host }}/workflow_alert_queue/_doc?refresh=wait_for'
+          method: POST
+          headers:
+            Authorization: '{{ consts.kbn_auth }}'
+            Content-Type: application/json
+          body: '{"alert": { "_index": "{{ foreach.item.index}}", "_id": "{{ foreach.item.id}}", "kibana": { "alert": {{ foreach.item | json }} }}}'
+          timeout: 30s
