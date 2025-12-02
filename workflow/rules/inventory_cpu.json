@@ -11,7 +11,7 @@
         "metric": "cpuV2",
         "comparator": ">",
         "threshold": [
-          30
+          80
         ],
         "timeSize": 5,
         "timeUnit": "m",

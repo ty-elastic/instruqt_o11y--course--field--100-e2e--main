@@ -22,6 +22,12 @@ spec:
         service: proxy
       annotations:
         io.opentelemetry.discovery.logs/enabled: "true"
+        io.opentelemetry.discovery.logs/config: |
+          operators:
+            - id: es_index
+              type: add
+              field: attributes["elasticsearch.index"]
+              value: logs
     spec:
       tolerations:
       - key: "REGION"

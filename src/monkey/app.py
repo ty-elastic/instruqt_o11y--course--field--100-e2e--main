@@ -53,15 +53,7 @@ ua_generator_options.version_ranges = {
 DAYS_OF_WEEK = ['M', 'Tu', 'W', 'Th', 'F']
 ACTIONS = ['buy', 'sell', 'hold']
 
-if os.environ['REGION'] == "1":
-    print("region1")
-    REGIONS = ['NA', 'LATAM']
-elif os.environ['REGION'] == "2":
-    print("region2")
-    REGIONS = ['EU', 'EMEA', 'APAC']
-else:
-    print("region=all")
-    REGIONS = ['NA', 'LATAM', 'EU', 'EMEA', 'APAC']
+REGIONS = ['NA', 'LATAM', 'EU', 'EMEA', 'APAC']
 
 SYMBOLS = ['ZVZZT', 'ZALM', 'ZYX', 'CBAZ', 'BAA', 'OELK']
 
