@@ -25,6 +25,7 @@ output=$(curl -s -X POST --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE
             {
                 "names": [
                 "logs",
+                "logs*",
                 "logs-*-*",
                 "metrics-*-*",
                 "traces-*-*"
