@@ -55,8 +55,7 @@ ELASTICSEARCH_APIKEY=$(echo $output | jq -r '.encoded')
 
 
 cd /workspace/workshop
-./build.sh -o false -c $INSTRUQT_TRACK_SLUG -d true -b false -s all
-# -g -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY
+./build.sh -o false -c $INSTRUQT_TRACK_SLUG -d true -b false -s all -g $ELASTIC_APM_SERVER_ENDPOINT -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY
 
 # ------------- REMOTE
 
