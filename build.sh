@@ -13,9 +13,13 @@ build_lib=false
 deploy_otel=false
 deploy_service=false
 
+elasticsearch_rum_endpoint=""
+elasticsearch_kibana_endpoint=""
+elasticsearch_api_key=""
+
 gcloud auth configure-docker us-central1-docker.pkg.dev
 
-while getopts "a:c:s:l:b:x:o:d:r:v:" opt
+while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:" opt
 do
    case "$opt" in
       a ) arch="$OPTARG" ;;
@@ -30,6 +34,11 @@ do
 
       r ) region="$OPTARG" ;;
       v ) service_version="$OPTARG" ;;
+
+
+      g ) elasticsearch_rum_endpoint="$OPTARG" ;;
+      h ) elasticsearch_kibana_endpoint="$OPTARG" ;;
+      i ) elasticsearch_api_key="$OPTARG" ;;
    esac
 done
 
