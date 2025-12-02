@@ -64,10 +64,6 @@ IFS="$OIFS"
 
 for current_region in "${regions[@]}"; do
     echo "setup for region=$current_region"
-    
-    if [ -f "./.env" ]; then
-        export $(cat ./.env | xargs)
-    fi
 
     namespace=$namespace_base-$current_region
     echo $namespace
@@ -80,7 +76,7 @@ for current_region in "${regions[@]}"; do
 
     if [ "$build_service" = "true" ]; then
         cd ./src
-        ./build.sh -e $embrace_app_id -f $embrace_upload_api_token -k $service_version -r $repo -s $service -c $course -a $arch -n $namespace -t $elasticsearch_rum_endpoint -u $elasticsearch_kibana_endpoint -v $elasticsearch_api_key
+        ./build.sh -k $service_version -r $repo -s $service -c $course -a $arch -n $namespace -t $elasticsearch_rum_endpoint -u $elasticsearch_kibana_endpoint -v $elasticsearch_api_key
         cd ..
     fi
 

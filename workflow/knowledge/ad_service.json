@@ -1,5 +1,0 @@
-{
-    "id": "ad_service",
-    "title": "CPU issue with Ad Service",
-    "text": "Ad Service can sometimes hang CPU. Try restarting the service."
-}

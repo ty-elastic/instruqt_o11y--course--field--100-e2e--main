@@ -25,16 +25,20 @@ for dir in ./tracks/*/; do
 
       if [ "$build" = "true" ]; then
         cd ../observability_ai_assistant_proxy
-        ./build.sh
+        ./build.sh -c $current_course
         cd ../instruqt
 
         cd ../workflow
-        ./build.sh
+        ./build.sh -c $current_course
         cd ../instruqt
 
         cd ../remote
-        ./build.sh
+        ./build.sh -c $current_course
         cd ../instruqt
+
+        cd ..
+        ./build.sh -c $current_course -b true -x true -s all
+        cd instruqt
       fi
 
       cd tracks/$current_course

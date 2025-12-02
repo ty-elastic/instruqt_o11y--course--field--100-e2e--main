@@ -9,9 +9,6 @@ elasticsearch_rum_endpoint=""
 elasticsearch_kibana_endpoint=""
 elasticsearch_api_key=""
 
-embrace_app_id=""
-embrace_upload_api_token=""
-
 while getopts "r:a:c:s:n:t:u:v:k:e:f:" opt
 do
    case "$opt" in
@@ -24,9 +21,6 @@ do
       u ) elasticsearch_kibana_endpoint="$OPTARG" ;;
       v ) elasticsearch_api_key="$OPTARG" ;;
       k ) service_version="$OPTARG" ;;
-
-      e ) embrace_app_id="$OPTARG" ;;
-      f ) embrace_upload_api_token="$OPTARG" ;;
    esac
 done
 
@@ -47,8 +41,6 @@ for service_dir in ./*/; do
             fi
 
             docker buildx build --platform $arch \
-                --build-arg EMBRACE_APP_ID=$embrace_app_id \
-                --build-arg EMBRACE_UPLOAD_API_TOKEN=$embrace_upload_api_token \
                 --build-arg NAMESPACE=$namespace \
                 --build-arg SERVICE_VERSION=$service_version \
                 --build-arg ELASTICSEARCH_RUM_ENDPOINT=$elasticsearch_rum_endpoint \

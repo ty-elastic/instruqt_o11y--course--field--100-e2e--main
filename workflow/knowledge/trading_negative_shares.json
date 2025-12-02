@@ -1,0 +1,5 @@
+{
+    "id": "trading_negative_shares",
+    "title": "trading negative shares",
+    "text": "version 0.1 of the frontend had a bug which could cause it, under certain circumstances, to trade a negative number of shares. this has been fixed in newer versions of the app. the proxy should be blocking old versions. if it is not, please try restarting the proxy service."
+}
