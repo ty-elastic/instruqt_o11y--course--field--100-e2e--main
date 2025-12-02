@@ -16,7 +16,7 @@ source /workspace/workshop/instruqt/scripts/elastic-otel.sh
 
 output=$(curl -s -X POST --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"  -H 'Content-Type: application/json' "$ELASTICSEARCH_URL/_security/api_key" -d '
 {
-    "name": "kubernetes_otel_onboarding",
+    "name": "rum",
     "metadata": {
         "application": "logs",
         "managed": true
@@ -50,9 +50,7 @@ output=$(curl -s -X POST --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE
     }
 }
 ')
-
 ELASTICSEARCH_APIKEY=$(echo $output | jq -r '.encoded')
-
 
 cd /workspace/workshop
 ./build.sh -o false -c $INSTRUQT_TRACK_SLUG -d true -b false -s all -g $ELASTIC_APM_SERVER_ENDPOINT -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY
