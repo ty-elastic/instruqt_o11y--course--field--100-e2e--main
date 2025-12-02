@@ -23,6 +23,10 @@ source /workspace/workshop/instruqt/scripts/elastic-view.sh
 
 source /workspace/workshop/instruqt/scripts/elastic-completion.sh
 
+# ------------- STREAMS
+
+source /workspace/workshop/instruqt/scripts/elastic-streams.sh
+
 # ------------- PODMAN
 
 sudo apt-get update
