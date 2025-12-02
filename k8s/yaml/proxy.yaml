@@ -34,7 +34,6 @@ spec:
           name: proxy
           ports:
             - containerPort: 80
-            - containerPort: 8080
           volumeMounts:
             - mountPath: /usr/share/nginx/html
               name: frontend-claim0
