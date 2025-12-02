@@ -1,4 +1,0 @@
-FROM logs-*
-| WHERE service.name == ?service_name and `@timestamp` >= NOW() - 7 DAYS
-| WHERE CONTAINS(message, ?phrase)
-| KEEP @timestamp, message, k8s.pod.name, k8s.node.hostname, k8s.namespace.name

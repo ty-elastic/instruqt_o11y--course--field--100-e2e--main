@@ -34,14 +34,20 @@ spec:
           name: proxy
           ports:
             - containerPort: 80
+            - containerPort: 8080
           volumeMounts:
             - mountPath: /usr/share/nginx/html
               name: frontend-claim0
+            - mountPath: /usr/share/nginx/html/embrace
+              name: trader-app-web-embrace-claim0
       restartPolicy: Always
       volumes:
         - name: frontend-claim0
           persistentVolumeClaim:
             claimName: frontend-claim0
+        - name: trader-app-web-embrace-claim0
+          persistentVolumeClaim:
+            claimName: trader-app-web-embrace-claim0
 ---
 apiVersion: v1
 kind: Service

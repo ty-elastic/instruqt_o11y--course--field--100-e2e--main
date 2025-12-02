@@ -14,6 +14,8 @@ consts:
   es_host: TBD
   kbn_auth: TBD
   kbn_host: TBD
+  snow_host: TBD
+  snow_auth: TBD
 steps:
 - name: alert_debug
   type: console

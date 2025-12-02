@@ -6,13 +6,13 @@
   },
   "params": {
     "aggregationType": "95th",
-    "threshold": 10,
+    "threshold": 8,
     "windowSize": 5,
     "windowUnit": "m",
     "environment": "ENVIRONMENT_ALL",
     "searchConfiguration": {
       "query": {
-        "query": "not (service.name : \"flagd\" or transaction.name : \"/flagd.evaluation.v1.Service/EventStream\" or transaction.name : \"flagd.evaluation.v1.Service/EventStream\" or transaction.type :\"external.grpc\" )",
+        "query": "not (service.name : \"flagd\" or transaction.name : \"/flagd.evaluation.v1.Service/EventStream\" or transaction.name : \"flagd.evaluation.v1.Service/EventStream\" or transaction.type :\"external.grpc\" ) and service.name : \"ad\"",
         "language": "kuery"
       }
     },

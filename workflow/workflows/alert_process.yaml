@@ -5,13 +5,15 @@ consts:
   es_host: TBD
   kbn_auth: TBD
   kbn_host: TBD
+  snow_host: TBD
+  snow_auth: TBD
 description: Process o11y alerts and correlate to cases
 enabled: true
 name: alert_process
 tags:
 - automated_observability_triage
 triggers:
-- enabled: true
+- enabled: false
   type: alert
 settings:
   timeout: 10m
@@ -209,7 +211,7 @@ steps:
         - '@timestamp': now
           message:
             content: |
-              Create an incident case for handling this new alert. Output a field called 'title' that summarizes the attached alert in a few words, a field called 'trigger' that provides a detailed summary of the alert, and a field called 'severity' with a value of 'low', 'medium', 'high', or 'critical' based on an initial analysis of the alert.
+              Output a field called 'title' that summarizes the attached alert in a few words, a field called 'trigger' that provides a detailed summary of the alert, and a field called 'severity' with a value of 'low', 'medium', 'high', or 'critical' based on an initial analysis of the alert.
             role: user
         persist: false
       headers:

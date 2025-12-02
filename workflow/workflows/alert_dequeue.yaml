@@ -5,6 +5,8 @@ consts:
   es_host: TBD
   kbn_auth: TBD
   kbn_host: TBD
+  snow_host: TBD
+  snow_auth: TBD
 name: alert_dequeue
 enabled: true
 description: dequeue alerts serially and start processing

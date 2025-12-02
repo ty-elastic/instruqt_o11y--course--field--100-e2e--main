@@ -1,4 +1,0 @@
-using the Elky tool, can you check average latency for this service?
-
-using the elky service_logs tool, can you search my deployment logs from this service for this log line?
-yes, break down by region

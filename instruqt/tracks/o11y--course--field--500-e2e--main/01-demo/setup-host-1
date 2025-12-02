@@ -1,0 +1,49 @@
+source /opt/workshops/elastic-retry.sh
+export $(curl http://kubernetes-vm:9000/env | xargs)
+
+export INSTRUQT_TRACK_SLUG=o11y--course--field--100-e2e--main
+export REPO=us-central1-docker.pkg.dev/elastic-sa/tbekiares
+export COURSE=o11y--course--field--100-e2e--main
+
+/opt/workshops/clone-code.sh -r ty-elastic/instruqt_$INSTRUQT_TRACK_SLUG -d false
+
+# ------------- OTEL
+
+source /workspace/workshop/instruqt/scripts/elastic-otel.sh
+
+# ------------- DEMO
+
+cd /workspace/workshop
+./build.sh -o false -c $INSTRUQT_TRACK_SLUG -d true -b false -s all
+
+# ------------- REMOTE
+
+cd /workspace/workshop
+export NAMESPACE=trading-1
+envsubst < remote/remote.yaml | kubectl apply -f -
+cd /workspace/
+
+# ------------- DASHBOARD
+
+# kubectl delete namespace kubernetes-dashboard
+# helm install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard --namespace kubernetes-dashboard --create-namespace --set enableInsecureLogin=true --set protocolHttp=true
+
+# echo '
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: kubernetes-dashboard-ext
+#   namespace: kubernetes-dashboard
+# spec:
+#   ports:
+#   - name: kubernetes-dashboard
+#     port: 34443
+#     protocol: TCP
+#     targetPort: 8443
+#   selector:
+#     app.kubernetes.io/component: app
+#     app.kubernetes.io/instance: kubernetes-dashboard
+#     app.kubernetes.io/name: kong
+#   type: LoadBalancer' > /workspace/kubernetes-dashboard.yaml
+
+# kubectl apply -f /workspace/kubernetes-dashboard.yaml

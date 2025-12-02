@@ -13,6 +13,8 @@ build_lib=false
 deploy_otel=false
 deploy_service=false
 
+gcloud auth configure-docker us-central1-docker.pkg.dev
+
 while getopts "a:c:s:l:b:x:o:d:r:v:" opt
 do
    case "$opt" in
@@ -78,7 +80,7 @@ for current_region in "${regions[@]}"; do
 
     if [ "$build_service" = "true" ]; then
         cd ./src
-        ./build.sh -k $service_version -r $repo -s $service -c $course -a $arch -n $namespace -t $elasticsearch_rum_endpoint -u $elasticsearch_kibana_endpoint -v $elasticsearch_api_key
+        ./build.sh -e $embrace_app_id -f $embrace_upload_api_token -k $service_version -r $repo -s $service -c $course -a $arch -n $namespace -t $elasticsearch_rum_endpoint -u $elasticsearch_kibana_endpoint -v $elasticsearch_api_key
         cd ..
     fi
 
@@ -119,9 +121,11 @@ for current_region in "${regions[@]}"; do
         export NAMESPACE=$namespace
         export REGION=$current_region
 
-
         export SERVICE_VERSION=$service_version
         export NOTIFIER_ENDPOINT=$notifier_endpoint
+
+        export JOB_ID=$(( $RANDOM ))
+        echo $JOB_ID
 
         envsubst < k8s/yaml/_namespace.yaml | kubectl apply -f -
 

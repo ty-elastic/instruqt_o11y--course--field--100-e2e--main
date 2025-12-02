@@ -14,7 +14,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: frontend-$SERVICE_VERSION
+  name: frontend-$JOB_ID-$SERVICE_VERSION
   namespace: $NAMESPACE
 spec:
   template:

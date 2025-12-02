@@ -14,31 +14,6 @@ cd tools/pandoc
 docker build --platform linux/amd64 -t pandoc-inter .
 cd ../..
 
-cd ..
-cd collector/_courses
-./diff.sh
-cd ../../instruqt
-
-cd ..
-cd k8s/yaml/_courses
-./diff.sh
-cd ../../../instruqt
-
-cd ..
-cd src/recorder-java/_courses
-./diff.sh
-cd ../../../instruqt
-
-cd ..
-cd src/router/_courses
-./diff.sh
-cd ../../../instruqt
-
-cd ..
-cd src/trader/_courses
-./diff.sh
-cd ../../../instruqt
-
 for dir in ./tracks/*/; do
   echo $dir
   if [[ -d "$dir" ]]; then
@@ -49,9 +24,17 @@ for dir in ./tracks/*/; do
     if [[ "$course" == "all" || "$course" == "$current_course" ]]; then
 
       if [ "$build" = "true" ]; then
-        cd ..
-        ./build.sh -c $current_course -a $arch -v $current_course
-        cd instruqt
+        cd ../observability_ai_assistant_proxy
+        ./build.sh
+        cd ../instruqt
+
+        cd ../workflow
+        ./build.sh
+        cd ../instruqt
+
+        cd ../remote
+        ./build.sh
+        cd ../instruqt
       fi
 
       cd tracks/$current_course

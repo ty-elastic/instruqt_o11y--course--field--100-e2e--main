@@ -1,0 +1,5 @@
+{
+    "id": "payment_service",
+    "title": "Payment service failures",
+    "text": "The payment service can sometimes get in a bad state. Try restarting the service."
+}

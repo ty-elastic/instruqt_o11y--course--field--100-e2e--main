@@ -5,6 +5,8 @@ consts:
   es_host: TBD
   kbn_auth: TBD
   kbn_host: TBD
+  snow_host: TBD
+  snow_auth: TBD
 name: case_process
 version: '1'
 description: Process o11y cases
@@ -139,9 +141,12 @@ steps:
         {% if steps.rca1.output.data.result.k8s_namespace != 'NOT_AVAILABLE' %}
         | WHERE k8s.namespace.name == "{{ steps.rca1.output.data.result.k8s_namespace }}"
         {% endif %}
-        | WHERE TO_UPPER(log.level) IN ("WARN", "WARNING", "SEVERE", "FATAL", "ERROR") OR TO_UPPER(message) LIKE "* ERROR *"
-        | STATS num = COUNT() BY pattern = CATEGORIZE(message), service.name
-        | SORT num DESC
+        | WHERE TO_UPPER(log.level) IN ("WARN", "WARNING", "SEVERE", "FATAL", "ERROR") OR TO_UPPER(message) LIKE "*ERROR*" OR TO_UPPER(message) LIKE "*FAIL*" OR TO_UPPER(message) LIKE "*PROBLEM*"
+        | STATS pattern_count = COUNT() BY pattern = CATEGORIZE(message), service.name
+        | WHERE pattern IS NOT NULL
+        | INLINE STATS top_count = TOP(pattern_count, 5, "desc") BY service.name
+        | WHERE pattern_count >= LEAST(top_count)
+        | SORT service.name, pattern_count
         | LIMIT 1000
     headers:
       Authorization: '{{ consts.kbn_auth }}'
@@ -168,6 +173,7 @@ steps:
         | EVAL normalized_load = (TO_DOUBLE(load_1m) / TO_DOUBLE(cpucount)) * 100
         | EVAL mem_usage = (mem_used + mem_buffered + mem_reclaimable + mem_unreclaimable) * 100
         | EVAL disk_usage = max_disk_usage * 100
+        | WHERE cpu_usage IS NOT NULL
         | KEEP cpu_usage, normalized_load, mem_usage, disk_usage, `BUCKET(@timestamp, 1m)`
         | LIMIT 1000
     headers:
