@@ -1,34 +1,34 @@
 ---
 slug: demo
-id: zzp0nxfxmxry
+id: djf9hko1ubhc
 type: challenge
 title: Demo
 tabs:
-- id: xdbcqb6naygo
+- id: 6isqyipw1hmd
   title: Elasticsearch
   type: service
   hostname: kubernetes-vm
   path: /app/apm/service-map
   port: 30001
-- id: mdp2y75l0s6c
+- id: cqdigxbelhba
   title: Elasticsearch (breakout)
   type: service
   hostname: kubernetes-vm
   path: /app/apm/service-map
   port: 30001
   new_window: true
-- id: 3o6dqpvmx3sb
+- id: aq8oaqxxd2nc
   title: Trader
   type: service
   hostname: host-1
   path: /
   port: 8080
-- id: ssyhxjku2bhz
+- id: ent1or6pgmot
   title: host-1
   type: terminal
   hostname: host-1
   workdir: /workspace/workshop
-- id: swrcs8e6rna6
+- id: uv4y5drik7sj
   title: kubernetes-vm
   type: terminal
   hostname: kubernetes-vm
