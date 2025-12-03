@@ -40,8 +40,16 @@ spec:
               value: $POSTGRESQL_USER
             - name: POSTGRESQL_DBNAME
               value: $POSTGRESQL_DBNAME
-            - name: POSTGRESQL_SSLMODE
-              value: "$POSTGRESQL_SSLMODE"
+            - name: POSTGRESQL_PROTOCOL
+              value: $POSTGRESQL_PROTOCOL
+            - name: POSTGRESQL_SETUP
+              value: $POSTGRESQL_SETUP
+            - name: POSTGRESQL_OPTIONS
+              value: $POSTGRESQL_OPTIONS
+            - name: POSTGRESQL_PORT
+              value: "$POSTGRESQL_PORT"
+            - name: POSTGRESQL_DIALECT
+              value: $POSTGRESQL_DIALECT
           image: $REPO/recorder-go-zero:$COURSE
           imagePullPolicy: Always
           name: recorder-go-zero

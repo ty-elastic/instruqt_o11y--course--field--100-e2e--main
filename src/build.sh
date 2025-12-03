@@ -9,7 +9,7 @@ elasticsearch_rum_endpoint=""
 elasticsearch_kibana_endpoint=""
 elasticsearch_api_key=""
 
-while getopts "r:a:c:s:n:t:u:v:k:e:f:" opt
+while getopts "r:a:c:s:n:k:e:f:g:h:i:" opt
 do
    case "$opt" in
       a ) arch="$OPTARG" ;;
@@ -17,10 +17,11 @@ do
       r ) repo="$OPTARG" ;;
       s ) service="$OPTARG" ;;
       n ) namespace="$OPTARG" ;;
-      t ) elasticsearch_rum_endpoint="$OPTARG" ;;
-      u ) elasticsearch_kibana_endpoint="$OPTARG" ;;
-      v ) elasticsearch_api_key="$OPTARG" ;;
       k ) service_version="$OPTARG" ;;
+
+      g ) elasticsearch_rum_endpoint="$OPTARG" ;;
+      h ) elasticsearch_kibana_endpoint="$OPTARG" ;;
+      i ) elasticsearch_api_key="$OPTARG" ;;
    esac
 done
 

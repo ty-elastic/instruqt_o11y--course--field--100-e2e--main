@@ -24,6 +24,8 @@ spec:
         io.opentelemetry.discovery.logs/enabled: "true"
         io.opentelemetry.discovery.logs/config: |
           operators:
+            - id: container-parser # Extract container's metadata
+              type: container
             - id: es_index
               type: add
               field: attributes["elasticsearch.index"]

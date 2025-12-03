@@ -11,10 +11,6 @@ mkdir -p /workspace/workshop
 git clone $GITHUB_REPO /workspace/workshop
 cd /workspace/workshop
 
-# ------------- BASEURL
-
-kubectl patch Kibana kibana -p '{"spec": {"config": {"server.publicBaseUrl": "http://kubernetes-vm:30001"}}}' --type=merge
-
 # ------------- VIEW
 
 source /workspace/workshop/instruqt/scripts/elastic-view.sh
@@ -93,3 +89,7 @@ podman run --network host $REPO/workflows:$INSTRUQT_TRACK_SLUG --kibana_host $KI
 podman run --network host $REPO/workflows:$INSTRUQT_TRACK_SLUG --kibana_host $KIBANA_URL --es_host $ELASTICSEARCH_URL --es_apikey $ELASTICSEARCH_APIKEY load_knowledge
 
 podman run --network host $REPO/workflows:$INSTRUQT_TRACK_SLUG --kibana_host $KIBANA_URL --es_host $ELASTICSEARCH_URL --es_apikey $ELASTICSEARCH_APIKEY load_prompt
+
+# ------------- BASEURL
+
+kubectl patch Kibana kibana -p '{"spec": {"config": {"server.publicBaseUrl": "http://kubernetes-vm:30001"}}}' --type=merge

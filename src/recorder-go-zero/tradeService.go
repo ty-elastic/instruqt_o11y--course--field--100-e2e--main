@@ -21,7 +21,7 @@ func NewTradeService() (*TradeService, error) {
 
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=%s",
-		os.Getenv("POSTGRESQL_HOST"), 5432, os.Getenv("POSTGRESQL_USER"), os.Getenv("POSTGRESQL_PASSWORD"), os.Getenv("POSTGRESQL_DBNAME"), os.Getenv("POSTGRESQL_SSLMODE"))
+		os.Getenv("POSTGRESQL_HOST"), 5432, os.Getenv("POSTGRESQL_USER"), os.Getenv("POSTGRESQL_PASSWORD"), os.Getenv("POSTGRESQL_DBNAME"), "disable")
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
 		log.Fatal("unable to connect to database: ", err)

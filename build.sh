@@ -35,7 +35,6 @@ do
       r ) region="$OPTARG" ;;
       v ) service_version="$OPTARG" ;;
 
-
       g ) elasticsearch_rum_endpoint="$OPTARG" ;;
       h ) elasticsearch_kibana_endpoint="$OPTARG" ;;
       i ) elasticsearch_api_key="$OPTARG" ;;
@@ -85,7 +84,7 @@ for current_region in "${regions[@]}"; do
 
     if [ "$build_service" = "true" ]; then
         cd ./src
-        ./build.sh -k $service_version -r $repo -s $service -c $course -a $arch -n $namespace -t $elasticsearch_rum_endpoint -u $elasticsearch_kibana_endpoint -v $elasticsearch_api_key
+        ./build.sh -k $service_version -r $repo -s $service -c $course -a $arch -n $namespace -g $elasticsearch_rum_endpoint -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key
         cd ..
     fi
 
