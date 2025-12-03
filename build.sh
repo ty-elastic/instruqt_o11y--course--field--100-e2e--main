@@ -154,7 +154,7 @@ for current_region in "${regions[@]}"; do
                             echo "skipping deployment annotation"
                         else
                             echo "adding deployment annotation"
-                            ts=$(date -z utc +%FT%TZ)
+                            ts=$(date --utc +%FT%TZ)
                             curl -X POST "$elasticsearch_kibana_endpoint/api/apm/services/$current_service/annotation" \
                                 -H 'Content-Type: application/json' \
                                 -H 'kbn-xsrf: true' \
