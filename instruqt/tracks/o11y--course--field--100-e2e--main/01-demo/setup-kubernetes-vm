@@ -80,7 +80,8 @@ retry_command_lin get_ai_connector
 
 output=$(curl -s -X POST --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"  -H 'Content-Type: application/json' "$ELASTICSEARCH_URL/_security/api_key" -d '
 {
-    "name": "workflow"
+    "name": "workflow",
+    "expiration": "7d"
 }
 ')
 ELASTICSEARCH_APIKEY=$(echo $output | jq -r '.encoded')
