@@ -1,7 +1,7 @@
 version: '1'
 name: alert_queue
 description: ingest alerts
-enabled: false
+enabled: true
 tags:
 - automated_observability_triage
 triggers:
