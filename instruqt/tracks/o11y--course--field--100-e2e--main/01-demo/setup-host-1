@@ -10,6 +10,7 @@ export COURSE=o11y--course--field--100-e2e--main
 # ------------- OTEL
 
 source /workspace/workshop/instruqt/scripts/elastic-otel.sh
+sleep 30
 
 # ------------- DEMO
 
