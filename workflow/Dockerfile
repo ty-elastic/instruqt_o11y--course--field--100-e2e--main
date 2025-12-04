@@ -11,6 +11,7 @@ COPY workflows workflows
 COPY rules rules
 COPY prompt prompt
 COPY knowledge knowledge
+COPY synthetics synthetics
 
 ENV PYTHONUNBUFFERED=1
 

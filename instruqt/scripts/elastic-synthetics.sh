@@ -54,7 +54,7 @@ echo $ENROLLMENT_API_KEY_ID
 echo $ENROLLMENT_API_KEY
 
 # ------------- START AGENT
-docker run -d --net host \
+podman run -d --net host \
   --env FLEET_INSECURE=true \
   --env FLEET_ENROLL=1 \
   --env FLEET_URL=https://fleet-server-agent-http.default.svc:8220 \
