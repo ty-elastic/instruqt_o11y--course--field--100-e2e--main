@@ -1,6 +1,6 @@
 arch=linux/amd64
 repo=us-central1-docker.pkg.dev/elastic-sa/tbekiares
-course=o11y--course--field--demo-oneworkflow--main
+course=o11y--course--field--100-e2e--main
 current_service=workflows
 
 while getopts "c:" opt

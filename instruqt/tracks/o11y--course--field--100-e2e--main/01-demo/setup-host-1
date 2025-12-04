@@ -64,27 +64,6 @@ export NAMESPACE=trading-1
 envsubst < remote/remote.yaml | kubectl apply -f -
 cd /workspace/
 
-# ------------- DASHBOARD
+# ------------- SYNTHETICS
 
-# kubectl delete namespace kubernetes-dashboard
-# helm install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard --namespace kubernetes-dashboard --create-namespace --set enableInsecureLogin=true --set protocolHttp=true
-
-# echo '
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: kubernetes-dashboard-ext
-#   namespace: kubernetes-dashboard
-# spec:
-#   ports:
-#   - name: kubernetes-dashboard
-#     port: 34443
-#     protocol: TCP
-#     targetPort: 8443
-#   selector:
-#     app.kubernetes.io/component: app
-#     app.kubernetes.io/instance: kubernetes-dashboard
-#     app.kubernetes.io/name: kong
-#   type: LoadBalancer' > /workspace/kubernetes-dashboard.yaml
-
-# kubectl apply -f /workspace/kubernetes-dashboard.yaml
+source /workspace/workshop/instruqt/scripts/elastic-synthetics.sh

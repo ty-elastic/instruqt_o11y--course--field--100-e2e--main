@@ -225,6 +225,26 @@ def load_workflows(kibana_server, kibana_auth, es_host, ai_connector, ai_proxy, 
 
 #
 
+def load_synthetics(kibana_server, kibana_auth):
+
+    directory_path = "synthetics"
+    target_extension = ".json"
+    
+    for root, dirs, files in os.walk(directory_path):
+        for file in files:
+            if file.endswith(target_extension):
+                full_path = os.path.join(root, file)
+                with open(full_path, 'r') as fileo:
+                    #content = file.read()
+                    synthetic = json.load(fileo)
+
+                    print(synthetic)
+                    resp = requests.post(f"{kibana_server}/api/synthetics/monitors",
+                                        json=synthetic,
+                                        headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+                    print(resp.json())     
+ 
+
 def load_rules(kibana_server, kibana_auth, es_host, connect_alerts=True):
 
     body = {
@@ -341,6 +361,9 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, ai_conne
         print('done')
     elif action == 'load_prompt':
         load_prompt(kibana_host, auth)
+        print('done')
+    elif action == 'load_synthetics':
+        load_synthetics(kibana_host, auth)
         print('done')
 
 if __name__ == '__main__':

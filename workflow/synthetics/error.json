@@ -1,0 +1,15 @@
+{
+  "type": "browser",
+  "name": "Error",
+  "url": "http://host-1:8080",
+  "tags": ["trader"],
+  "private_locations": ["host-1"],
+  "schedule": 1,
+  "service.name": "trader-app-web",
+  "inline_script": """step('Go to http://host-1:8080/', async () => {
+    await page.goto('http://host-1:8080/');
+    await page.getByRole('button', { name: 'Error' }).click();
+    await page.getByRole('button', { name: 'Browser Browser (Javascript)' }).click();
+    await page.getByRole('button', { name: 'Submit' }).click();
+    });"""
+}
