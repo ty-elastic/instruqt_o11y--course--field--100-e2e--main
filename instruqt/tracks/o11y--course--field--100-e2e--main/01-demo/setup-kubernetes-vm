@@ -24,14 +24,21 @@ source /workspace/workshop/instruqt/scripts/elastic-view.sh
 
 source /workspace/workshop/instruqt/scripts/elastic-completion.sh
 
+# ------------- PROFILING
+
+source /workspace/workshop/instruqt/scripts/elastic-profiling-backend.sh
+
 # ------------- STREAMS
 
 source /workspace/workshop/instruqt/scripts/elastic-streams.sh
 
-
 # ------------- ENABLE ONE WORKFLOW
 
 source /workspace/workshop/instruqt/scripts/elastic-workflow.sh
+
+# ------------- ENABLE SYNTHETICS
+
+source /workspace/workshop/instruqt/scripts/elastic-synthetics.sh
 
 # ------------- AI PROXY
 
@@ -74,8 +81,7 @@ podman run --network host $REPO/workflows:$INSTRUQT_TRACK_SLUG --kibana_host $KI
 
 podman run --network host $REPO/workflows:$INSTRUQT_TRACK_SLUG --kibana_host $KIBANA_URL --es_host $ELASTICSEARCH_URL --es_apikey $ELASTICSEARCH_APIKEY load_prompt
 
-# ------------- SYNTHETICS
+# ------------- LOAD SYNTHETICS
 
-source /workspace/workshop/instruqt/scripts/elastic-synthetics.sh
 podman run --network host $REPO/workflows:$INSTRUQT_TRACK_SLUG --kibana_host $KIBANA_URL --es_host $ELASTICSEARCH_URL --es_apikey $ELASTICSEARCH_APIKEY load_synthetics
 

@@ -65,3 +65,6 @@ export NAMESPACE=trading-1
 envsubst < remote/remote.yaml | kubectl apply -f -
 cd /workspace/
 
+# ------------- PROFILING
+
+source /workspace/workshop/instruqt/scripts/elastic-profiling-agent.sh
