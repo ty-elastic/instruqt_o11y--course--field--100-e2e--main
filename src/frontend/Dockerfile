@@ -39,6 +39,6 @@ COPY upload_source_map.sh build/
 RUN export ELASTICSEARCH_APIKEY=$ELASTICSEARCH_APIKEY
 RUN export SERVICE_NAME=$SERVICE_NAME
 RUN export SERVICE_VERSION=$SERVICE_VERSION
-RUN cd build && ./upload_source_map.sh
+RUN cd build && ./upload_source_map.sh || true
 
 CMD rm -rf /build/* && cp -r /app/build/. /build/

@@ -11,7 +11,7 @@ curl -X POST "$KIBANA_URL/api/profiling/setup/es_resources" \
     --header 'x-elastic-internal-origin: Kibana' \
     --header "Authorization: ApiKey $ELASTICSEARCH_APIKEY"
 
-# ------------- APIKEY
+# ------------- SERVICES
 
 output=$(curl -s -X POST --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"  -H 'Content-Type: application/json' "$ELASTICSEARCH_URL/_security/api_key" -d '
 {
@@ -21,10 +21,7 @@ output=$(curl -s -X POST --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE
 ')
 export PROFILING_APIKEY=$(echo $output | jq -r '.encoded')
 
-cd /workspace/workshop
-
-
-cd profiling
+cd /workspace/workshop/profiling
 
 envsubst < collector.yml > collector-rendered.yml
 envsubst < symbolizer.yml > symbolizer-rendered.yml
