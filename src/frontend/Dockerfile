@@ -34,11 +34,10 @@ RUN echo "import apm from './rum';\n" | cat - src/index.js > temp && mv temp src
 
 RUN npm run build
 
-COPY upload_source_map.sh build/
-
-RUN export ELASTICSEARCH_APIKEY=$ELASTICSEARCH_APIKEY
-RUN export SERVICE_NAME=$SERVICE_NAME
-RUN export SERVICE_VERSION=$SERVICE_VERSION
-RUN cd build && ./upload_source_map.sh || true
+# COPY upload_source_map.sh build/
+# RUN export ELASTICSEARCH_APIKEY=$ELASTICSEARCH_APIKEY
+# RUN export SERVICE_NAME=$SERVICE_NAME
+# RUN export SERVICE_VERSION=$SERVICE_VERSION
+# RUN cd build && ./upload_source_map.sh || true
 
 CMD rm -rf /build/* && cp -r /app/build/. /build/
