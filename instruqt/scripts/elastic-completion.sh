@@ -56,3 +56,7 @@ add_connector() {
     fi
 }
 retry_command_lin add_connector
+
+# ------------- BASEURL
+
+kubectl patch Kibana kibana -p '{"spec": {"config": {"server.publicBaseUrl": "http://kubernetes-vm:30001"}}}' --type=merge
