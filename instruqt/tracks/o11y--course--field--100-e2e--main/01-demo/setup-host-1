@@ -3,7 +3,7 @@ export $(curl http://kubernetes-vm:9000/env | xargs)
 
 export INSTRUQT_TRACK_SLUG=o11y--course--field--100-e2e--main
 export REPO=us-central1-docker.pkg.dev/elastic-sa/tbekiares
-export COURSE=o11y--course--field--100-e2e--main
+export COURSE=$INSTRUQT_TRACK_SLUG
 
 /opt/workshops/clone-code.sh -r ty-elastic/instruqt_$INSTRUQT_TRACK_SLUG -d false
 
@@ -13,7 +13,6 @@ source /workspace/workshop/instruqt/scripts/elastic-otel.sh
 sleep 30
 
 # ------------- DEMO
-
 
 output=$(curl -s -X POST --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"  -H 'Content-Type: application/json' "$ELASTICSEARCH_URL/_security/api_key" -d '
 {
