@@ -1,6 +1,16 @@
 source /opt/workshops/elastic-retry.sh
 export $(curl http://kubernetes-vm:9000/env | xargs)
 
+# ------------- KIBANA
+
+kubectl patch Kibana kibana -p '{"spec": {"config": {"xpack.profiling.enabled": true}}}' --type=merge
+
+echo "/api/profiling/setup/es_resources"
+curl -X POST "$KIBANA_URL/api/profiling/setup/es_resources" \
+    --header "kbn-xsrf: true" \
+    --header 'x-elastic-internal-origin: Kibana' \
+    --header "Authorization: ApiKey $ELASTICSEARCH_APIKEY"
+
 # ------------- APIKEY
 
 output=$(curl -s -X POST --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"  -H 'Content-Type: application/json' "$ELASTICSEARCH_URL/_security/api_key" -d '
@@ -13,7 +23,6 @@ export PROFILING_APIKEY=$(echo $output | jq -r '.encoded')
 
 cd /workspace/workshop
 
-kubectl patch Kibana kibana -p '{"spec": {"config": {"xpack.profiling.enabled": true}}}' --type=merge
 
 cd profiling
 
