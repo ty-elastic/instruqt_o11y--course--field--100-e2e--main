@@ -12,6 +12,7 @@ done
 output=$(curl -s -X POST --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"  -H 'Content-Type: application/json' "$ELASTICSEARCH_URL/_security/api_key" -d '
 {
     "name": "kubernetes_otel_onboarding",
+    "expiration": "7d",
     "metadata": {
         "application": "logs",
         "managed": true
@@ -24,11 +25,11 @@ output=$(curl -s -X POST --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE
             "indices": [
             {
                 "names": [
-                "logs",
-                "logs*",
-                "logs-*-*",
-                "metrics-*-*",
-                "traces-*-*"
+                    "logs-*-*",
+                    "logs",
+                    "logs.*",
+                    "metrics-*-*",
+                    "traces-*-*"
                 ],
                 "privileges": [
                 "auto_configure",

@@ -17,45 +17,15 @@ sleep 30
 output=$(curl -s -X POST --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"  -H 'Content-Type: application/json' "$ELASTICSEARCH_URL/_security/api_key" -d '
 {
     "name": "rum",
-    "metadata": {
-        "application": "logs",
-        "managed": true
-    },
-    "role_descriptors": {
-        "standalone_agent": {
-            "cluster": [
-            "monitor"
-            ],
-            "indices": [
-            {
-                "names": [
-                "logs-*-*",
-                "metrics-*-*",
-                "traces-*-*"
-                ],
-                "privileges": [
-                "auto_configure",
-                "create_doc"
-                ],
-                "allow_restricted_indices": false
-            }
-            ],
-            "applications": [],
-            "run_as": [],
-            "metadata": {},
-            "transient_metadata": {
-            "enabled": true
-            }
-        }
-    }
+    "expiration": "7d"
 }
 ')
-ELASTICSEARCH_APIKEY=$(echo $output | jq -r '.encoded')
+RUM_APIKEY=$(echo $output | jq -r '.encoded')
 
-RUM_ENDPOINT=https://kubernetes-vm-8200-$_SANDBOX_ID.env.play.instruqt.com
+RUM_ENDPOINT=/
 cd /workspace/workshop
-./build.sh -o false -c $INSTRUQT_TRACK_SLUG -d true -b false -s all -g $RUM_ENDPOINT -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY
-./build.sh -o false -c latest -l true -d force -b true -s frontend -g $RUM_ENDPOINT -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY
+./build.sh -o false -c $INSTRUQT_TRACK_SLUG -d true -b false -s all -g $RUM_ENDPOINT -h $KIBANA_URL -i $RUM_APIKEY
+./build.sh -o false -c latest -l true -d force -b true -s frontend -g $RUM_ENDPOINT -h $KIBANA_URL -i $RUM_APIKEY
 
 # ------------- REMOTE
 
