@@ -21,7 +21,7 @@ triggers:
 - enabled: true
   type: scheduled
   with:
-    every: 1m
+    every: 5m
 steps:
 - name: get_end_time
   type: http
