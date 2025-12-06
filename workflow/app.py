@@ -283,7 +283,7 @@ def load_rules(kibana_server, kibana_auth, es_host, connect_alerts=True):
                                         headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
                     print(resp.json())     
             
-def run_setup(kibana_server, kibana_auth, es_host):
+def run_workflow(kibana_server, kibana_auth, workflow_name):
     
       
     body = {
@@ -298,16 +298,12 @@ def run_setup(kibana_server, kibana_auth, es_host):
     #print(resp.json())
     
     for workflow in resp.json()['results']:
-        if workflow['name'] == 'automated_triage_setup':
+        if workflow['name'] == workflow_name:
             resp2 = requests.post(f"{kibana_server}/api/workflows/{workflow['id']}/run",
                             json={"inputs":{}},
                             headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
-            print(resp2.json())  
-        elif workflow['name'] == 'topology':
-            resp2 = requests.post(f"{kibana_server}/api/workflows/{workflow['id']}/run",
-                            json={"inputs":{}},
-                            headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
-            print(resp2.json())  
+            print(resp2.json())
+            break
 
 
 @click.command()
@@ -351,7 +347,8 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, ai_conne
     if action == 'load_workflows':
         print("LOADING WORKFLOWS")
         load_workflows(kibana_host, auth, es_host, ai_connector, ai_proxy, snow_host, snow_auth)
-        run_setup(kibana_host, auth, es_host)
+        run_workflow(kibana_host, auth, 'automated_triage_setup')
+        run_workflow(kibana_host, auth, 'topology')
     elif action == 'load_alerts':
         load_rules(kibana_host, auth, es_host, connect_alerts)
     elif action == 'backup_workflows':
