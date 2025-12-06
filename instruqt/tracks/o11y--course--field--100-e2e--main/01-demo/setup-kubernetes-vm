@@ -75,7 +75,7 @@ ELASTICSEARCH_APIKEY=$(echo $output | jq -r '.encoded')
 
 podman run --network host $REPO/workflows:$INSTRUQT_TRACK_SLUG --ai_connector $CONNECTOR_ID --ai_proxy http://kubernetes-vm:8080 --kibana_host $KIBANA_URL --es_host $ELASTICSEARCH_URL --es_apikey $ELASTICSEARCH_APIKEY load_workflows
 
-podman run --network host $REPO/workflows:$INSTRUQT_TRACK_SLUG --kibana_host $KIBANA_URL --es_host $ELASTICSEARCH_URL --es_apikey $ELASTICSEARCH_APIKEY load_alerts --connect_alerts False
+podman run --network host $REPO/workflows:$INSTRUQT_TRACK_SLUG --kibana_host $KIBANA_URL --es_host $ELASTICSEARCH_URL --es_apikey $ELASTICSEARCH_APIKEY load_alerts --connect_alerts True
 
 podman run --network host $REPO/workflows:$INSTRUQT_TRACK_SLUG --kibana_host $KIBANA_URL --es_host $ELASTICSEARCH_URL --es_apikey $ELASTICSEARCH_APIKEY load_knowledge
 
