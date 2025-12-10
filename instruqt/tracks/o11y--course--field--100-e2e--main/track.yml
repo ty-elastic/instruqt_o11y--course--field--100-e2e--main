@@ -10,7 +10,7 @@ developers:
 show_timer: true
 idle_timeout: 21600
 timelimit: 43200
-sandbox_preset: managed-vm-elastic-9-3-0
+sandbox_preset: managed-vm-elastic-9-3-0-fe116a51
 lab_config:
   extend_ttl: 3600
   sidebar_enabled: true
