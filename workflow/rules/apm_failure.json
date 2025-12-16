@@ -11,7 +11,7 @@
     "environment": "ENVIRONMENT_ALL",
     "searchConfiguration": {
       "query": {
-        "query": "not (service.name : \"flagd\" or transaction.name : \"/flagd.evaluation.v1.Service/EventStream\" or transaction.name : \"flagd.evaluation.v1.Service/EventStream\" or transaction.type :\"external.grpc\" )",
+        "query": "",
         "language": "kuery"
       }
     },

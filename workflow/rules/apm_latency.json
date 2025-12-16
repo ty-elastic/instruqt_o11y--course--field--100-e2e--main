@@ -2,17 +2,17 @@
   "name": "APM Latency Rule",
   "tags": ["automated_observability_triage"],
   "schedule": {
-    "interval": "30s"
+    "interval": "5s"
   },
   "params": {
     "aggregationType": "95th",
-    "threshold": 8,
+    "threshold": 500,
     "windowSize": 5,
     "windowUnit": "m",
     "environment": "ENVIRONMENT_ALL",
     "searchConfiguration": {
       "query": {
-        "query": "not (service.name : \"flagd\" or transaction.name : \"/flagd.evaluation.v1.Service/EventStream\" or transaction.name : \"flagd.evaluation.v1.Service/EventStream\" or transaction.type :\"external.grpc\" ) and service.name : \"ad\"",
+        "query": "",
         "language": "kuery"
       }
     },
