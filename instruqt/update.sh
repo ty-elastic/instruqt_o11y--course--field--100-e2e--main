@@ -36,6 +36,10 @@ for dir in ./tracks/*/; do
         ./build.sh -c $current_course
         cd ../instruqt
 
+        cd ../cpuhog
+        ./build.sh -c $current_course
+        cd ../instruqt
+
         cd ..
         ./build.sh -c $current_course -b true -x true -s all
         cd instruqt

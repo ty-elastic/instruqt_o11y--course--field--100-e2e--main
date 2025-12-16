@@ -11,7 +11,7 @@ import signal
 import sys
 
 TIMEOUT = 1
-REGIONS = ['EU', 'EMEA', 'APAC']
+REGIONS = ['NA', 'LATAM', 'EU', 'EMEA', 'APAC']
 
 def clear_latency(region):
     try:

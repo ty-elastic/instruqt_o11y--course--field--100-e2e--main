@@ -1,6 +1,6 @@
 <remediation>
 
-<restart_service>
+<service>
 If a case involves a kubernetes pod, you may be asked to remediate the issue by invoking the specified workflow via the following Kibana API:
 
 ```
@@ -14,7 +14,7 @@ POST kbn:/api/workflows/{WORKFLOW_ID}/run
 }
 ```
 
-where <service_name> is the name of the service, <service_action> is  'restart', and `case_id` is the id of the Kibana case likely referenced earlier in this conversation. If it is not available, send "NOT_AVAILABLE" as the `case_id`.
-</restart_service>
+where <service_name> is the name of the service, <service_action> is  'restart' or 'down' (terminate), and `case_id` is the id of the Kibana case likely referenced earlier in this conversation. If it is not available, send "NOT_AVAILABLE" as the `case_id`.
+</service>
 
 </remediation>
