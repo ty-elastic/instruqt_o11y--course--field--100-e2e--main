@@ -19,7 +19,7 @@ _frontend
 obj
 *.sln
 
-pyproject.toml
+#pyproject.toml
 uv.lock
 .python-version
 

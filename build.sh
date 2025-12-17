@@ -13,13 +13,21 @@ build_lib=false
 deploy_otel=false
 deploy_service=false
 
+elasticsearch_es_endpoint=""
 elasticsearch_rum_endpoint=""
 elasticsearch_kibana_endpoint=""
 elasticsearch_api_key=""
 
+unameOut="$(uname -s)"
+case "${unameOut}" in
+    Linux*)     machine=Linux;;
+    Darwin*)    machine=Mac;;
+    *)          machine="UNKNOWN:${unameOut}"
+esac
+
 gcloud auth configure-docker us-central1-docker.pkg.dev
 
-while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:" opt
+while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:" opt
 do
    case "$opt" in
       a ) arch="$OPTARG" ;;
@@ -38,6 +46,7 @@ do
       g ) elasticsearch_rum_endpoint="$OPTARG" ;;
       h ) elasticsearch_kibana_endpoint="$OPTARG" ;;
       i ) elasticsearch_api_key="$OPTARG" ;;
+      j ) elasticsearch_es_endpoint="$OPTARG" ;;
    esac
 done
 
@@ -97,7 +106,7 @@ for current_region in "${regions[@]}"; do
     if [ "$deploy_otel" != "false" ]; then
         # ---------- COLLECTOR
 
-        echo "deploying values-$deploy_otel.yaml"
+        echo "deploying values.yaml"
 
         helm repo add open-telemetry 'https://open-telemetry.github.io/opentelemetry-helm-charts' --force-update
 
@@ -112,7 +121,7 @@ for current_region in "${regions[@]}"; do
         cd collector
         helm upgrade --install opentelemetry-kube-stack open-telemetry/opentelemetry-kube-stack \
         --namespace opentelemetry-operator-system \
-        --values "values-$deploy_otel.yaml" \
+        --values "values.yaml" \
         --version '0.10.5'
         cd ..
 
@@ -124,6 +133,7 @@ for current_region in "${regions[@]}"; do
         export REPO=$repo
         export NAMESPACE=$namespace
         export REGION=$current_region
+        export ELASTICSEARCH_RUM_ENDPOINT=$elasticsearch_rum_endpoint
 
         export SERVICE_VERSION=$service_version
         export NOTIFIER_ENDPOINT=$notifier_endpoint
@@ -153,7 +163,11 @@ for current_region in "${regions[@]}"; do
                             echo "skipping deployment annotation"
                         else
                             echo "adding deployment annotation"
-                            ts=$(date --utc +%FT%TZ)
+                            if [ "$machine" == "Mac" ]; then
+                                ts=$(date -z utc +%FT%TZ)
+                            elif [ "$machine" == "Linux" ]; then
+                                ts=$(date --utc +%FT%TZ)
+                            fi
                             curl -X POST "$elasticsearch_kibana_endpoint/api/apm/services/$current_service/annotation" \
                                 -H 'Content-Type: application/json' \
                                 -H 'kbn-xsrf: true' \

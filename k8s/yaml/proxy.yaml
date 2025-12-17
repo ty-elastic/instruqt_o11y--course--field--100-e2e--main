@@ -45,6 +45,9 @@ spec:
           volumeMounts:
             - mountPath: /usr/share/nginx/html
               name: frontend-claim0
+          env:
+            - name: ELASTICSEARCH_RUM_ENDPOINT
+              value: $ELASTICSEARCH_RUM_ENDPOINT
       restartPolicy: Always
       volumes:
         - name: frontend-claim0
