@@ -10,5 +10,7 @@ do
    esac
 done
 
+echo $repo
+
 docker buildx build --platform $arch \
     --progress plain -t $repo/$current_service:$course --output "type=registry,name=$repo/$current_service:$course" .

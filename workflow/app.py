@@ -89,6 +89,45 @@ def load_knowledge(kibana_server, kibana_auth):
                         headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
     print(resp.json())
 
+def load_new_knowledge(es_host, es_auth):
+    directory_path = "knowledge"
+    target_extension = ".json"
+
+    mappings={
+        "mappings": {
+            "properties": {
+                "text": {
+                    "type": "semantic_text"
+                },
+                "id": {
+                    "type": "keyword"
+                },
+                "title": {
+                    "type": "semantic_text"
+                }
+            }
+        }
+    }
+
+    resp = requests.put(f"{es_host}/rca_knowledge",
+                        json=mappings,
+                        headers={"Content-Type": "application/json", f"Authorization": es_auth})
+    print(resp.json())
+
+    for root, dirs, files in os.walk(directory_path):
+        for file in files:
+            if file.endswith(target_extension):
+                full_path = os.path.join(root, file)
+                with open(full_path, 'r') as fileo:
+                    jcontent = json.load(fileo)
+
+                    resp = requests.post(f"{es_host}/rca_knowledge/_doc/",
+                    json=jcontent,
+                    headers={"Content-Type": "application/json", f"Authorization": es_auth})
+                    print(resp.json())
+
+
+
 
 
 def backup_workflows(kibana_server, kibana_auth):
@@ -197,13 +236,13 @@ def load_workflows(kibana_server, kibana_auth, es_host, ai_connector, ai_proxy, 
                         delete_existing(kibana_server, kibana_auth, es_host, parsed['name'])
                         print(parsed['name'])
                         
-                        parsed['consts']['kbn_host'] = kibana_server
-                        parsed['consts']['kbn_auth'] = kibana_auth
-                        parsed['consts']['es_host'] = es_host    
-                        parsed['consts']['ai_connector'] = ai_connector   
-                        parsed['consts']['ai_proxy'] = ai_proxy  
-                        parsed['consts']['snow_host'] = snow_host   
-                        parsed['consts']['snow_auth'] = snow_auth              
+                        # parsed['consts']['kbn_host'] = kibana_server
+                        # parsed['consts']['kbn_auth'] = kibana_auth
+                        # parsed['consts']['es_host'] = es_host    
+                        # parsed['consts']['ai_connector'] = ai_connector   
+                        # parsed['consts']['ai_proxy'] = ai_proxy  
+                        # parsed['consts']['snow_host'] = snow_host   
+                        # parsed['consts']['snow_auth'] = snow_auth              
                         
                         yaml = MyYAML()
                         yaml.width = float("inf") # Set the width attribute of the YAML instance
@@ -282,7 +321,95 @@ def load_rules(kibana_server, kibana_auth, es_host, connect_alerts=True):
                                         json=rule,
                                         headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
                     print(resp.json())     
+
+def load_agent_tools(kibana_server, kibana_auth):
+    body = {
+        "limit": 50,
+        "page": 1,
+        "query": ""
+    }
+    workflows_resp = requests.post(f"{kibana_server}/api/workflows/search",
+                        json=body,
+                        headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+
+
+    directory_path = "tools"
+    target_extension = ".json"
+    
+    for root, dirs, files in os.walk(directory_path):
+        for file in files:
+            if file.endswith(target_extension):
+                full_path = os.path.join(root, file)
+                with open(full_path, 'r') as fileo:
+                    #content = file.read()
+                    tool = json.load(fileo)
+                    del tool['readonly']
+
+                    if tool['type'] == 'workflow':
+                        for workflow in workflows_resp.json()['results']:
+                            #print(workflow)
+                            if workflow['name'] == tool['id']:
+                                print("HERE!!!")
+                                tool['configuration']['workflow_id'] = workflow['id']
+
+                    #print(tool)
+                    resp = requests.post(f"{kibana_server}/api/agent_builder/tools",
+                                        json=tool,
+                                        headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+                    print(resp.json())     
+ 
+
+
+def backup_agent_tools(kibana_server, kibana_auth):
+    
+    resp = requests.get(f"{kibana_server}/api/agent_builder/tools", 
+                         json={},
+                        headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+    #print(resp.json())
+    
+    for tool in resp.json()['results']:
+        print(tool)
+        if 'rca' in tool['tags']:
             
+            with open(f"tools/{tool['id']}.json", "w") as json_file:
+                json.dump(tool, json_file)
+
+def load_agents(kibana_server, kibana_auth):
+    
+    directory_path = "agents"
+    target_extension = ".json"
+    
+    for root, dirs, files in os.walk(directory_path):
+        for file in files:
+            if file.endswith(target_extension):
+                full_path = os.path.join(root, file)
+                with open(full_path, 'r') as fileo:
+                    #content = file.read()
+                    agent = json.load(fileo)
+                    del agent['readonly']
+                    del agent['type']
+
+                    print(agent)
+                    resp = requests.post(f"{kibana_server}/api/agent_builder/agents",
+                                        json=agent,
+                                        headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+                    print(resp.json())     
+ 
+
+def backup_agents(kibana_server, kibana_auth):
+    
+    resp = requests.get(f"{kibana_server}/api/agent_builder/agents", 
+                         json={},
+                        headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+    print(resp.json())
+    
+    for agent in resp.json()['results']:
+        print(agent)
+        if 'labels' in agent and 'rca' in agent['labels']:
+            
+            with open(f"agents/{agent['id']}.json", "w") as json_file:
+                json.dump(agent, json_file)
+
 def run_workflow(kibana_server, kibana_auth, workflow_name):
     
       
@@ -354,13 +481,26 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, ai_conne
     elif action == 'backup_workflows':
         backup_workflows(kibana_host, auth)
     elif action == 'load_knowledge':
-        load_knowledge(kibana_host, auth)
+        #load_knowledge(kibana_host, auth)
+        load_new_knowledge(es_host, auth)
         print('done')
     elif action == 'load_prompt':
         load_prompt(kibana_host, auth)
         print('done')
     elif action == 'load_synthetics':
         load_synthetics(kibana_host, auth)
+        print('done')
+    elif action == 'backup_tools':
+        backup_agent_tools(kibana_host, auth)
+        print('done')
+    elif action == 'backup_agents':
+        backup_agents(kibana_host, auth)
+        print('done')
+    elif action == 'load_agents':
+        load_agents(kibana_host, auth)
+        print('done')
+    elif action == 'load_tools':
+        load_agent_tools(kibana_host, auth)
         print('done')
 
 if __name__ == '__main__':

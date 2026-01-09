@@ -1,409 +1,67 @@
-consts:
-  ai_connector: TBD
-  ai_proxy: TBD
-  ai_timeout: 10m
-  es_host: TBD
-  kbn_auth: TBD
-  kbn_host: TBD
-  snow_host: TBD
-  snow_auth: TBD
 name: case_process
-version: '1'
-description: Process o11y cases
 enabled: true
+description: Perform RCA on a Case
 tags:
-- automated_observability_triage
+- rca
+triggers:
+- type: manual
 settings:
   timeout: 20m
-triggers:
-- enabled: true
-  type: manual
 inputs:
 - name: case_id
   type: string
 steps:
-- name: debug2
-  type: console
+- name: rca
+  type: kibana.request
   with:
-    message: '{{ inputs | json }}'
-- name: get_case
-  type: http
-  with:
+    method: POST
+    path: /api/agent_builder/converse
     headers:
-      Authorization: '{{ consts.kbn_auth }}'
-      Content-Type: application/json
-      kbn-xsrf: true
-      x-elastic-internal-origin: kibana
-    method: GET
-    url: '{{ consts.kbn_host }}/api/cases/{{ inputs.case_id }}'
-- name: get_case_alerts
-  type: http
-  with:
-    headers:
-      Authorization: '{{ consts.kbn_auth }}'
-      Content-Type: application/json
-      kbn-xsrf: true
-      x-elastic-internal-origin: kibana
-    method: GET
-    url: '{{ consts.kbn_host }}/api/cases/{{ inputs.case_id }}/alerts'
-- name: debug3
-  type: console
-  with:
-    message: '{{ steps.get_case_alerts.output.data | json }}'
-- name: get_case_comments
-  type: http
-  with:
-    headers:
-      Authorization: '{{ consts.kbn_auth }}'
-      Content-Type: application/json
-      kbn-xsrf: true
-      x-elastic-internal-origin: kibana
-    method: GET
-    url: '{{ consts.kbn_host }}/api/cases/{{ inputs.case_id }}/comments/_find'
-- name: debug1
-  type: console
-  with:
-    message: '{{ steps.get_case.output.data | json }}'
+      kbn-xsrf: 'true'
+    body:
+      agent_id: rca
+      input: 'perform RCA on this case: {{ inputs.case_id }}'
 
-- name: foreach_custom_field
+- name: foreach_steps
   type: foreach
-  foreach: '{{ steps.get_case.output.data.customFields | json }}'
+  foreach: '{{ steps.rca.output.steps }}'
   steps:
-  - name: is_system_field
+  - name: if_reasoning
     type: if
-    condition: 'foreach.item.key : system'
+    condition: 'foreach.item.type: "reasoning"'
     steps:
-    - name: get_topology
-      type: http
+    - name: add_reasoning_to_existing_case
+      type: kibana.request
       with:
-        body:
-          size: 1
-          query:
-            term:
-              system:
-                value: '{{ foreach.item.value }}'
-          sort:
-            '@timestamp':
-              order: desc
-        headers:
-          Authorization: '{{ consts.kbn_auth }}'
-          Content-Type: application/json
         method: POST
-        url: '{{ consts.es_host }}/workflow_topology/_search'
+        path: /api/cases/{{ inputs.case_id }}/comments
+        body:
+          type: user
+          owner: observability
+          comment: 🤔 {{ foreach.item.reasoning }}
 
-- name: rca1
-  type: http
+- name: add_response_to_existing_case
+  type: kibana.request
   with:
-    body:
-      connectorId: '{{ consts.ai_connector }}'
-      persist: true
-      messages:
-
-      - '@timestamp': now
-        message:
-          role: user
-          content: |
-            # Related Alerts
-            ```
-            {{ steps.get_case_alerts.output.data | json }}
-            ```
-
-      - '@timestamp': now
-        message:
-          role: user
-          content: |
-            # System Topology
-            ```
-            {{ steps.get_topology.output.data.hits.hits[0]._source | json }}
-            ```
-
-      - '@timestamp': now
-        message:
-          role: user
-          content: |
-            Using the provided system topology and the related alerts, identify the service which is both closet to being a leaf node AND has a related alert associated with it. Output a field 'service_name' with the determined service name. Output a field 'host_name' with the name of the host ('host.name' from the toplogy) that the service is running on. Output a field 'k8s_namespace' with a value of of the kubernetes namespace ('k8s.namespace.name' from the toplogy) that the service is running on; if 'k8s.namespace.name' is not available for the service, output a value of 'NOT_AVAILABLE'.
-            Additionally, identify a time window to search for problems before and after the associated active alert. Output a field 'start_time' with the determined start time in ISO format and a field 'end_time' with the determined end time in ISO format.
-    headers:
-      Content-Type: application/json
-      kibana-auth: '{{ consts.kbn_auth }}'
-      kibana-host: '{{ consts.kbn_host }}'
     method: POST
-    timeout: '{{ consts.ai_timeout }}'
-    url: '{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete'
-
-- name: relevant_logs
-  type: http
-  with:
+    path: /api/cases/{{ inputs.case_id }}/comments
     body:
-      query: |
-        FROM logs-*
-        | WHERE @timestamp >= "{{ steps.rca1.output.data.result.start_time}}" AND @timestamp <= "{{ steps.rca1.output.data.result.end_time}}"
-        {% if steps.rca1.output.data.result.k8s_namespace != 'NOT_AVAILABLE' %}
-        | WHERE k8s.namespace.name == "{{ steps.rca1.output.data.result.k8s_namespace }}"
-        {% endif %}
-        | WHERE TO_UPPER(log.level) IN ("WARN", "WARNING", "SEVERE", "FATAL", "ERROR") OR TO_UPPER(message) LIKE "*ERROR*" OR TO_UPPER(message) LIKE "*FAIL*" OR TO_UPPER(message) LIKE "*PROBLEM*"
-        | STATS pattern_count = COUNT() BY pattern = CATEGORIZE(message), service.name
-        | WHERE pattern IS NOT NULL
-        | INLINE STATS top_count = TOP(pattern_count, 5, "desc") BY service.name
-        | WHERE pattern_count >= LEAST(top_count)
-        | SORT service.name, pattern_count
-        | LIMIT 1000
-    headers:
-      Authorization: '{{ consts.kbn_auth }}'
-      Content-Type: application/json
-    method: POST
-    url: '{{ consts.es_host }}/_query?format=txt'
-
-- name: relevant_host_metrics
-  type: http
-  with:
-    body:
-      query: |
-        FROM metrics-* 
-        | WHERE @timestamp >= "{{ steps.rca1.output.data.result.start_time}}" AND @timestamp <= "{{ steps.rca1.output.data.result.end_time}}"
-        | WHERE host.name == "{{ steps.rca1.output.data.result.host_name}}"
-        | WHERE system.cpu.utilization IS NOT NULL OR `system.cpu.load_average.1m` IS NOT NULL OR system.memory.utilization IS NOT NULL OR system.cpu.logical.count IS NOT NULL OR system.filesystem.utilization IS NOT NULL
-        | STATS 
-          mem_used = AVG(system.memory.utilization) WHERE state == "used", mem_buffered = AVG(system.memory.utilization) WHERE state == "buffered", mem_reclaimable = AVG(system.memory.utilization) WHERE state == "slab_reclaimable", mem_unreclaimable = AVG(system.memory.utilization) WHERE state == "slab_unreclaimable", 
-          load_1m = AVG(`metrics.system.cpu.load_average.1m`), cpucount = MAX(system.cpu.logical.count), 
-          cpu_idle = AVG(system.cpu.utilization) WHERE state == "idle", cpu_wait = AVG(system.cpu.utilization) WHERE state == "wait",
-          max_disk_usage = MAX(system.filesystem.utilization)
-          BY BUCKET(@timestamp, 1m)
-        | EVAL cpu_usage = (1 - (cpu_idle + cpu_wait)) * 100
-        | EVAL normalized_load = (TO_DOUBLE(load_1m) / TO_DOUBLE(cpucount)) * 100
-        | EVAL mem_usage = (mem_used + mem_buffered + mem_reclaimable + mem_unreclaimable) * 100
-        | EVAL disk_usage = max_disk_usage * 100
-        | WHERE cpu_usage IS NOT NULL
-        | KEEP cpu_usage, normalized_load, mem_usage, disk_usage, `BUCKET(@timestamp, 1m)`
-        | LIMIT 1000
-    headers:
-      Authorization: '{{ consts.kbn_auth }}'
-      Content-Type: application/json
-    method: POST
-    url: '{{ consts.es_host }}/_query?format=txt'
-  on-failure:
-    continue: true
-
-- name: relevant_pod_metrics
-  type: http
-  with:
-    body:
-      query: |
-        FROM metrics-*
-        | WHERE @timestamp >= "{{ steps.rca1.output.data.result.start_time}}" AND @timestamp <= "{{ steps.rca1.output.data.result.end_time}}"
-        {% if steps.rca1.output.data.result.k8s_namespace != 'NOT_AVAILABLE' %}
-        | WHERE k8s.namespace.name == "{{ steps.rca1.output.data.result.k8s_namespace }}"
-        {% endif %}
-        | WHERE metrics.k8s.pod.cpu.node.utilization IS NOT NULL AND metrics.k8s.pod.memory.node.utilization IS NOT NULL
-        | STATS pod_cpu = AVG(metrics.k8s.pod.cpu.node.utilization) * 100, 
-        pod_mem = AVG(metrics.k8s.pod.memory.node.utilization) * 100
-        BY k8s.pod.name, BUCKET(@timestamp, 10m)
-        | KEEP pod_cpu, pod_mem, k8s.pod.name, `BUCKET(@timestamp, 10m)`
-    headers:
-      Authorization: '{{ consts.kbn_auth }}'
-      Content-Type: application/json
-    method: POST
-    url: '{{ consts.es_host }}/_query?format=txt'
-  on-failure:
-    continue: true
-
-- name: relevant_trace_metrics
-  type: http
-  with:
-    body:
-      query: |
-        FROM traces-*
-        | WHERE @timestamp >= "{{ steps.rca1.output.data.result.start_time}}" AND @timestamp <= "{{ steps.rca1.output.data.result.end_time}}"
-        {% if steps.rca1.output.data.result.k8s_namespace != 'NOT_AVAILABLE' %}
-        | WHERE k8s.namespace.name == "{{ steps.rca1.output.data.result.k8s_namespace }}"
-        {% endif %}
-        | STATS 
-          spans = COUNT(), 
-          failed_spans = COUNT() WHERE event.outcome != "success",
-          latency_us = AVG(span.duration.us)
-          BY span.subtype, span.name, BUCKET(@timestamp, 1m)
-        | EVAL failed_span_percent = (TO_DOUBLE(failed_spans) / TO_DOUBLE(spans)) * 100
-        | LIMIT 1000
-    headers:
-      Authorization: '{{ consts.kbn_auth }}'
-      Content-Type: application/json
-    method: POST
-    url: '{{ consts.es_host }}/_query?format=txt'
-
-- name: rca5
-  type: http
-  with:
-    body:
-      result: true
-      persist: true
-      conversationId: '{{ steps.rca1.output.data.conversationId }}'
-      connectorId: '{{ consts.ai_connector }}'
-      messages:
-
-      - '@timestamp': now
-        message:
-          role: user
-          content: |
-            # Related Alerts
-            ```
-            {{ steps.get_case_alerts.output.data | json }}
-            ```
-
-      - '@timestamp': now
-        message:
-          role: user
-          content: |
-            # System Topology
-            ```
-            {{ steps.get_topology.output.data.hits.hits[0]._source | json }}
-            ```
-
-      - '@timestamp': now
-        message:
-          role: user
-          content: |
-            # Related Case
-            ```
-            {{ steps.get_case.output.data | json }}
-            ```
-
-      - '@timestamp': now
-        message:
-          role: user
-          content: |
-            # Related Comments
-            ```
-            {{ steps.get_case_comments.output.data | json }}
-            ```
-
-      - '@timestamp': now
-        message:
-          role: user
-          content: |
-            # Relevant Logs
-            ```
-            {{ steps.relevant_logs.output.data }}
-            ```
-      - '@timestamp': now
-        message:
-          role: user
-          content: |
-            # Relevant Host Metrics
-            ```
-            {{ steps.relevant_host_metrics.output.data }}
-            ```
-
-      - '@timestamp': now
-        message:
-          role: user
-          content: |
-            # Relevant Pod Metrics
-            ```
-            {{ steps.relevant_pod_metrics.output.data }}
-            ```
-
-      - '@timestamp': now
-        message:
-          role: user
-          content: |
-            # Relevant Trace Metrics
-            ```
-            {{ steps.relevant_trace_metrics.output.data }}
-            ```
-
-      - '@timestamp': now
-        message:
-          role: user
-          content: |
-            Using only the provided telemetry data and any relevant knowledge base documents, please output a detailed Root Cause Analysis. Your analysis should explain how the alerts are related (using the toplogy to understand dependencies), it should visualize the dependencies in a simple ASCII graph, it should conclude what is the root cause of these related alerts, and it should offer suggestions for remediation based in part on the knowledge base. If the alert is related to an existing issue (from the knowledge base), or if it relates to an existing (now closed case), it should indicate that. Additionally, if the RCA results in a more accurate severity level for the case, please output a field 'severity' with an updated severity level of of 'low', 'medium', 'high', or 'critical'; if the assigned severity level was appropraite, simply output a field 'severity' with the existing severity level. If applicable, in your analysis, explain why the severity level was changed.
-
-    headers:
-      Content-Type: application/json
-      kibana-auth: '{{ consts.kbn_auth }}'
-      kibana-host: '{{ consts.kbn_host }}'
-    method: POST
-    timeout: '{{ consts.ai_timeout }}'
-    url: '{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete'
-
-- name: get_cmdb_info
-  type: http
-  with:
-    headers:
-      Authorization: '{{ consts.kbn_auth }}'
-      Content-Type: application/json
-    method: GET
-    url: '{{ consts.es_host }}/workflow_cmdb/_doc/{{ steps.rca1.output.data.result.service_name }}'
-  on-failure:
-    continue: true
-
-- name: update_ai_conversation_id
-  type: http
-  with:
-    body:
-      cases:
-      - id: '{{ inputs.case_id }}'
-        version: '{{ steps.get_case.output.data.version }}'
-        severity: '{{ steps.rca5.output.data.result.severity }}'
-        customFields:
-        - key: ai_conversation_id
-          type: text
-          value: '{{ steps.rca5.output.data.conversationId }}'
-        - key: system
-          type: text
-          value: '{{ steps.get_topology.output.data.hits.hits[0]._source.system }}'
-        - key: service
-          type: text
-          value: '{{ steps.rca1.output.data.result.service_name }}'
-
-        - key: cmdb_id
-          type: text
-          value: '{% if steps.get_cmdb_info.output.data._source.cmdb_id and steps.get_cmdb_info.output.data._source.cmdb_id != "" %}{{ steps.get_cmdb_info.output.data._source.cmdb_id }}{% else %}not_available{% endif %}'
-
-        - key: cmdb_owner
-          type: text
-          value: '{% if steps.get_cmdb_info.output.data._source.cmdb_owner and steps.get_cmdb_info.output.data._source.cmdb_owner != "" %}{{ steps.get_cmdb_info.output.data._source.cmdb_owner }}{% else %}not_available{% endif %}'
-
-        - key: cmdb_support_group
-          type: text
-          value: '{% if steps.get_cmdb_info.output.data._source.cmdb_support_group and steps.get_cmdb_info.output.data._source.cmdb_support_group != "" %}{{ steps.get_cmdb_info.output.data._source.cmdb_support_group }}{% else %}not_available{% endif %}'
-    headers:
-      Authorization: '{{ consts.kbn_auth }}'
-      Content-Type: application/json
-      kbn-xsrf: true
-      x-elastic-internal-origin: kibana
-    method: PATCH
-    url: '{{ consts.kbn_host }}/api/cases'
-  on-failure:
-    continue: true
-
-- name: add_comment_to_existing_case
-  type: http
-  with:
-    body:
-      comment: '{{ steps.rca5.output.data.lastMessage }}'
-      owner: observability
       type: user
-    headers:
-      Authorization: '{{ consts.kbn_auth }}'
-      Content-Type: application/json
-      kbn-xsrf: true
-      x-elastic-internal-origin: kibana
-    method: POST
-    url: '{{ consts.kbn_host }}/api/cases/{{ inputs.case_id }}/comments'
+      owner: observability
+      comment: '{{ steps.rca.output.response.message }}'
 
 - name: add_conversation_to_existing_case
-  type: http
+  type: kibana.request
   with:
-    body:
-      comment: You can continue your investigation [here](/app/observabilityAIAssistant/conversations/{{ steps.rca5.output.data.conversationId }}).
-      owner: observability
-      type: user
-    headers:
-      Authorization: '{{ consts.kbn_auth }}'
-      Content-Type: application/json
-      kbn-xsrf: true
-      x-elastic-internal-origin: kibana
     method: POST
-    url: '{{ consts.kbn_host }}/api/cases/{{ inputs.case_id }}/comments'
+    path: /api/cases/{{ inputs.case_id }}/comments
+    body:
+      type: user
+      owner: observability
+      comment: 🔍 You can continue your investigation or take remediation action [here](/app/agent_builder/conversations/{{ steps.rca.output.conversation_id }}).
+
+
+
+
 
 
