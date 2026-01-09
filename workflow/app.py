@@ -502,6 +502,11 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, ai_conne
     elif action == 'load_tools':
         load_agent_tools(kibana_host, auth)
         print('done')
+    elif action == 'backup':
+        backup_agents(kibana_host, auth)
+        backup_agent_tools(kibana_host, auth)
+        backup_workflows(kibana_host, auth)
+        print('done')
 
 if __name__ == '__main__':
     main()

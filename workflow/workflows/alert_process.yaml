@@ -77,8 +77,8 @@ steps:
         index: '{{ foreach.item._index }}'
         owner: observability
         rule:
-          id: '{{ foreach.item["kibana.alert.rule.uuid"] }}'
-          name: '{{ foreach.item["kibana.alert.rule.uuid"] }}'
+          id: '{% if foreach.item["kibana.alert.rule.uuid"] != nil %}{{ foreach.item["kibana.alert.rule.uuid"] }}{% else %}{{ foreach.item.kibana.alert.rule.uuid }}{% endif %}'
+          name: '{% if foreach.item["kibana.alert.rule.name"] != nil %}{{ foreach.item["kibana.alert.rule.name"] }}{% else %}{{ foreach.item.kibana.alert.rule.name }}{% endif %}'
 
   - name: add_comment_to_case
     type: kibana.request
@@ -90,7 +90,7 @@ steps:
         owner: observability
         comment: |
           # Related Alert
-          * Summary: {{ foreach.item["kibana.alert.reason"] }}
+          * Summary: {% if foreach.item["kibana.alert.reason"] != nil %}{{ foreach.item["kibana.alert.reason"] }}{% else %}{{ foreach.item.kibana.alert.reason }}{% endif %}
           * [Conversation](/app/agent_builder/conversations/{{ steps.correlate.output.conversation_id }})
           * Relationship to Case: {{ steps.correlate_parse.output.relation }}
 
@@ -103,4 +103,3 @@ steps:
       headers:
         Content-Type: application/json
     timeout: 30s
-
