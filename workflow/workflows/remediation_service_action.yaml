@@ -1,7 +1,7 @@
 name: remediation_service_action
 enabled: true
 consts:
-  remote_host: http://136.119.107.55:43210
+  remote_host: http://host-1:43210
 tags:
 - rca
 inputs:
