@@ -1,7 +1,7 @@
 source /opt/workshops/elastic-retry.sh
 export $(curl http://kubernetes-vm:9000/env | xargs)
 
-source /opt/workshops/elastic-view.sh -v oblt
+#source /opt/workshops/elastic-view.sh -v oblt
 
 echo "Hide tour"
 hide_tour() {

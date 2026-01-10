@@ -12,6 +12,8 @@ COPY rules rules
 COPY prompt prompt
 COPY knowledge knowledge
 COPY synthetics synthetics
+COPY agents agents
+COPY tools tools
 
 ENV PYTHONUNBUFFERED=1
 
