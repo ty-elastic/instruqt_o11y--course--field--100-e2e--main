@@ -474,8 +474,8 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, ai_conne
     if action == 'load_workflows':
         print("LOADING WORKFLOWS")
         load_workflows(kibana_host, auth, es_host, ai_connector, ai_proxy, snow_host, snow_auth)
-        run_workflow(kibana_host, auth, 'automated_triage_setup')
-        run_workflow(kibana_host, auth, 'topology')
+        run_workflow(kibana_host, auth, 'setup')
+        #run_workflow(kibana_host, auth, 'topology')
     elif action == 'load_alerts':
         load_rules(kibana_host, auth, es_host, connect_alerts)
     elif action == 'backup_workflows':
