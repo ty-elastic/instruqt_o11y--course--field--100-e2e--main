@@ -14,15 +14,20 @@ triggers:
 steps:
 
 - name: get_topologies
-  type: onechat.runAgent
+  type: kibana.request
   with:
-    agent_id: topology_builder
-    message: "get system topologies from {{ 'now' | date: '%s' | minus: 3600 | date: '%Y-%m-%dT%H:%M:%SZ' }} to {{ 'now' | date: '%Y-%m-%dT%H:%M:%SZ' }}"
+    method: POST
+    path: /api/agent_builder/converse
+    headers:
+      kbn-xsrf: 'true'
+    body:
+      agent_id: topology_builder
+      input: "Get system topologies from {{ 'now' | date: '%s' | minus: 3600 | date: '%Y-%m-%dT%H:%M:%SZ' }} to {{ 'now' | date: '%Y-%m-%dT%H:%M:%SZ' }}. Respond only in valid JSON format with no newlines, no extra spaces, and with no prefixes or postfixes (DO NOT USE ```json prefix and ``` postfix) in your response!'"
 
 - name: get_topologies_parsed
   type: console
   with:
-    message: ${{steps.get_topologies.output | json_parse}}
+    message: ${{steps.get_topologies.output.response.message | json_parse}}
 
 - name: foreach_topology
   type: foreach

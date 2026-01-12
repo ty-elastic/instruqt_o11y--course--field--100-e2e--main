@@ -23,7 +23,7 @@ steps:
         kbn-xsrf: 'true'
       body:
         agent_id: alert_correlation
-        input: 'try to correlate this alert: {{ foreach.item | json }}. respond only in valid JSON format with no newlines, no extra spaces, and with no prefixes or postfixes (DO NOT USE ```json prefix and ``` postfix) in your response!'
+        input: 'try to correlate this alert: {{ foreach.item | json }}. Respond only in valid JSON format with no newlines, no extra spaces, and with no prefixes or postfixes (DO NOT USE ```json prefix and ``` postfix) in your response!'
 
   - name: correlate_parse
     type: console
@@ -53,6 +53,9 @@ steps:
         - key: system_environment
           type: text
           value: '{{ steps.correlate_parse.output.system_environment}}'
+        # - key: ai_conversation_id
+        #   type: text
+        #   value: '{{ steps.correlate.output.conversation_id }}'
         description: '{{ steps.correlate_parse.output.trigger }}'
         owner: observability
         settings:

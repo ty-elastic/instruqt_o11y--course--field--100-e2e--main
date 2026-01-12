@@ -11,6 +11,18 @@ inputs:
 - name: case_id
   type: string
 steps:
+
+- name: get_case
+  type: kibana.request
+  with:
+    method: GET
+    path: /api/cases/{{ inputs.case_id }}
+
+- name: get_ai_coversation_id
+  type: console
+  with:
+    message: "{% for field in steps.get_case.output.customFields %}{%- if field.key == 'ai_conversation_id' -%}{{ field.value }}{% break %}{%- endif -%}{% endfor %}"
+
 - name: rca
   type: kibana.request
   with:
@@ -18,9 +30,12 @@ steps:
     path: /api/agent_builder/converse
     headers:
       kbn-xsrf: 'true'
-    body:
-      agent_id: rca
-      input: 'perform RCA on this case: {{ inputs.case_id }}'
+    body: |
+      {
+        "agent_id": "rca",
+        "input": "perform RCA on case id: {{ inputs.case_id }}"
+        {% if steps.get_ai_coversation_id.output != "not_available" %},"conversation_id": "{{ steps.get_ai_coversation_id.output }}"{% endif %}
+      }
 
 - name: foreach_steps
   type: foreach
@@ -39,6 +54,28 @@ steps:
           type: user
           owner: observability
           comment: 🤔 {{ foreach.item.reasoning }}
+
+- name: get_case_refresh
+  type: kibana.request
+  with:
+    method: GET
+    path: /api/cases/{{ inputs.case_id }}
+
+- name: update_ai_conversation_id
+  type: kibana.request
+  with:
+    method: PATCH
+    path: /api/cases
+    body:
+      cases:
+      - id: '{{ inputs.case_id }}'
+        version: '{{ steps.get_case_refresh.output.version }}'
+        customFields:
+        - key: ai_conversation_id
+          type: text
+          value: '{{ steps.rca.output.conversation_id }}'
+  on-failure:
+    continue: true
 
 - name: add_response_to_existing_case
   type: kibana.request

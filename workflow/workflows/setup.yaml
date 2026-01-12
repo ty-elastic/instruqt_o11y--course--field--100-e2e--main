@@ -81,6 +81,11 @@ steps:
         label: system_environment
         required: false
         type: text
+      - defaultValue: not_available
+        key: ai_conversation_id
+        label: ai_conversation_id
+        required: false
+        type: text
       owner: observability
   on-failure:
     continue: true

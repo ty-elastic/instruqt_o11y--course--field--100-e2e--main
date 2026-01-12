@@ -181,7 +181,7 @@ def backup_workflows(kibana_server, kibana_auth):
             yaml.dump(parsed, yaml_file)
   
   
-def delete_existing(kibana_server, kibana_auth, es_host, workflow_name):
+def delete_existing_workflow(kibana_server, kibana_auth, es_host, workflow_name):
     
     body = {
         "limit": 50,
@@ -233,7 +233,7 @@ def load_workflows(kibana_server, kibana_auth, es_host, ai_connector, ai_proxy, 
 
                         parsed = yaml.load(fileo)
                         
-                        delete_existing(kibana_server, kibana_auth, es_host, parsed['name'])
+                        delete_existing_workflow(kibana_server, kibana_auth, es_host, parsed['name'])
                         print(parsed['name'])
                         
                         # parsed['consts']['kbn_host'] = kibana_server
@@ -322,6 +322,16 @@ def load_rules(kibana_server, kibana_auth, es_host, connect_alerts=True):
                                         headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
                     print(resp.json())     
 
+def delete_existing_agent_tool(kibana_server, kibana_auth, tool_id):
+
+    try:
+        resp = requests.delete(f"{kibana_server}/api/agent_builder/tools/{tool_id}",
+                            headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+        print(resp.json())
+    except Exception as e:
+        print(e)        
+               
+
 def load_agent_tools(kibana_server, kibana_auth):
     body = {
         "limit": 50,
@@ -352,6 +362,8 @@ def load_agent_tools(kibana_server, kibana_auth):
                                 print("HERE!!!")
                                 tool['configuration']['workflow_id'] = workflow['id']
 
+                    delete_existing_agent_tool(kibana_server, kibana_auth, tool['id'])
+
                     #print(tool)
                     resp = requests.post(f"{kibana_server}/api/agent_builder/tools",
                                         json=tool,
@@ -374,6 +386,16 @@ def backup_agent_tools(kibana_server, kibana_auth):
             with open(f"tools/{tool['id']}.json", "w") as json_file:
                 json.dump(tool, json_file)
 
+def delete_existing_agent(kibana_server, kibana_auth, agent_id):
+
+    try:
+        resp = requests.delete(f"{kibana_server}/api/agent_builder/agents/{agent_id}",
+                            headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+        print(resp.json())
+    except Exception as e:
+        print(e)        
+               
+
 def load_agents(kibana_server, kibana_auth):
     
     directory_path = "agents"
@@ -388,6 +410,8 @@ def load_agents(kibana_server, kibana_auth):
                     agent = json.load(fileo)
                     del agent['readonly']
                     del agent['type']
+
+                    delete_existing_agent(kibana_server, kibana_auth, agent['id'])
 
                     print(agent)
                     resp = requests.post(f"{kibana_server}/api/agent_builder/agents",
