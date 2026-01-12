@@ -61,7 +61,12 @@ steps:
     method: GET
     path: /api/cases/{{ inputs.case_id }}
 
-- name: update_ai_conversation_id
+- name: get_system_environment
+  type: console
+  with:
+    message: "{% for field in steps.get_case_refresh.output.customFields %}{%- if field.key == 'system_environment' -%}{{ field.value }}{% break %}{%- endif -%}{% endfor %}"
+
+- name: update_fields
   type: kibana.request
   with:
     method: PATCH
@@ -71,6 +76,9 @@ steps:
       - id: '{{ inputs.case_id }}'
         version: '{{ steps.get_case_refresh.output.version }}'
         customFields:
+        - key: system_environment
+          type: text
+          value: '{{ steps.get_system_environment.output}}'
         - key: ai_conversation_id
           type: text
           value: '{{ steps.rca.output.conversation_id }}'
