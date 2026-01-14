@@ -31,7 +31,7 @@ steps:
 
 - name: foreach_topology
   type: foreach
-  foreach: '{{ steps.get_topologies_parsed.output }}'
+  foreach: '{{ steps.get_topologies_parsed.output.topologies }}'
   steps:
   - name: debug
     type: console

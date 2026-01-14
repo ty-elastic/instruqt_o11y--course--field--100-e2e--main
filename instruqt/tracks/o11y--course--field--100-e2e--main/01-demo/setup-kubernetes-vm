@@ -83,6 +83,9 @@ podman run --network host $REPO/workflows:$INSTRUQT_TRACK_SLUG --kibana_host $KI
 
 podman run --network host $REPO/workflows:$INSTRUQT_TRACK_SLUG --kibana_host $KIBANA_URL --es_host $ELASTICSEARCH_URL --es_apikey $ELASTICSEARCH_APIKEY load_agents
 
+podman run --network host $REPO/workflows:$INSTRUQT_TRACK_SLUG --kibana_host $KIBANA_URL --es_host $ELASTICSEARCH_URL --es_apikey $ELASTICSEARCH_APIKEY run_setup
+
+
 # ------------- LOAD SYNTHETICS
 
 podman run --network host $REPO/workflows:$INSTRUQT_TRACK_SLUG --kibana_host $KIBANA_URL --es_host $ELASTICSEARCH_URL --es_apikey $ELASTICSEARCH_APIKEY load_synthetics

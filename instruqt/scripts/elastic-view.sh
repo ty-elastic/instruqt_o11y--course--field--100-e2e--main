@@ -10,7 +10,7 @@ hide_tour() {
     --header "kbn-xsrf: true" \
     --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
     --header 'x-elastic-internal-origin: Kibana' \
-    -d '{"changes":{"hideAnnouncements":true}}')
+    -d '{"changes":{"hideAnnouncements":true, savedObjects.enableAccessControl: false}  }')
 
     if echo $http_status | grep -q '^2'; then
         echo "Disabled Tour: $http_status"

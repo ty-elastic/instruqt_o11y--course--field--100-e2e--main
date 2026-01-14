@@ -9,7 +9,7 @@ region=1
 service_version="1.0"
 
 build_service=false
-build_lib=false
+build_lib=true
 deploy_otel=false
 deploy_service=false
 

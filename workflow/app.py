@@ -498,7 +498,7 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, ai_conne
     if action == 'load_workflows':
         print("LOADING WORKFLOWS")
         load_workflows(kibana_host, auth, es_host, ai_connector, ai_proxy, snow_host, snow_auth)
-        run_workflow(kibana_host, auth, 'setup')
+        #run_workflow(kibana_host, auth, 'setup')
         #run_workflow(kibana_host, auth, 'topology')
     elif action == 'load_alerts':
         load_rules(kibana_host, auth, es_host, connect_alerts)
@@ -526,11 +526,20 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, ai_conne
     elif action == 'load_tools':
         load_agent_tools(kibana_host, auth)
         print('done')
+    elif action == 'load':
+        load_workflows(kibana_host, auth, es_host, ai_connector, ai_proxy, snow_host, snow_auth)
+        load_rules(kibana_host, auth, es_host, connect_alerts)
+        load_agent_tools(kibana_host, auth)
+        load_agents(kibana_host, auth)
+        print('done')
+
     elif action == 'backup':
         backup_agents(kibana_host, auth)
         backup_agent_tools(kibana_host, auth)
         backup_workflows(kibana_host, auth)
         print('done')
+    elif action == 'run_setup':
+        run_workflow(kibana_host, auth, 'setup')
 
 if __name__ == '__main__':
     main()

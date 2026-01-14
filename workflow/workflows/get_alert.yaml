@@ -1,0 +1,30 @@
+version: '1'
+name: get_alert
+description: Get Alert by index and ID
+enabled: true
+tags:
+- rca
+triggers:
+- type: manual
+inputs:
+- name: alert_id
+  description: the alert ID
+  required: true
+  type: string
+- name: index
+  description: the index of the alert
+  required: true
+  type: string
+steps:
+- name: get_alert
+  type: elasticsearch.request
+  with:
+    method: POST
+    path: /{{ inputs.index }}/_search
+    body:
+      query:
+        term:
+          _id:
+            value: '{{ inputs.alert_id }}'
+    headers:
+      x-elastic-internal-origin: kibana

@@ -1,0 +1,1 @@
+{"id": "get_case_alerts", "type": "workflow", "description": "get alerts for a given case", "tags": ["rca"], "configuration": {"workflow_id": "workflow-1905aa7a-64a3-4c9a-85de-08d040414051", "wait_for_completion": true}, "readonly": false}
