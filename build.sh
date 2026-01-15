@@ -14,7 +14,7 @@ deploy_otel=false
 deploy_service=false
 
 elasticsearch_es_endpoint=" "
-elasticsearch_rum_endpoint=" "
+elasticsearch_rum_endpoint="http://kubernetes-vm:8200"
 elasticsearch_kibana_endpoint=" "
 elasticsearch_api_key=" "
 
@@ -24,8 +24,6 @@ case "${unameOut}" in
     Darwin*)    machine=Mac;;
     *)          machine="UNKNOWN:${unameOut}"
 esac
-
-gcloud auth configure-docker us-central1-docker.pkg.dev
 
 while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:" opt
 do
@@ -89,6 +87,10 @@ for current_region in "${regions[@]}"; do
     if [ "$local" = "true" ]; then
         docker run -d -p 5093:5000 --restart=always --name registry registry:2
         repo=localhost:5093
+    else
+        if [[ "$build_service" == "true" || "$build_lib" == "true" ]]; then
+            gcloud auth configure-docker us-central1-docker.pkg.dev
+        fi
     fi
 
     if [ "$build_service" = "true" ]; then

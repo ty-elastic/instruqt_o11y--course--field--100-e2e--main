@@ -60,7 +60,7 @@ def load_prompt(kibana_server, kibana_auth):
             prompt = json.load(prompt)
             prompt['text'] = instructions_txt
 
-            print(prompt)
+            #print(prompt)
 
             resp = requests.put(f"{kibana_server}/internal/observability_ai_assistant/kb/user_instructions",
                                 json=prompt,
@@ -80,7 +80,7 @@ def load_knowledge(kibana_server, kibana_auth):
                     #content = file.read()
                     knowledge = json.load(fileo)
                     entries.append(knowledge)
-    print(entries)
+    #print(entries)
     body = {
         "entries": entries
     }
@@ -202,7 +202,7 @@ def delete_existing_workflow(kibana_server, kibana_auth, es_host, workflow_name)
                 delete_body = {
                     "ids": [f"{workflow['id']}"]
                 }
-                print(delete_body)
+                #print(delete_body)
                 
                 resp = requests.delete(f"{kibana_server}/api/workflows",
                                     json=delete_body,
@@ -227,7 +227,7 @@ def load_workflows(kibana_server, kibana_auth, es_host, ai_connector, ai_proxy, 
                         #parsed = yaml.load(content)
                         #content = file.read()
                         #print(content)
-                        print(full_path)
+                        #print(full_path)
                         
                         yaml = MyYAML()
 
@@ -252,7 +252,7 @@ def load_workflows(kibana_server, kibana_auth, es_host, ai_connector, ai_proxy, 
                         body = {
                             "yaml": out
                         }
-                        print(out)
+                        #print(out)
                         
 
                         resp = requests.post(f"{kibana_server}/api/workflows",
@@ -277,7 +277,7 @@ def load_synthetics(kibana_server, kibana_auth):
                     #content = file.read()
                     synthetic = json.load(fileo)
 
-                    print(synthetic)
+                    #print(synthetic)
                     resp = requests.post(f"{kibana_server}/api/synthetics/monitors",
                                         json=synthetic,
                                         headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
@@ -316,7 +316,7 @@ def load_rules(kibana_server, kibana_auth, es_host, connect_alerts=True):
                         rule['actions'][0]['params']['subActionParams']['workflowId'] = alert_queue_id
                     else:
                         del rule['actions']
-                    print(rule)
+                    #print(rule)
                     resp = requests.post(f"{kibana_server}/api/alerting/rule",
                                         json=rule,
                                         headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
@@ -380,7 +380,7 @@ def backup_agent_tools(kibana_server, kibana_auth):
     #print(resp.json())
     
     for tool in resp.json()['results']:
-        print(tool)
+        #print(tool)
         if 'rca' in tool['tags']:
             
             with open(f"tools/{tool['id']}.json", "w") as json_file:
@@ -413,7 +413,7 @@ def load_agents(kibana_server, kibana_auth):
 
                     delete_existing_agent(kibana_server, kibana_auth, agent['id'])
 
-                    print(agent)
+                    #print(agent)
                     resp = requests.post(f"{kibana_server}/api/agent_builder/agents",
                                         json=agent,
                                         headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
@@ -428,7 +428,7 @@ def backup_agents(kibana_server, kibana_auth):
     print(resp.json())
     
     for agent in resp.json()['results']:
-        print(agent)
+        #print(agent)
         if 'labels' in agent and 'rca' in agent['labels']:
             
             with open(f"agents/{agent['id']}.json", "w") as json_file:

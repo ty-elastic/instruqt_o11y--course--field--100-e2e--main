@@ -5,7 +5,7 @@ service=all
 namespace=trading
 service_version="1.0"
 
-elasticsearch_rum_endpoint="http://kubernetes-vm:8200"
+elasticsearch_rum_endpoint=""
 elasticsearch_kibana_endpoint=""
 elasticsearch_api_key=""
 

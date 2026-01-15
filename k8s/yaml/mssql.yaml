@@ -146,7 +146,7 @@ data:
       resource/servicename:
         attributes:
           - key: service.name
-            value: mssql
+            value: mssql_server
             action: insert
 
     exporters:
@@ -162,11 +162,11 @@ data:
         logs:
           receivers: [sqlserver]
           processors: [resource/servicename, batch]
-          exporters: [otlp/gateway]
+          exporters: [debug, otlp/gateway]
         metrics:
           receivers: [sqlserver]
           processors: [resource/servicename, batch]
-          exporters: [otlp/gateway]
+          exporters: [debug, otlp/gateway]
 ---
 apiVersion: v1
 kind: ConfigMap
