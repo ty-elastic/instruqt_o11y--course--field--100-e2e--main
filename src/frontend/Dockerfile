@@ -1,6 +1,6 @@
 FROM node:20 as frontend
 
-ARG ELASTICSEARCH_RUM_ENDPOINT=""
+ARG ELASTICSEARCH_RUM_FE_ENDPOINT="/"
 ARG ELASTICSEARCH_RUM_CREDENTIALS=true
 ARG NAMESPACE
 ARG ELASTICSEARCH_KIBANA_ENDPOINT
@@ -23,7 +23,7 @@ RUN echo "\
     import { init as initApm } from '@elastic/apm-rum'; \n\
     const apm = initApm({ \n\
         serviceName: '${SERVICE_NAME}', \n\
-        serverUrl: '${ELASTICSEARCH_RUM_ENDPOINT}', \n\
+        serverUrl: '${ELASTICSEARCH_RUM_FE_ENDPOINT}', \n\
         sendCredentials: ${ELASTICSEARCH_RUM_CREDENTIALS}, \n\
         serviceVersion: '${SERVICE_VERSION}', \n\
         environment: '${NAMESPACE}' \n\

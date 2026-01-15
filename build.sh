@@ -13,10 +13,10 @@ build_lib=false
 deploy_otel=false
 deploy_service=false
 
-elasticsearch_es_endpoint=" "
+elasticsearch_es_endpoint="-"
 elasticsearch_rum_endpoint="http://kubernetes-vm:8200"
-elasticsearch_kibana_endpoint=" "
-elasticsearch_api_key=" "
+elasticsearch_kibana_endpoint="-"
+elasticsearch_api_key="-"
 
 unameOut="$(uname -s)"
 case "${unameOut}" in
@@ -142,6 +142,7 @@ for current_region in "${regions[@]}"; do
 
         export JOB_ID=$(( $RANDOM ))
         echo $JOB_ID
+        echo ELASTICSEARCH_RUM_ENDPOINT=$ELASTICSEARCH_RUM_ENDPOINT
 
         envsubst < k8s/yaml/_namespace.yaml | kubectl apply -f -
 
@@ -156,6 +157,7 @@ for current_region in "${regions[@]}"; do
                         envsubst < k8s/yaml/$current_service.yaml | kubectl delete -f -
                     else
                         echo "deploying $current_service to region $REGION"
+                        envsubst < k8s/yaml/$current_service.yaml
                         envsubst < k8s/yaml/$current_service.yaml | kubectl apply -f -
                         if [ "$deploy_service" = "force" ]; then
                             kubectl -n $namespace rollout restart deployment/$current_service

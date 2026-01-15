@@ -20,13 +20,12 @@ output=$(curl -s -X POST --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE
     "expiration": "7d"
 }
 ')
-RUM_APIKEY=$(echo $output | jq -r '.encoded')
+APP_APIKEY=$(echo $output | jq -r '.encoded')
 
-RUM_ENDPOINT=/
 cd /workspace/workshop
-./build.sh -o false -c $INSTRUQT_TRACK_SLUG -d true -b false -s all -g $RUM_ENDPOINT -h $KIBANA_URL -i $RUM_APIKEY
-#./build.sh -o false -c latest -l true -d force -b true -s proxy -g $ELASTIC_APM_SERVER_ENDPOINT -h $KIBANA_URL -i $RUM_APIKEY
-./build.sh -o false -c latest -l true -d force -b true -s frontend -g $RUM_ENDPOINT -h $KIBANA_URL -i $RUM_APIKEY
+./build.sh -o false -c $INSTRUQT_TRACK_SLUG -d true -b false -s all -g $ELASTIC_APM_SERVER_ENDPOINT -h $KIBANA_URL -i $APP_APIKEY
+#./build.sh -o false -c latest -l true -d force -b true -s proxy -g $ELASTIC_APM_SERVER_ENDPOINT -h $KIBANA_URL -i $APP_APIKEY
+./build.sh -o false -c latest -l true -d force -b true -s frontend -g $ELASTIC_APM_SERVER_ENDPOINT -h $KIBANA_URL -i $APP_APIKEY
 
 # ------------- REMOTE
 
