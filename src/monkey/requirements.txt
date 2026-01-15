@@ -4,3 +4,5 @@ ua-generator
 Faker
 
 elastic-opentelemetry
+
+prometheus-client

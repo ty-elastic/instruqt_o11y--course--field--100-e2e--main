@@ -162,11 +162,11 @@ data:
         logs:
           receivers: [sqlserver]
           processors: [resource/servicename, batch]
-          exporters: [debug, otlp/gateway]
+          exporters: [otlp/gateway]
         metrics:
           receivers: [sqlserver]
           processors: [resource/servicename, batch]
-          exporters: [debug, otlp/gateway]
+          exporters: [otlp/gateway]
 ---
 apiVersion: v1
 kind: ConfigMap

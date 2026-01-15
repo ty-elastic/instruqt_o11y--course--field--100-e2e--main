@@ -25,9 +25,9 @@ do
    esac
 done
 
-echo $elasticsearch_rum_endpoint
-echo $elasticsearch_kibana_endpoint
-echo $elasticsearch_api_key
+echo elasticsearch_rum_endpoint=$elasticsearch_rum_endpoint
+echo elasticsearch_kibana_endpoint=$elasticsearch_kibana_endpoint
+echo elasticsearch_api_key=$elasticsearch_api_key
 
 for service_dir in ./*/; do
     echo $service_dir

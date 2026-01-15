@@ -9,14 +9,14 @@ region=1
 service_version="1.0"
 
 build_service=false
-build_lib=true
+build_lib=false
 deploy_otel=false
 deploy_service=false
 
-elasticsearch_es_endpoint=""
-elasticsearch_rum_endpoint=""
-elasticsearch_kibana_endpoint=""
-elasticsearch_api_key=""
+elasticsearch_es_endpoint=" "
+elasticsearch_rum_endpoint=" "
+elasticsearch_kibana_endpoint=" "
+elasticsearch_api_key=" "
 
 unameOut="$(uname -s)"
 case "${unameOut}" in
