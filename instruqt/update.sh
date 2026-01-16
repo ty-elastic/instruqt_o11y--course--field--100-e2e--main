@@ -11,7 +11,7 @@ do
 done
 
 cd tools/pandoc
-#docker build --platform linux/amd64 -t pandoc-inter .
+docker build --platform linux/amd64 -t pandoc-inter .
 cd ../..
 
 for dir in ./tracks/*/; do

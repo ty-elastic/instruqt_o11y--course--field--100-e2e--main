@@ -82,7 +82,7 @@ metadata:
 spec:
   ports:
     - name: proxy
-      port: 8080
+      port: 8081
       targetPort: 80
   type: LoadBalancer
   selector:

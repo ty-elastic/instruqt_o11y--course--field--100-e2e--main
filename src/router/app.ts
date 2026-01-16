@@ -7,6 +7,15 @@ import { createProxyMiddleware } from 'http-proxy-middleware';
 import { Logger } from "tslog";
 const logger = new Logger({ name: "router", type: "json" });
 
+const promClient = require('prom-client');
+// Create a Registry to register metrics
+const promRegistry = new promClient.Registry();
+const shares_traded = new promClient.Counter({
+  name: 'shares_traded',
+  help: 'number of shares traded',
+  registers: [promRegistry]
+});
+
 const PORT: number = parseInt(process.env.PORT || '9000');
 const app: Express = express();
 
@@ -17,6 +26,10 @@ function getRandomBoolean() {
 function customRouter(req: any) {
   var host = "";
   var method = ""
+
+  const requestBody = req.body;
+  shares_traded.inc();
+
   if (req.query.service != null) {
     method = "service";
     host = `http://${req.query.service}:9003`;
@@ -52,11 +65,25 @@ const proxyMiddleware = createProxyMiddleware<Request, Response>({
   proxyTimeout: 5000
 })
 
-app.use('/', proxyMiddleware);
+app.use(express.json());
 
 app.get('/health', (req, res) => {
   res.send("KERNEL OK")
 });
+
+// The metrics endpoint
+app.get('/metrics', async (req, res) => {
+  try {
+    // Set the appropriate content type header for Prometheus
+    res.setHeader('Content-Type', promRegistry.contentType);
+    // Respond with the metrics data
+    res.end(await promRegistry.metrics());
+  } catch (err) {
+    res.status(500).end(err);
+  }
+})
+
+app.use('/', proxyMiddleware);
 
 app.listen(PORT, () => {
   logger.info(`Listening for requests on http://localhost:${PORT}`);

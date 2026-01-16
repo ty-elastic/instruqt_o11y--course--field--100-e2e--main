@@ -15,11 +15,6 @@ from faker import Faker
 
 from opentelemetry import trace
 
-from prometheus_client import start_http_server, Counter, Gauge
-TRADE_COUNT = Counter('trade_count', 'Total number of trades')
-SYMBOL_TRADE_COUNT = Counter('symbol_trade_count', 'Total number of trades per symbol', ['symbol'])
-start_http_server(8000)
-
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
 
@@ -174,10 +169,7 @@ def generate_trade_request(*, subscription, customer_id, symbol, day_of_week, re
         if error_request is True:
             del params['customer_id']
             params['customerid'] = customer_id
-
-        TRADE_COUNT.inc()
-        SYMBOL_TRADE_COUNT.labels(symbol=symbol).inc()
-            
+    
         trade_response = requests.post(f"http://{os.environ['TRADER_SERVICE']}/trade/request", 
                                        json=params,
                                        headers=headers,
