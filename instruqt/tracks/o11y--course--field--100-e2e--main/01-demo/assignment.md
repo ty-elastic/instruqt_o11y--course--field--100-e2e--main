@@ -22,7 +22,7 @@ tabs:
   type: service
   hostname: host-1
   path: /
-  port: 8080
+  port: 8081
 - id: ent1or6pgmot
   title: host-1
   type: terminal
@@ -33,6 +33,12 @@ tabs:
   type: terminal
   hostname: kubernetes-vm
   workdir: /workspace/workshop
+- id: uv4y5drik7sz
+  title: VSCode
+  type: service
+  hostname: host-1
+  path: /
+  port: 8080
 difficulty: basic
 timelimit: 43200
 enhanced_loading: null

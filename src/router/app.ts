@@ -10,8 +10,8 @@ const logger = new Logger({ name: "router", type: "json" });
 const promClient = require('prom-client');
 // Create a Registry to register metrics
 const promRegistry = new promClient.Registry();
-const shares_traded = new promClient.Counter({
-  name: 'shares_traded',
+const metricTransactions = new promClient.Counter({
+  name: 'transactions',
   help: 'number of shares traded',
   registers: [promRegistry]
 });
@@ -28,7 +28,7 @@ function customRouter(req: any) {
   var method = ""
 
   const requestBody = req.body;
-  shares_traded.inc();
+  metricTransactions.inc();
 
   if (req.query.service != null) {
     method = "service";
