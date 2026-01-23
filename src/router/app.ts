@@ -15,6 +15,12 @@ const metricTransactions = new promClient.Counter({
   help: 'number of transactions routed',
   registers: [promRegistry]
 });
+const metricSharesTraded = new promClient.Counter({
+  name: 'shares_traded',
+  help: 'Number of shares traded per region',
+  labelNames: ['region', 'symbol', 'action'],
+  registers: [promRegistry]
+});
 
 const PORT: number = parseInt(process.env.PORT || '9000');
 const app: Express = express();
@@ -27,8 +33,8 @@ function customRouter(req: any) {
   var host = "";
   var method = ""
 
-  const requestBody = req.body;
   metricTransactions.inc();
+  metricSharesTraded.labels({ region: req.query.region, symbol: req.query.symbol, action: req.query.action}).inc(req.query.shares);
 
   if (req.query.service != null) {
     method = "service";
