@@ -23,7 +23,7 @@ data:
       resource/servicename:
         attributes:
           - key: service.name
-            value: router
+            value: routerapp
             action: insert
 
     exporters:
@@ -72,16 +72,6 @@ spec:
         value: "$REGION"
         effect: "PreferNoSchedule"
       containers:
-        - name: collector
-          image: otel/opentelemetry-collector-contrib:0.130.1
-          command:
-            - "/otelcol-contrib"
-            - "--config=/etc/otelcol-contrib/config.yaml"
-          volumeMounts:
-            - mountPath: /etc/otelcol-contrib/config.yaml
-              name: data
-              subPath: config.yaml
-              readOnly: true
         - name: router
           env:
             - name: RECORDER_HOST_1
@@ -94,6 +84,16 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 9000
+        - name: collector
+          image: otel/opentelemetry-collector-contrib:0.130.1
+          command:
+            - "/otelcol-contrib"
+            - "--config=/etc/otelcol-contrib/config.yaml"
+          volumeMounts:
+            - mountPath: /etc/otelcol-contrib/config.yaml
+              name: data
+              subPath: config.yaml
+              readOnly: true
       volumes:
         - name: data
           configMap:

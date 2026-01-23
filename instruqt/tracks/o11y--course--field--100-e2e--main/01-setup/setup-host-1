@@ -41,4 +41,25 @@ source /workspace/workshop/instruqt/scripts/elastic-profiling-agent.sh
 # ------------- VSCODE
 
 code-server --install-extension mcp/vscode/feiskyer.chatgpt-copilot.vsix --force --user-data-dir "/user-data"
+
+jq --arg apiBaseUrl "https://$LLM_PROXY_URL" \
+  '. += {"chatgpt.gpt3.apiBaseUrl": $apiBaseUrl}' \
+  /user-data/User/settings.json > /user-data/User/settings.tmp && mv /user-data/User/settings.tmp /user-data/User/settings.json
+
+jq --arg apiKey "$LLM_APIKEY" \
+  '. += {"chatgpt.gpt3.apiKey": $apiKey}' \
+  /user-data/User/settings.json > /user-data/User/settings.tmp && mv /user-data/User/settings.tmp /user-data/User/settings.json
+
+jq --arg model "gpt-4.1" \
+  '. += {"chatgpt.gpt3.model": $model}' \
+  /user-data/User/settings.json > /user-data/User/settings.tmp && mv /user-data/User/settings.tmp /user-data/User/settings.json
+
+jq \
+  '. += {"chatgpt.gpt3.provider": "AzureAI"}' \
+  /user-data/User/settings.json > /user-data/User/settings.tmp && mv /user-data/User/settings.tmp /user-data/User/settings.json
+
+jq \
+  '. += {"chat.mcp.discovery.enabled": true}' \
+  /user-data/User/settings.json > /user-data/User/settings.tmp && mv /user-data/User/settings.tmp /user-data/User/settings.json
+
 /opt/workshops/vscode-start.sh

@@ -1,8 +1,8 @@
 ---
-slug: demo
+slug: rca
 id: djf9hko1ubhc
 type: challenge
-title: Demo
+title: RCA
 tabs:
 - id: 6isqyipw1hmd
   title: Elasticsearch
@@ -43,8 +43,6 @@ difficulty: basic
 timelimit: 43200
 enhanced_loading: null
 ---
-RCA
-===
 
 # Setup
 1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
