@@ -40,5 +40,5 @@ source /workspace/workshop/instruqt/scripts/elastic-profiling-agent.sh
 
 # ------------- VSCODE
 
-code-server --install-extension mcp/vscode/DanielSanMedium.dscodegpt-3.13.1.vsix --force --user-data-dir "/user-data"
+code-server --install-extension mcp/vscode/feiskyer.chatgpt-copilot.vsix --force --user-data-dir "/user-data"
 /opt/workshops/vscode-start.sh
