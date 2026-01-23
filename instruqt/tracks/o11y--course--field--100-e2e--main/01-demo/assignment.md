@@ -33,7 +33,7 @@ tabs:
   type: terminal
   hostname: kubernetes-vm
   workdir: /workspace/workshop
-- id: uv4y5drik7sz
+- id: zzk3aplqxisv
   title: VSCode
   type: service
   hostname: host-1

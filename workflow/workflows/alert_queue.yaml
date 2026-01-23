@@ -1,7 +1,7 @@
 version: '1'
 name: alert_queue
 description: ingest alerts
-enabled: true
+enabled: false
 tags:
 - rca
 triggers:

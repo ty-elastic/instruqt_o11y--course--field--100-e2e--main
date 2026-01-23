@@ -13,10 +13,10 @@ build_lib=false
 deploy_otel=false
 deploy_service=false
 
-elasticsearch_es_endpoint="-"
+elasticsearch_es_endpoint="a"
 elasticsearch_rum_endpoint="http://kubernetes-vm:8200"
-elasticsearch_kibana_endpoint="-"
-elasticsearch_api_key="-"
+elasticsearch_kibana_endpoint="b"
+elasticsearch_api_key="c"
 
 unameOut="$(uname -s)"
 case "${unameOut}" in
@@ -76,6 +76,12 @@ IFS=","
 regions=($region)
 # Restore the original IFS
 IFS="$OIFS"
+
+if [ -f ".env" ]; then
+    set -o allexport # Automatically export all variables defined after this point
+    source .env
+    set +o allexport # Stop automatic exporting
+fi
 
 for current_region in "${regions[@]}"; do
     echo "setup for region=$current_region"

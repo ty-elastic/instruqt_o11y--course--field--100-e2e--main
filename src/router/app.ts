@@ -12,7 +12,7 @@ const promClient = require('prom-client');
 const promRegistry = new promClient.Registry();
 const metricTransactions = new promClient.Counter({
   name: 'transactions',
-  help: 'number of shares traded',
+  help: 'number of transactions routed',
   registers: [promRegistry]
 });
 
