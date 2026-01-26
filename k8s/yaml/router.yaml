@@ -23,7 +23,7 @@ data:
       resource/servicename:
         attributes:
           - key: service.name
-            value: routerapp
+            value: router
             action: insert
 
     exporters:

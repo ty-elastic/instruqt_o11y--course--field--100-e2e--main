@@ -7,23 +7,24 @@ import { createProxyMiddleware } from 'http-proxy-middleware';
 import { Logger } from "tslog";
 const logger = new Logger({ name: "router", type: "json" });
 
+const { ExpressPrometheusMiddleware } = require('@matteodisabatino/express-prometheus-middleware')
 const promClient = require('prom-client');
-// Create a Registry to register metrics
-const promRegistry = new promClient.Registry();
+
 const metricTransactions = new promClient.Counter({
   name: 'transactions',
-  help: 'number of transactions routed',
-  registers: [promRegistry]
+  help: 'number of transactions routed'
 });
 const metricSharesTraded = new promClient.Counter({
   name: 'shares_traded',
   help: 'Number of shares traded per region',
-  labelNames: ['region', 'symbol', 'action'],
-  registers: [promRegistry]
+  labelNames: ['region', 'symbol', 'action']
 });
+const epm = new ExpressPrometheusMiddleware();
 
 const PORT: number = parseInt(process.env.PORT || '9000');
+
 const app: Express = express();
+app.use(epm.handler)
 
 function getRandomBoolean() {
   return Math.random() < 0.5;
@@ -34,7 +35,8 @@ function customRouter(req: any) {
   var method = ""
 
   metricTransactions.inc();
-  metricSharesTraded.labels({ region: req.query.region, symbol: req.query.symbol, action: req.query.action}).inc(req.query.shares);
+  logger.info(req.query)
+  metricSharesTraded.labels({ region: req.query.region, symbol: req.query.symbol, action: req.query.action }).inc(Number(req.query.shares));
 
   if (req.query.service != null) {
     method = "service";
@@ -76,18 +78,6 @@ app.use(express.json());
 app.get('/health', (req, res) => {
   res.send("KERNEL OK")
 });
-
-// The metrics endpoint
-app.get('/metrics', async (req, res) => {
-  try {
-    // Set the appropriate content type header for Prometheus
-    res.setHeader('Content-Type', promRegistry.contentType);
-    // Respond with the metrics data
-    res.end(await promRegistry.metrics());
-  } catch (err) {
-    res.status(500).end(err);
-  }
-})
 
 app.use('/', proxyMiddleware);
 
