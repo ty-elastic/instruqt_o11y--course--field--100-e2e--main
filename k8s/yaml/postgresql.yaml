@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: otel-collector-config
+  name: postgres-collector-config
   namespace: $NAMESPACE
 data:
   config.yaml: |-
@@ -235,7 +235,7 @@ spec:
             name: postgres-init-scripts
         - name: data
           configMap:
-            name: otel-collector-config
+            name: postgres-collector-config
       restartPolicy: Always
 ---
 apiVersion: v1

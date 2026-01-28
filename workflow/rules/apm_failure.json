@@ -2,7 +2,7 @@
   "name": "APM Failure Rule",
   "tags": ["automated_observability_triage"],
   "schedule": {
-    "interval": "30s"
+    "interval": "1m"
   },
   "params": {
     "threshold": 5,
