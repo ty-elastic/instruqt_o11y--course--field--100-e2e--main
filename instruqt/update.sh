@@ -1,12 +1,14 @@
 arch=linux/amd64
 build=true
 course=all
-while getopts "a:b:c:" opt
+track=o11y--course--field--100-e2e--main
+while getopts "a:b:c:d:" opt
 do
    case "$opt" in
       a ) arch="$OPTARG" ;;
       b ) build="$OPTARG" ;;
       c ) course="$OPTARG" ;;
+      d ) track="$OPTARG" ;;
    esac
 done
 

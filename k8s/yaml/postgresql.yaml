@@ -2,6 +2,75 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  name: otel-collector-config
+  namespace: $NAMESPACE
+data:
+  config.yaml: |-
+    receivers:
+      postgresql:
+          endpoint: localhost:5432
+          transport: tcp
+          tls:
+            insecure: true
+          username: otelu
+          password: otelp
+
+          metrics:
+            postgresql.database.locks:
+              enabled: true
+            postgresql.tup_updated:
+              enabled: true
+            postgresql.tup_returned:
+              enabled: true
+            postgresql.tup_fetched:
+              enabled: true
+            postgresql.tup_inserted:
+              enabled: true
+            postgresql.tup_deleted:
+              enabled: true
+            postgresql.blks_hit:
+              enabled: true
+            postgresql.blks_read:
+              enabled: true
+          events:
+            db.server.top_query:
+              enabled: true 
+            db.server.query_sample:
+              enabled: true
+
+    processors:
+      batch:
+        send_batch_size: 1000
+        timeout: 1s
+        send_batch_max_size: 1500
+      resource/attributes:
+        attributes:
+          - key: data_stream.dataset
+            value: postgresqlreceiver
+            action: insert
+
+    exporters:
+      debug:
+        verbosity: basic
+      otlp/gateway:
+        endpoint: "http://opentelemetry-kube-stack-daemon-collector.opentelemetry-operator-system.svc.cluster.local:4317"
+        tls:
+          insecure: true
+
+    service:
+      pipelines:
+        logs:
+          receivers: [postgresql]
+          processors: [resource/attributes, batch]
+          exporters: [debug, otlp/gateway]
+        metrics:
+          receivers: [postgresql]
+          processors: [resource/attributes, batch]
+          exporters: [debug, otlp/gateway]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
   name: postgres-init-scripts
   namespace: $NAMESPACE
 data:
@@ -14,7 +83,22 @@ data:
       symbol varchar(255), 
       trade_id varchar(255) not null, 
       primary key (trade_id));
+    alter system set shared_preload_libraries='pg_stat_statements';
+    CREATE USER otelu WITH PASSWORD 'otelp';
+    GRANT SELECT ON pg_stat_database TO otelu;
+    GRANT SELECT ON trades TO otelu;
+    GRANT pg_monitor TO otelu;
     CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: $NAMESPACE
+data:
+  postgresql.conf: |
+    shared_preload_libraries = 'pg_stat_statements'
+    pg_stat_statements.track = all
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -38,8 +122,8 @@ spec:
         type: postgresql
         dbName: $POSTGRESQL_DBNAME
       annotations:
-        io.opentelemetry.discovery.logs/enabled: "true"
-        io.opentelemetry.discovery.logs/config: |
+        io.opentelemetry.discovery.logs.postgresql/enabled: "true"
+        io.opentelemetry.discovery.logs.postgresql/config: |
           operators:
           - type: container
           - type: regex_parser
@@ -113,10 +197,23 @@ spec:
         value: "$REGION"
         effect: "PreferNoSchedule"
       containers:
+        - name: collector
+          image: otel/opentelemetry-collector-contrib:0.144.0
+          command:
+            - "/otelcol-contrib"
+            - "--config=/etc/otelcol-contrib/config.yaml"
+          volumeMounts:
+            - mountPath: /etc/otelcol-contrib/config.yaml
+              name: data
+              subPath: config.yaml
+              readOnly: true
         - name: postgresql
           volumeMounts:
             - name: init-scripts-volume
               mountPath: /docker-entrypoint-initdb.d
+            - name: config-volume
+              mountPath: /etc/postgresql/postgresql.conf # Mount as a specific file
+              subPath: postgresql.conf # Mount only the specific ke
           env:
             - name: POSTGRES_DB
               value: $POSTGRESQL_DBNAME
@@ -125,14 +222,20 @@ spec:
             - name: POSTGRES_USER
               value: $POSTGRESQL_USER
           image: postgres
-          args: ["-c", "log_statement=all", "-c", "shared_preload_libraries=pg_stat_statements"]
+          args: ["-c", "log_statement=all", "-c", "shared_preload_libraries=pg_stat_statements", "-c", "pg_stat_statements.track=all"]
           ports:
             - containerPort: 5432
               protocol: TCP
       volumes:
+        - name: config-volume
+          configMap:
+            name: postgres-config
         - name: init-scripts-volume
           configMap:
             name: postgres-init-scripts
+        - name: data
+          configMap:
+            name: otel-collector-config
       restartPolicy: Always
 ---
 apiVersion: v1

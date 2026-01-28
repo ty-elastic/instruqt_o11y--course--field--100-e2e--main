@@ -7,6 +7,7 @@ local=false
 namespace_base=trading
 region=1
 service_version="1.0"
+workflows=false
 
 build_service=false
 build_lib=false
@@ -25,7 +26,7 @@ case "${unameOut}" in
     *)          machine="UNKNOWN:${unameOut}"
 esac
 
-while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:" opt
+while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:w:" opt
 do
    case "$opt" in
       a ) arch="$OPTARG" ;;
@@ -45,6 +46,8 @@ do
       h ) elasticsearch_kibana_endpoint="$OPTARG" ;;
       i ) elasticsearch_api_key="$OPTARG" ;;
       j ) elasticsearch_es_endpoint="$OPTARG" ;;
+
+      w ) workflows="$OPTARG" ;;
    esac
 done
 
@@ -61,10 +64,10 @@ export MSSQL_DIALECT="SQLServerDialect"
 export POSTGRESQL_HOST=postgresql
 export POSTGRESQL_USER=postgres
 export POSTGRESQL_PASSWORD=postgres
-export POSTGRESQL_DBNAME=trades
+export POSTGRESQL_DBNAME=postgres
 export POSTGRESQL_PROTOCOL=postgresql
 export POSTGRESQL_SETUP=none
-export POSTGRESQL_OPTIONS="/trades?sslmode=disable"
+export POSTGRESQL_OPTIONS="/postgres?sslmode=disable"
 export POSTGRESQL_PORT=5432
 export POSTGRESQL_DIALECT=PostgreSQLDialect
 
@@ -113,8 +116,11 @@ for current_region in "${regions[@]}"; do
 
     if [ "$deploy_otel" != "false" ]; then
         # ---------- COLLECTOR
+        if [ "$deploy_otel" = "true" ]; then
+            deploy_otel="values"
+        fi
 
-        echo "deploying values.yaml"
+        echo "deploying $deploy_otel.yaml"
 
         helm repo add open-telemetry 'https://open-telemetry.github.io/opentelemetry-helm-charts' --force-update
 
@@ -129,11 +135,24 @@ for current_region in "${regions[@]}"; do
         cd collector
         helm upgrade --install opentelemetry-kube-stack open-telemetry/opentelemetry-kube-stack \
         --namespace opentelemetry-operator-system \
-        --values "values.yaml" \
+        --values "$deploy_otel.yaml" \
         --version '0.10.5'
         cd ..
 
+        kubectl -n opentelemetry-operator-system rollout restart deployment
         sleep 30
+    fi
+
+    if [ "$workflows" = "true" ]; then
+        cd workflow
+        ./build.sh -r $repo -c $course -a $arch
+        docker run --network host $repo/workflows:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key load_workflows
+        docker run --network host $repo/workflows:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key load_alerts --connect_alerts True
+        docker run --network host $repo/workflows:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key load_knowledge
+        docker run --network host $repo/workflows:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key load_tools
+        docker run --network host $repo/workflows:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key load_agents
+        docker run --network host $repo/workflows:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key run_setup
+        cd ..
     fi
 
     if [[ "$deploy_service" == "true" || "$deploy_service" == "delete" || "$deploy_service" == "force" ]]; then

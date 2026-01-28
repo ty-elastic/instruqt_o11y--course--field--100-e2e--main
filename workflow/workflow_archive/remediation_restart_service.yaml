@@ -1,0 +1,49 @@
+name: remediation_restart_service
+enabled: true
+consts:
+  remote_host: http://host-1:43210
+  ai_connector: TBD
+  ai_proxy: TBD
+  ai_timeout: 10m
+  es_host: TBD
+  kbn_auth: TBD
+  kbn_host: TBD
+  topology_lookback_time: 1h
+  snow_host: TBD
+  snow_auth: TBD
+tags:
+- automated_observability_triage
+inputs:
+- name: service_name
+  type: string
+- name: service_action
+  type: string
+- name: case_id
+  type: string
+  default: NOT_AVAILABLE
+triggers:
+- type: manual
+steps:
+- name: call_remote
+  type: http
+  with:
+    url: '{{consts.remote_host}}/service/{{inputs.service_name}}/{{inputs.service_action}}'
+    method: POST
+    headers:
+      Content-Type: application/json
+- name: add_comment_to_existing_case
+  type: http
+  with:
+    body:
+      comment: Attempted `{{inputs.service_action}}` of `{{inputs.service_name}}`
+      owner: observability
+      type: user
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
+      Content-Type: application/json
+      kbn-xsrf: true
+      x-elastic-internal-origin: kibana
+    method: POST
+    url: '{{ consts.kbn_host }}/api/cases/{{ inputs.case_id }}/comments'
+  on-failure:
+    continue: true

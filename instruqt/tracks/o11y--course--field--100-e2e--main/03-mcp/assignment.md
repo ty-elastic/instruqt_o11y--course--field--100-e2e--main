@@ -1,39 +1,39 @@
 ---
-slug: rca
-id: djf9hko1ubhc
+slug: mcp
+id: xf7adpjt1sd2
 type: challenge
-title: RCA
+title: MCP
 tabs:
-- id: 6isqyipw1hmd
+- id: lvudbbn0xojl
   title: Elasticsearch
   type: service
   hostname: kubernetes-vm
   path: /app/apm/service-map
   port: 30001
-- id: cqdigxbelhba
+- id: lmsjzmbn3ddp
   title: Elasticsearch (breakout)
   type: service
   hostname: kubernetes-vm
   path: /app/apm/service-map
   port: 30001
   new_window: true
-- id: aq8oaqxxd2nc
+- id: kojvl2izcn95
   title: Trader
   type: service
   hostname: host-1
   path: /
   port: 8081
-- id: ent1or6pgmot
+- id: 6j4kfnxtykpo
   title: host-1
   type: terminal
   hostname: host-1
   workdir: /workspace/workshop
-- id: uv4y5drik7sj
+- id: kmnzm5poqvtt
   title: kubernetes-vm
   type: terminal
   hostname: kubernetes-vm
   workdir: /workspace/workshop
-- id: zzk3aplqxisv
+- id: wygirmylndyu
   title: VSCode
   type: service
   hostname: host-1

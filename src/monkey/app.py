@@ -32,7 +32,7 @@ tracer = init_otel()
 
 TRADE_TIMEOUT = 5
 S_PER_DAY = 60
-HIGH_TPUT_PCT = 95
+HIGH_TPUT_PCT = 50
 LATENCY_SWING_MS = 10
 HIGH_TPUT_SLEEP_MS = [2,3]
 NORMAL_TPUT_SLEEP_MS = [200,300]
@@ -421,7 +421,7 @@ def err_db_region(region, amount):
     err_db_oneshot = request.args.get('err_db_oneshot', default=True, type=conform_request_bool)
     if region in REGIONS:     
         db_error_per_region[region] = {'service': err_db_service, 'amount': int(amount), 'start': time.time(), 'oneshot': err_db_oneshot}
-        high_tput_per_region[region] = HIGH_TPUT_PCT
+        #high_tput_per_region[region] = HIGH_TPUT_PCT
     return db_error_per_region
 @app.delete('/err/db/region/<region>')
 def err_db_region_delete(region):

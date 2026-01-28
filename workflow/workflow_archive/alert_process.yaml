@@ -1,0 +1,356 @@
+consts:
+  ai_connector: TBD
+  ai_proxy: TBD
+  ai_timeout: 10m
+  es_host: TBD
+  kbn_auth: TBD
+  kbn_host: TBD
+  snow_host: TBD
+  snow_auth: TBD
+description: Process o11y alerts and correlate to cases
+enabled: true
+name: alert_process
+tags:
+- automated_observability_triage
+triggers:
+- enabled: false
+  type: alert
+settings:
+  timeout: 10m
+version: '1'
+steps:
+- name: debug1
+  type: console
+  with:
+    message: '{{ event | json }}'
+
+- name: get_cases
+  type: http
+  with:
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
+      Content-Type: application/json
+      kbn-xsrf: true
+      x-elastic-internal-origin: kibana
+    method: GET
+    url: '{{ consts.kbn_host }}/api/cases/_find?status=open'
+
+- name: delete_temp_alert_queue
+  type: http
+  with:
+    url: '{{ consts.es_host }}/temp_alert_queue'
+    method: DELETE
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
+    timeout: 30s
+  on-failure:
+    continue: true
+
+- name: create_temp_alert_queue
+  type: http
+  with:
+    url: '{{ consts.es_host }}/temp_alert_queue'
+    method: PUT
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
+    body:
+      mappings:
+        properties:
+          case:
+            type: flattened
+          alerts:
+            type: flattened
+          case_id:
+            type: keyword
+    timeout: 30s
+
+- name: foreach_case
+  type: foreach
+  foreach: '{{ steps.get_cases.output.data.cases | json }}'
+  steps:
+  - name: get_case
+    type: http
+    with:
+      headers:
+        Authorization: '{{ consts.kbn_auth }}'
+        Content-Type: application/json
+        kbn-xsrf: true
+        x-elastic-internal-origin: kibana
+      method: GET
+      url: '{{ consts.kbn_host }}/api/cases/{{ foreach.item.id }}'
+  - name: get_case_alerts
+    type: http
+    with:
+      headers:
+        Authorization: '{{ consts.kbn_auth }}'
+        Content-Type: application/json
+        kbn-xsrf: true
+        x-elastic-internal-origin: kibana
+      method: GET
+      url: '{{ consts.kbn_host }}/api/cases/{{ foreach.item.id }}/alerts'
+
+  - name: write_temp_alert_queue
+    type: http
+    with:
+      url: '{{ consts.es_host }}/temp_alert_queue/_doc?refresh=wait_for'
+      method: POST
+      headers:
+        Authorization: '{{ consts.kbn_auth }}'
+        Content-Type: application/json
+      body: '{ "alerts": {{ steps.get_case_alerts.output.data | json}}, "case": {{ steps.get_case.output.data | json}}, "case_id": "{{ steps.get_case.output.data.id}}"}'
+      timeout: 30s
+
+- name: get_temp_alert_queue
+  type: http
+  with:
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
+      Content-Type: application/json
+    method: POST
+    timeout: 30s
+    url: '{{ consts.es_host }}/temp_alert_queue/_search'
+
+- name: get_topology
+  type: http
+  with:
+    body:
+      size: 0
+      aggs:
+        unique_field_buckets:
+          terms:
+            field: system
+            size: 100
+            order:
+              _key: asc
+          aggs:
+            latest_document:
+              top_hits:
+                size: 1
+                sort:
+                - '@timestamp':
+                    order: desc
+                _source:
+                  includes:
+                  - '@timestamp'
+                  - system
+                  - topology
+    headers:
+      Authorization: '{{ consts.kbn_auth }}'
+      Content-Type: application/json
+    method: POST
+    url: '{{ consts.es_host }}/workflow_topology/_search'
+
+- name: correlate_to_case
+  type: http
+  with:
+    body:
+      connectorId: '{{ consts.ai_connector }}'
+      messages:
+      - '@timestamp': now
+        message:
+          content: |
+            # Open Cases & Correlated Alerts
+            ```
+            {{ steps.get_temp_alert_queue.output.data.hits.hits | json }}
+            ```
+          role: user
+
+      - '@timestamp': now
+        message:
+          content: |
+            # Topologies
+            ```
+            {{ steps.get_topology.output.data.aggregations.unique_field_buckets.buckets | json }}
+            ```
+          role: user
+
+      - '@timestamp': now
+        message:
+          content: |
+            # New Alert to Correlate
+            ```
+            {{ event | json }}
+            ```
+          role: user
+
+      - '@timestamp': now
+        message:
+          content: |
+            Decide if the New Alert to Correlate is directly related to any existing open case. Consider only the Open Cases & Correlated Alerts, and the system Topologies. You should strongly consider the system name (available for each existing case under `customFields/key=system`), the timestamps of the existing Correlated Alerts compared to the timestamp of the New Alert, and whether the Correlated Alerts are still active to decide if this New Alert to Correlate is related to an existing case or should be treated as part of a new case. 
+            If the alert is related to an existing case, output a field 'case_id' with the value of the related case and a field 'relation' with a summary of how it is related. If it is not related to any open case, output a field 'case_id' with a value of 'NONE'. If, from the topologies, you can identify a system associated with this alert, output a field 'system' with a value of the name of the system. Always favor topologies with a system name other than 'ENVIRONMENT_NOT_DEFINED' if applicable.
+          role: user
+
+      persist: false
+    headers:
+      Content-Type: application/json
+      kibana-auth: '{{ consts.kbn_auth }}'
+      kibana-host: '{{ consts.kbn_host }}'
+    method: POST
+    timeout: '{{ consts.ai_timeout }}'
+    url: '{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete'
+
+- name: new_or_update_case
+  type: if
+  condition: 'steps.correlate_to_case.output.data.result.case_id : NONE'
+  steps:
+  - name: create_alert_details
+    type: http
+    with:
+      body:
+        connectorId: '{{ consts.ai_connector }}'
+        messages:
+        - '@timestamp': now
+          message:
+            content: |
+              Alert
+              ```
+              {{ event | json }}
+              ```
+            role: user
+
+        - '@timestamp': now
+          message:
+            content: |
+              Output a field called 'title' that summarizes the attached alert in a few words, a field called 'trigger' that provides a detailed summary of the alert, and a field called 'severity' with a value of 'low', 'medium', 'high', or 'critical' based on an initial analysis of the alert.
+            role: user
+        persist: false
+      headers:
+        Content-Type: application/json
+        kibana-auth: '{{ consts.kbn_auth }}'
+        kibana-host: '{{ consts.kbn_host }}'
+      method: POST
+      timeout: '{{ consts.ai_timeout }}'
+      url: '{{ consts.ai_proxy }}/api/observability_ai_assistant/chat/complete'
+
+
+  - name: get_case_settings
+    type: http
+    with:
+      method: GET
+      headers:
+        Authorization: '{{ consts.kbn_auth }}'
+        Content-Type: application/json
+        kbn-xsrf: true
+        x-elastic-internal-origin: kibana
+      url: '{{ consts.kbn_host }}/api/cases/configure'
+
+  - name: create_case
+    type: http
+    with:
+      body:
+        connector:
+          fields:
+          id: '{{ steps.get_case_settings.output.data[0].connector.id }}'
+          name: '{{ steps.get_case_settings.output.data[0].connector.name }}'
+          type: '{{ steps.get_case_settings.output.data[0].connector.type }}'
+
+        customFields:
+        - key: system
+          type: text
+          value: '{{ steps.correlate_to_case.output.data.result.system}}'
+        description: '{{ steps.create_alert_details.output.data.result.trigger }}'
+        owner: observability
+        settings:
+          syncAlerts: true
+        severity: '{{ steps.create_alert_details.output.data.result.severity }}'
+        tags:
+        - automated_observability_triage
+        title: '{{ steps.create_alert_details.output.data.result.title }}'
+      method: POST
+      headers:
+        Authorization: '{{ consts.kbn_auth }}'
+        Content-Type: application/json
+        kbn-xsrf: true
+        x-elastic-internal-origin: kibana
+      url: '{{ consts.kbn_host }}/api/cases'
+  - name: add_alert_to_case
+    type: http
+    with:
+      body:
+        alertId: '{{ event.alerts[0]._id }}'
+        index: '{{ event.alerts[0]._index }}'
+        owner: observability
+        rule:
+          id: '{{ event.alerts[0].kibana.alert.rule.uuid }}'
+          name: '{{ event.alerts[0].kibana.alert.rule.name }}'
+        type: alert
+      headers:
+        Authorization: '{{ consts.kbn_auth }}'
+        Content-Type: application/json
+        kbn-xsrf: true
+        x-elastic-internal-origin: kibana
+      method: POST
+      url: '{{ consts.kbn_host }}/api/cases/{{ steps.create_case.output.data.id }}/comments'
+
+  - name: queue_new_case
+    type: http
+    with:
+      body:
+        case_id: '{{ steps.create_case.output.data.id }}'
+      headers:
+        Authorization: '{{ consts.kbn_auth }}'
+        Content-Type: application/json
+      method: POST
+      url: '{{ consts.es_host }}/workflow_case_queue/_doc?refresh=wait_for'
+  else:
+  - name: add_alert_to_existing_case
+    type: http
+    with:
+      body:
+        alertId: '{{ event.alerts[0]._id }}'
+        index: '{{ event.alerts[0]._index }}'
+        owner: observability
+        rule:
+          id: '{{ event.alerts[0].kibana.alert.rule.uuid }}'
+          name: '{{ event.alerts[0].kibana.alert.rule.name }}'
+        type: alert
+      headers:
+        Authorization: '{{ consts.kbn_auth }}'
+        Content-Type: application/json
+        kbn-xsrf: true
+        x-elastic-internal-origin: kibana
+      method: POST
+      url: '{{ consts.kbn_host }}/api/cases/{{ steps.correlate_to_case.output.data.result.case_id }}/comments'
+  - name: add_comment_to_existing_case
+    type: http
+    with:
+      body:
+        comment: |
+          # Related Alert
+          * Reason: '{{ event.alerts[0].kibana.alert.reason }}'
+          * Relationship to Case: {{ steps.correlate_to_case.output.data.result.relation }}
+        owner: observability
+        type: user
+      headers:
+        Authorization: '{{ consts.kbn_auth }}'
+        Content-Type: application/json
+        kbn-xsrf: true
+        x-elastic-internal-origin: kibana
+      method: POST
+      url: '{{ consts.kbn_host }}/api/cases/{{ steps.correlate_to_case.output.data.result.case_id }}/comments'
+
+  - name: queue_existing_case
+    type: http
+    with:
+      body:
+        case_id: '{{ steps.correlate_to_case.output.data.result.case_id }}'
+      headers:
+        Authorization: '{{ consts.kbn_auth }}'
+        Content-Type: application/json
+      method: POST
+      url: '{{ consts.es_host }}/workflow_case_queue/_doc?refresh=wait_for'
+
+# - name: mute_alert
+#   on-failure:
+#     continue: true
+#   type: http
+#   with:
+#     body: {}
+#     headers:
+#       Authorization: '{{ consts.kbn_auth }}'
+#       Content-Type: application/json
+#       kbn-xsrf: true
+#       x-elastic-internal-origin: kibana
+#     method: POST
+#     url: '{{ consts.es_host }}/api/alerting/rule/{{ event.alerts[0].kibana.alert.rule.uuid }}/alert/{{ event.alerts[0].kibana.alert.instance.id }}/_mute'
+

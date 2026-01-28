@@ -631,6 +631,7 @@ collectors:
       exporters:
         debug: {}
         # [Elasticsearch exporter](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/exporter/elasticsearchexporter/README.md)
+
         elasticsearch/otel:
           endpoints: # List of Elasticsearch endpoints.
             - ${env:ELASTIC_ENDPOINT}
@@ -641,27 +642,63 @@ collectors:
           mapping:
             mode: otel
 
+        elasticsearch/otel2:
+          endpoints: # List of Elasticsearch endpoints.
+            - https://elastic92-352776.es.us-west2.gcp.elastic-cloud.com
+          api_key: Y2czS0Fad0JGQ09jWTVNRldiVWM6MUl5U3c1MmFDWGhWdWkwVFV6Q1FCZw==
+          # Enable in order to skip the SSL certificate Check
+          # tls:
+          #   insecure_skip_verify: true
+          mapping:
+            mode: otel
+
+        otlp/serverless:
+          endpoint: https://cf2128728baa4a268d6ebe9c7eab723f.ingest.us-central1.gcp.elastic.cloud:443
+          headers:
+            Authorization: ApiKey ZGZwUkFKd0Jzc1RCbVdZbTZrWUE6b0Zrc1d0QVU3aXFyalRKRXliejJSQQ==
+          sending_queue:
+            enabled: true
+            sizer: bytes
+            queue_size: 50000000 # 50MB uncompressed
+            block_on_overflow: true
+            batch:
+              flush_timeout: 1s
+              min_size: 1_000_000 # 1MB uncompressed
+              max_size: 4_000_000 # 4MB uncompressed
+          timeout: 15s
+
       service:
         pipelines:
-          metrics:
+          metrics/serverless:
+            receivers: [otlp]
+            exporters: [debug, otlp/serverless]
+          logs/serverless:
+            receivers: [otlp]
+            exporters: [debug, otlp/serverless]
+          traces/serverless:
+            receivers: [otlp]
+            exporters: [debug, otlp/serverless]
+
+          metrics/stack:
             receivers: [otlp]
             processors: [batch/metrics]
-            exporters: [debug, elasticsearch/otel]
-          logs:
+            exporters: [debug, elasticsearch/otel, elasticsearch/otel2]
+          logs/stack:
             receivers: [otlp]
             processors: [batch]
-            exporters: [debug, elasticapm, elasticsearch/otel]
-          traces:
+            exporters: [debug, elasticapm, elasticsearch/otel, elasticsearch/otel2]
+          traces/stack:
             receivers: [otlp]
             processors: [batch, elasticapm]
-            exporters: [debug, elasticapm, elasticsearch/otel]
-          metrics/aggregated-otel-metrics:
+            exporters: [debug, elasticapm, elasticsearch/otel, elasticsearch/otel2]
+          metrics/stack-aggregated-otel-metrics:
             receivers:
               - elasticapm
             processors:
             exporters:
               - debug
               - elasticsearch/otel
+              - elasticsearch/otel2
 # For more details on OpenTelemetry's zero-code instrumentation, see:
 # https://opentelemetry.io/docs/concepts/instrumentation/zero-code/
 instrumentation:

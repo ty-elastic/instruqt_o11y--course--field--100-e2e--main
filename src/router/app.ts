@@ -36,7 +36,10 @@ function customRouter(req: any) {
 
   metricTransactions.inc();
   logger.info(req.query)
-  metricSharesTraded.labels({ region: req.query.region, symbol: req.query.symbol, action: req.query.action }).inc(Number(req.query.shares));
+  if (req.query.shares > 0)
+    metricSharesTraded.labels({ region: req.query.region, symbol: req.query.symbol, action: req.query.action }).inc(Number(req.query.shares));
+  else
+    logger.warn(`negative shares`);
 
   if (req.query.service != null) {
     method = "service";
