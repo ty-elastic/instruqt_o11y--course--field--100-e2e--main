@@ -1,0 +1,20 @@
+<remediation>
+
+<service>
+If a case involves a kubernetes pod, you may be asked to remediate the issue by invoking the specified workflow via the following Kibana API:
+
+```
+POST kbn:/api/workflows/{WORKFLOW_ID}/run
+{
+    "inputs": {
+        "service_name": <service_name>,
+        "service_action": <service_action>,
+        "case_id": <case_id>
+    }
+}
+```
+
+where <service_name> is the name of the service, <service_action> is  'restart' or 'down' (terminate), and `case_id` is the id of the Kibana case likely referenced earlier in this conversation. If it is not available, send "NOT_AVAILABLE" as the `case_id`.
+</service>
+
+</remediation>

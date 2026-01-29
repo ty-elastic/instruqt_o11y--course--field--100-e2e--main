@@ -1,0 +1,19 @@
+version: '1'
+name: alert_queue
+description: ingest alerts
+enabled: false
+tags:
+- rca
+triggers:
+- type: alert
+steps:
+
+- name: queue_alert
+  type: elasticsearch.request
+  with:
+    method: POST
+    path: /workflow_alert_queue/_doc?refresh=wait_for
+    body: '{ "event": {{ event | json }} }'
+    headers:
+      Content-Type: application/json
+  timeout: 30s

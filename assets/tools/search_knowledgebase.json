@@ -1,0 +1,1 @@
+{"id": "search_knowledgebase", "type": "index_search", "description": "Known issues and runbooks for services", "tags": ["rca"], "configuration": {"pattern": "rca_knowledge", "row_limit": 100, "custom_instructions": ""}, "readonly": false}

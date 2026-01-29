@@ -1,0 +1,143 @@
+name: cloudsql_lookup
+enabled: true
+description: Setup CloudSQL lookup
+tags:
+  - cloudsql
+triggers:
+  - type: manual
+  - type: scheduled
+    with:
+      every: 5m
+steps:
+  - name: create_lookup
+    type: elasticsearch.indices.create
+    with:
+      index: cloudsql_lookup
+      mappings:
+        properties:
+          gcp:
+            properties:
+              labels:
+                properties:
+                  resource:
+                    properties:
+                      database_id:
+                        type: keyword
+          deployment:
+            properties:
+              environment:
+                properties:
+                  name:
+                    type: keyword
+          service:
+            properties:
+              name:
+                type: keyword       
+    on-failure:
+      continue: true
+
+  - name: get_services_by_database
+    type: elasticsearch.esql.query
+    with:
+      query: FROM traces-*
+            | WHERE db.connection_string IS NOT NULL
+            | EVAL gcp.labels.resource.database_id = CONCAT(cloud.account.id, ":", attributes.server.address)
+            | EVAL service.name = MV_CONCAT(service.name, ",")
+            | EVAL deployment.environment.name = MV_CONCAT(deployment.environment.name, ",")
+            | STATS service.name = SAMPLE(service.name, 1), deployment.environment.name = SAMPLE(deployment.environment.name, 1) BY gcp.labels.resource.database_id
+      format: json
+ 
+  - name: foreach_database
+    type: foreach
+    foreach: "{{ steps.get_services_by_database.output.values }}"
+    steps:
+      - name: index
+        type: elasticsearch.request
+        with:
+          method: "PUT"
+          path: "/cloudsql_lookup/_doc/{{foreach.item[2]}}?refresh=wait_for"
+          body:
+            gcp:
+              labels:
+                resource:
+                  # in a real system, the name of the database server should match the server address (e.g., DNS mapping)
+                  database_id: "elastic-sa:tbekiarestest" #"{{ foreach.item[2] }}"
+            deployment:
+              environment:
+                name: ["{{ foreach.item[1] }}"]
+            service:
+              name: ["{{ foreach.item[0] }}"]
+
+  - name: build_enrich
+    type: elasticsearch.request
+    with:
+      method: "PUT"
+      path: "/_enrich/policy/cloudsql_policy"
+      body:
+        "match":
+          "indices": "cloudsql_lookup"
+          "match_field": "gcp.labels.resource.database_id"
+          "enrich_fields": [ "deployment.environment.name", "service.name" ]
+    on-failure:
+      continue: true
+      
+  - name: execute_enrich
+    type: elasticsearch.request
+    with:
+      method: "POST"
+      path: "/_enrich/policy/cloudsql_policy/_execute?wait_for_completion=false"
+
+  - name: add_ingest_pipeline
+    type: elasticsearch.request
+    with:
+      method: "PUT"
+      path: "/_ingest/pipeline/metrics-gcp.cloudsql_postgresql@custom"
+      body:
+        processors:
+          - enrich:
+              field: "gcp.labels.resource.database_id"
+              policy_name: "cloudsql_policy"
+              target_field: "enrich_service"
+          - rename:
+              field: "enrich_service.deployment.environment.name"
+              target_field: "deployment.environment.name"       
+          - rename:
+              field: "enrich_service.service.name"
+              target_field: "service.name"
+
+  - name: get_dashboards
+    type: kibana.request
+    with:
+      method: "GET"
+      path: "/api/saved_objects/_find?type=dashboard&per_page=1000"
+      
+  - name: get_dashboard
+    type: console
+    with:
+      message: "{% for dashboard in steps.get_dashboards.output.saved_objects %}{%- if dashboard.attributes.title == '[Metrics GCP] CloudSQL PostgreSQL Overview' -%}{{ dashboard.id }}{% break %}{%- endif -%}{% endfor %}"
+
+  - name: get_services
+    type: elasticsearch.esql.query
+    with:
+      query: FROM traces-*
+            | WHERE db.connection_string IS NOT NULL
+            | STATS service.name = SAMPLE(service.name, 1)
+      format: json
+
+  - name: foreach_service
+    type: foreach
+    foreach: "{{ steps.get_services.output.values }}"
+    steps:
+      - name: dashboard
+        type: kibana.request
+        with:
+          method: "POST"
+          path: "/internal/apm/custom-dashboard"
+          headers:
+            x-elastic-internal-origin: kibana
+          body:
+            dashboardSavedObjectId: "{{ steps.get_dashboard.output }}"
+            kuery: "service.name: {{ foreach.item }}"
+            serviceEnvironmentFilterEnabled: true
+            serviceNameFilterEnabled: true
+     

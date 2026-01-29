@@ -1,0 +1,48 @@
+name: build_topologies
+enabled: true
+version: '1'
+description: build topology to help with correlation and RCA
+tags:
+- rca
+settings:
+  timeout: 20m
+triggers:
+- type: manual
+- type: scheduled
+  with:
+    every: 30m
+steps:
+
+- name: get_topologies
+  type: kibana.request
+  with:
+    method: POST
+    path: /api/agent_builder/converse
+    headers:
+      kbn-xsrf: 'true'
+    body:
+      agent_id: topology_builder
+      input: "Get system topologies from {{ 'now' | date: '%s' | minus: 3600 | date: '%Y-%m-%dT%H:%M:%SZ' }} to {{ 'now' | date: '%Y-%m-%dT%H:%M:%SZ' }}. Respond only in valid JSON format with no newlines, no extra spaces, and with no prefixes or postfixes (DO NOT USE ```json prefix and ``` postfix) in your response!'"
+
+- name: get_topologies_parsed
+  type: console
+  with:
+    message: ${{steps.get_topologies.output.response.message | json_parse}}
+
+- name: foreach_topology
+  type: foreach
+  foreach: '{{ steps.get_topologies_parsed.output.topologies }}'
+  steps:
+  - name: debug
+    type: console
+    with:
+      message: "{{ foreach.item['system_environment']}}"
+
+  - name: store_topology
+    type: elasticsearch.request
+    with:
+      method: POST
+      path: /workflow_topology/_doc
+      body: '{{ foreach.item | json }}'
+      headers:
+        Content-Type: application/json

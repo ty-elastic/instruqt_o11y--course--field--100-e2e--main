@@ -1,0 +1,199 @@
+version: '1'
+name: setup
+description: setup state for automated rca
+enabled: true
+tags:
+- rca
+triggers:
+- type: manual
+steps:
+
+- name: get_cases
+  type: kibana.request
+  with:
+    method: GET
+    path: /api/cases/_find?status=open
+- name: foreach_case
+  type: foreach
+  foreach: '{{ steps.get_cases.output.cases }}'
+  steps:
+  - name: delete_case
+    type: kibana.request
+    with:
+      method: DELETE
+      path: /api/cases?ids=["{{foreach.item.id}}"]
+    on-failure:
+      continue: true
+
+- name: create_pipeline
+  type: elasticsearch.request
+  with:
+    method: PUT
+    path: /_ingest/pipeline/add_timestamp_pipeline
+    body:
+      description: Adds a timestamp to documents
+      processors:
+      - set:
+          field: '@timestamp'
+          value: '{% raw %}{{ _ingest.timestamp }}{% endraw %}'
+  on-failure:
+    continue: true
+
+- name: delete_topology
+  type: elasticsearch.indices.delete
+  with:
+    index: workflow_topology
+  on-failure:
+    continue: true
+- name: create_topology
+  type: elasticsearch.indices.create
+  with:
+    index: workflow_topology
+    settings:
+      default_pipeline: add_timestamp_pipeline
+    mappings:
+      properties:
+        '@timestamp':
+          type: date
+        system_environment:
+          type: keyword
+        topology:
+          type: flattened
+  on-failure:
+    continue: true
+
+
+- name: setup_cases
+  type: kibana.request
+  with:
+    method: POST
+    path: /api/cases/configure
+    body:
+      closure_type: close-by-user
+      connector:
+        fields:
+        id: none
+        name: none
+        type: .none
+      customFields:
+      - defaultValue: not_available
+        key: system_environment
+        label: system_environment
+        required: false
+        type: text
+      - defaultValue: not_available
+        key: ai_conversation_id
+        label: ai_conversation_id
+        required: false
+        type: text
+      owner: observability
+  on-failure:
+    continue: true
+
+
+- name: delete_alert_queue
+  type: elasticsearch.indices.delete
+  with:
+    index: workflow_alert_queue
+  on-failure:
+    continue: true
+- name: create_alert_queue
+  type: elasticsearch.indices.create
+  with:
+    index: workflow_alert_queue
+    settings:
+      default_pipeline: add_timestamp_pipeline
+    mappings:
+      properties:
+        event:
+          type: flattened
+        '@timestamp':
+          type: date
+  on-failure:
+    continue: true
+
+- name: delete_case_queue
+  type: elasticsearch.indices.delete
+  with:
+    index: workflow_case_queue
+  on-failure:
+    continue: true
+- name: create_case_queue
+  type: elasticsearch.indices.create
+  with:
+    index: workflow_case_queue
+    settings:
+      default_pipeline: add_timestamp_pipeline
+    mappings:
+      properties:
+        case_id:
+          type: keyword
+        '@timestamp':
+          type: date
+  on-failure:
+    continue: true
+
+
+- name: delete_config
+  type: elasticsearch.indices.delete
+  with:
+    index: workflow_config
+  on-failure:
+    continue: true
+- name: create_config
+  type: elasticsearch.indices.create
+  with:
+    index: workflow_config
+    settings:
+      index:
+        mode: lookup
+    mappings:
+      properties:
+        workflowId:
+          type: keyword
+        id:
+          type: keyword
+        name:
+          type: keyword
+    timeout: 30s
+- name: get_workflows
+  type: kibana.request
+  with:
+    method: POST
+    path: /api/workflows/search
+    headers:
+      x-elastic-internal-origin: kibana
+    body:
+      limit: 20
+      page: 1
+      query: ''
+  timeout: 30s
+- name: foreach_workflow
+  type: foreach
+  foreach: '{{ steps.get_workflows.output.results | json }}'
+  steps:
+  - name: save_id
+    type: elasticsearch.request
+    with:
+      method: POST
+      path: /workflow_config/_doc/{{ foreach.item.name }}
+      body:
+        workflowId: '{{ foreach.item.id }}'
+        id: '{{ foreach.item.id }}'
+        name: '{{ foreach.item.name }}'
+    timeout: 30s
+
+  - name: is_topology_builder
+    type: if
+    condition: 'foreach.item.name : "build_topologies"'
+    steps:
+    - name: start_topology_builder
+      type: kibana.request
+      with:
+        method: POST
+        path: /api/workflows/{{ foreach.item.id }}/run
+        body:
+          inputs:
+            event: ''
+        headers:
+          x-elastic-internal-origin: kibana
