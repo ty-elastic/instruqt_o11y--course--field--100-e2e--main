@@ -1,9 +1,0 @@
-{
-  "type": "browser",
-  "name": "Request Trade",
-  "tags": ["trader"],
-  "private_locations": ["host-1"],
-  "schedule": 1,
-  "service.name": "trader-app-web",
-  "inline_script": "step('Go to http://host-1:8080/', async () => {await page.goto('http://host-1:8080/'); await page.getByRole('button', { name: 'Request Trade Make a trade' }).click(); await page.getByRole('button', { name: 'Submit' }).click(); await page.waitForTimeout(5000);});"
-}

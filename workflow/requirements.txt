@@ -1,7 +1,0 @@
-flask
-requests
-PyYAML
-ruamel.yaml
-tolerantjson
-click
-python-dotenv

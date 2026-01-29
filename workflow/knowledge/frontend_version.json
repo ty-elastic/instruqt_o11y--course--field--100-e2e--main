@@ -1,5 +1,0 @@
-{
-    "id": "frontend_version",
-    "title": "finding the version of the frontend app",
-    "text": "The version of the frontend is available as a span attribute `attributes.com.example.frontend_version`."
-}

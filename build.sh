@@ -7,7 +7,7 @@ local=false
 namespace_base=trading
 region=1
 service_version="1.0"
-workflows=false
+assets=false
 
 build_service=false
 build_lib=false
@@ -47,7 +47,7 @@ do
       i ) elasticsearch_api_key="$OPTARG" ;;
       j ) elasticsearch_es_endpoint="$OPTARG" ;;
 
-      w ) workflows="$OPTARG" ;;
+      w ) assets="$OPTARG" ;;
    esac
 done
 
@@ -132,26 +132,26 @@ for current_region in "${regions[@]}"; do
             --from-literal=elastic_endpoint="$elasticsearch_es_endpoint" \
             --from-literal=elastic_api_key="$elasticsearch_api_key"
 
-        cd collector
+        cd agents/collector
         helm upgrade --install opentelemetry-kube-stack open-telemetry/opentelemetry-kube-stack \
         --namespace opentelemetry-operator-system \
         --values "$deploy_otel.yaml" \
         --version '0.10.5'
-        cd ..
+        cd ../..
 
         kubectl -n opentelemetry-operator-system rollout restart deployment
         sleep 30
     fi
 
-    if [ "$workflows" = "true" ]; then
-        cd workflow
+    if [ "$assets" = "true" ]; then
+        cd assets
         ./build.sh -r $repo -c $course -a $arch
-        docker run --network host $repo/workflows:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key load_workflows
-        docker run --network host $repo/workflows:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key load_alerts --connect_alerts True
-        docker run --network host $repo/workflows:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key load_knowledge
-        docker run --network host $repo/workflows:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key load_tools
-        docker run --network host $repo/workflows:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key load_agents
-        docker run --network host $repo/workflows:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key run_setup
+        docker run --network host $repo/assets:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key load_workflows
+        docker run --network host $repo/assets:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key load_alerts --connect_alerts True
+        docker run --network host $repo/assets:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key load_knowledge
+        docker run --network host $repo/assets:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key load_tools
+        docker run --network host $repo/assets:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key load_agents
+        docker run --network host $repo/assets:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key run_setup
         cd ..
     fi
 

@@ -1,5 +1,0 @@
-{
-    "id": "cpu_consumption",
-    "title": "high CPU usage for a pod",
-    "text": "The cpuhog service is a testing apparatus and should not be running in production. Please terminate the service if you see it running."
-}
