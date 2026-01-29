@@ -268,4 +268,7 @@ mkdir -p /workspace/workshop
 git clone $GITHUB_REPO /workspace/workshop
 cd /workspace/workshop
 
+# ----------------------------------------- SETUP SERVERLESS
+
 source /workspace/workshop/instruqt/scripts/serverless/serverless.sh
+
