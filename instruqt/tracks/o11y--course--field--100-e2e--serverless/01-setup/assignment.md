@@ -37,8 +37,12 @@ tabs:
     value: 'script-src ''self'' https://kibana.estccdn.com; worker-src blob: ''self'';
       style-src ''unsafe-inline'' ''self'' https://kibana.estccdn.com; style-src-elem
       ''unsafe-inline'' ''self'' https://kibana.estccdn.com'
+- id: oheg6ftlfcmf
+  title: eshost
+  type: terminal
+  hostname: es3
 - id: oheg6ftlfcme
-  title: k3s
+  title: k3shost
   type: terminal
   hostname: k3s
 difficulty: basic
