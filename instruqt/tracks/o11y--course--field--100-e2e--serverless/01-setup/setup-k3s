@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export JSON_FILE='/tmp/project_results.json'
+
 
 wait_for_instruqt_bootstrap() {
     # Wait for the Instruqt host bootstrap to finish
@@ -24,119 +24,12 @@ setup_bash_shell() {
     echo "complete -F __start_kubectl k" >> /root/.bashrc
 }
 
-get_project_results_json() {
-    # Fetch project results and store in $JSON_FILE
-    echo "Fetching project results from $PROXY_ES_KEY_BROKER..."
-
-    local MAX_RETRIES=10
-    local RETRY_WAIT=30
-
-    for attempt in $(seq 1 $MAX_RETRIES); do
-        echo "Attempt $attempt of $MAX_RETRIES at $(date)"
-
-        # Fetch the response
-        curl -s $PROXY_ES_KEY_BROKER > $JSON_FILE
-
-        if [ $? -eq 0 ]; then
-            echo "Project results saved to $JSON_FILE"
-            echo "Project results content:"
-            cat $JSON_FILE
-            echo ""
-
-            # Check if the response contains valid JSON and has the api_key
-            if command -v jq &> /dev/null; then
-                # Use jq to validate JSON and extract api_key, ES_URL, and KIBANA_URL
-                # Get the first (and only) region key from the JSON
-                API_KEY=$(jq -r 'to_entries[0].value.credentials.api_key' $JSON_FILE 2>/dev/null)
-                ES_URL=$(jq -r 'to_entries[0].value.endpoints.elasticsearch' $JSON_FILE 2>/dev/null)
-                KIBANA_URL=$(jq -r 'to_entries[0].value.endpoints.kibana' $JSON_FILE 2>/dev/null)
-                FLEET_URL=$(jq -r 'to_entries[0].value.endpoints.fleet' $JSON_FILE 2>/dev/null)
-
-                if [ $? -eq 0 ] && [ ! -z "$API_KEY" ] && [ "$API_KEY" != "null" ] && [ ! -z "$ES_URL" ] && [ "$ES_URL" != "null" ] && [ ! -z "$KIBANA_URL" ] && [ "$KIBANA_URL" != "null" ] || [ -z "$FLEET_URL" ] || [ "$FLEET_URL" = "null" ]; then
-                    echo "API key found successfully: ${API_KEY:0:10}..."
-                    echo "ES URL found: $ES_URL"
-                    echo "Kibana URL found: $KIBANA_URL"
-                    echo "Fleet URL found: $FLEET_URL"
-                    # Set agent variables
-                    echo "Setting agent variable ES_API_KEY..."
-                    agent variable set ES_API_KEY "$API_KEY"
-                    echo "Setting agent variable ES_URL..."
-                    agent variable set ES_URL "$ES_URL"
-                    echo "Setting agent variable KIBANA_URL..."
-                    agent variable set KIBANA_URL "$KIBANA_URL"
-                    echo "Setting agent variable FLEET_URL..."
-                    agent variable set FLEET_URL "$FLEET_URL"
-                    break
-                else
-                    echo "API key, ES URL, or Kibana URL not found or invalid in response on attempt $attempt"
-                    [ $attempt -lt $MAX_RETRIES ] && echo "Waiting $RETRY_WAIT seconds before retry..." && sleep $RETRY_WAIT
-                fi
-            else
-                # Fallback to grep/sed if jq is not available
-                API_KEY=$(grep -o '"api_key": "[^"]*"' $JSON_FILE | sed 's/"api_key": "\([^"]*\)"/\1/' 2>/dev/null)
-                ES_URL=$(grep -o '"elasticsearch": "[^"]*"' $JSON_FILE | sed 's/"elasticsearch": "\([^"]*\)"/\1/' 2>/dev/null)
-                KIBANA_URL=$(grep -o '"kibana": "[^"]*"' $JSON_FILE | sed 's/"kibana": "\([^"]*\)"/\1/' 2>/dev/null)
-                FLEET_URL=$(grep -o '"fleet": "[^"]*"' $JSON_FILE | sed 's/"fleet": "\([^"]*\)"/\1/' 2>/dev/null)
-                # "
-
-                if [ ! -z "$API_KEY" ] && [ ! -z "$ES_URL" ] && [ ! -z "$KIBANA_URL" ] && [ ! -z "$FLEET_URL" ]; then
-                    echo "API key found successfully: ${API_KEY:0:10}..."
-                    echo "ES URL found: $ES_URL"
-                    echo "Kibana URL found: $KIBANA_URL"
-                    echo "Fleet URL found: $FLEET_URL"
-                    # Set agent variables
-                    echo "Setting agent variable ES_API_KEY..."
-                    agent variable set ES_API_KEY "$API_KEY"
-                    echo "Setting agent variable ES_URL..."
-                    agent variable set ES_URL "$ES_URL"
-                    echo "Setting agent variable KIBANA_URL..."
-                    agent variable set KIBANA_URL "$KIBANA_URL"
-                    break
-                else
-                    echo "API key, ES URL, or Kibana URL not found in response on attempt $attempt"
-                    [ $attempt -lt $MAX_RETRIES ] && echo "Waiting $RETRY_WAIT seconds before retry..." && sleep $RETRY_WAIT
-                fi
-            fi
-        else
-            echo "Failed to fetch project results from $PROXY_ES_KEY_BROKER on attempt $attempt"
-            [ $attempt -lt $MAX_RETRIES ] && echo "Waiting $RETRY_WAIT seconds before retry..." && sleep $RETRY_WAIT
-        fi
-    done
-
-    # Check if we successfully got the API key and URLs after all attempts
-    if [ -z "$API_KEY" ] || [ "$API_KEY" = "null" ] || [ -z "$ES_URL" ] || [ "$ES_URL" = "null" ] || [ -z "$KIBANA_URL" ] || [ "$KIBANA_URL" = "null" ] || [ -z "$FLEET_URL" ] || [ "$FLEET_URL" = "null" ]; then
-        echo "Error: Failed to retrieve valid API key, ES URL, Kibana URL, or LLM credentials after $MAX_RETRIES attempts"
-        echo "Last response content:"
-        cat $JSON_FILE
-        exit 1
-    fi
-}
-
-create_env_file() {
-    # Write environment variables to $HOME/.env with export, extracting values directly with jq
-    cat > "$HOME/.env" <<EOF
-export APM_URL=$(jq -r '.[].endpoints.apm' "$JSON_FILE")
-export ELASTICSEARCH_URL=$(jq -r '.[].endpoints.elasticsearch' "$JSON_FILE")
-export INGEST_URL=$(jq -r '.[].endpoints.ingest' "$JSON_FILE")
-export KIBANA_URL=$(jq -r '.[].endpoints.kibana' "$JSON_FILE")
-export FLEET_URL=$(jq -r '.[].endpoints.fleet' "$JSON_FILE")
-export ELASTICSEARCH_USER=$(jq -r '.[].credentials.username' "$JSON_FILE")
-export ELASTICSEARCH_PASSWORD=$(jq -r '.[].credentials.password' "$JSON_FILE")
-EOF
-}
 
 # Wait for the Instruqt host bootstrap to finish
 wait_for_instruqt_bootstrap
 
 # Set up bash shell
 setup_bash_shell
-
-# Get project results and set variables
-get_project_results_json
-
-# Create and load .env file
-create_env_file
-source .env
 
 # Wait for the Kubernetes API server to become available
 wait_for_kubernetes_api

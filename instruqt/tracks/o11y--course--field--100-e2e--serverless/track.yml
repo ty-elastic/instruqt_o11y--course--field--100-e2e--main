@@ -7,13 +7,14 @@ tags: []
 owner: elastic
 developers:
 - tyrone.bekiares@elastic.co
-idle_timeout: 300
-timelimit: 1200
+idle_timeout: 21600
+timelimit: 43200
 lab_config:
   sidebar_enabled: true
   feedback_recap_enabled: true
   feedback_tab_enabled: false
-  loadingMessages: true
+  loadingMessages:
+  - Setting up your Elastic experience...
   hideStopButton: false
-checksum: "6297060307831746672"
+checksum: "13544377672624233206"
 enhanced_loading: false
