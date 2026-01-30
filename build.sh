@@ -15,7 +15,7 @@ deploy_otel=false
 deploy_service=false
 
 elasticsearch_es_endpoint="na"
-elasticsearch_rum_endpoint="na"
+elasticsearch_rum_endpoint="http://127.0.0.1:6741"
 elasticsearch_kibana_endpoint="na"
 elasticsearch_api_key="na"
 
@@ -136,12 +136,24 @@ for current_region in "${regions[@]}"; do
         helm upgrade --install opentelemetry-kube-stack open-telemetry/opentelemetry-kube-stack \
         --namespace opentelemetry-operator-system \
         --values "$deploy_otel.yaml" \
-        --version '0.10.5'
+        --version '0.12.4'
         cd ../..
 
         kubectl -n opentelemetry-operator-system rollout restart deployment
         sleep 30
     fi
+
+
+kubectl create namespace opentelemetry-operator-system
+kubectl create secret generic elastic-secret-otel \
+  --namespace opentelemetry-operator-system \
+  --from-literal=elastic_otlp_endpoint='https://cb4f0b611bb44ea393bfffdbb05fbf34.ingest.us-east-1.aws.elastic.cloud:443' \
+  --from-literal=elastic_api_key='UkIwdUQ1d0JUSEMtQVVHSnB5cjQ6TklOYTVDSi03MTh6ZkljX1VKYVAxQQ=='
+helm upgrade --install opentelemetry-kube-stack open-telemetry/opentelemetry-kube-stack \
+  --namespace opentelemetry-operator-system \
+  --values 'https://raw.githubusercontent.com/elastic/elastic-agent/refs/tags/v9.2.4/deploy/helm/edot-collector/kube-stack/managed_otlp/values.yaml' \
+  --version '0.12.4'
+
 
     if [ "$assets" = "true" ]; then
         cd assets
@@ -216,3 +228,5 @@ for current_region in "${regions[@]}"; do
         fi
     fi
 done
+
+

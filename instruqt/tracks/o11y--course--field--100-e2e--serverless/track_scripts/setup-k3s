@@ -44,14 +44,14 @@ cd /workspace/workshop
 
 # ----------------------------------------- DEPS
 
-# sudo apt-get update
-# sudo apt-get -y install podman
+sudo apt-get update
+sudo apt-get -y install podman
 
 # ----------------------------------------- APPS
 
 source /workspace/workshop/instruqt/scripts/vars.sh
 
-#source /workspace/workshop/instruqt/scripts/synthetics.sh
+source /workspace/workshop/instruqt/scripts/synthetics.sh
 
 cd /workspace/workshop
-#./build.sh -o true -c $COURSE -d true -b false -s all -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY
+./build.sh -o serverless -c $COURSE -d true -b false -s all -j $ELASTICSEARCH_URL -i $ELASTICSEARCH_APIKEY
