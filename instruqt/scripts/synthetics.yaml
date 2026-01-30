@@ -27,7 +27,7 @@ spec:
           image: docker.elastic.co/elastic-agent/elastic-agent-complete:9.2.4
           env:
             - name: FLEET_INSECURE
-              value: true
+              value: "true"
             - name: FLEET_ENROLL
               value: 1      
             - name: FLEET_URL
