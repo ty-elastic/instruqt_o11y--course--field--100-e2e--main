@@ -45,6 +45,10 @@ cd /workspace/workshop
 
 # ----------------------------------------- SETUP
 
+sudo apt-get update
+sudo apt-get -y install dnsutils
+sudo apt-get -y install podman
+
 source /workspace/workshop/instruqt/scripts/vars.sh
 
 source /workspace/workshop/instruqt/scripts/synthetics.sh
