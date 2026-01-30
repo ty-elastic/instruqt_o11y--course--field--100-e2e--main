@@ -1,4 +1,4 @@
-source /workspace/workshop/instruqt/scripts/vars.sh
+source /workspace/workshop/instruqt/scripts/retry.sh
 
 AGENT_VERSION=9.2.2
 

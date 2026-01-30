@@ -1,4 +1,4 @@
-source /workspace/workshop/instruqt/scripts/vars.sh
+source /workspace/workshop/instruqt/scripts/retry.sh
 
 echo "Configuring Streams"
 output=$(curl -X POST -s -u "admin:${ELASTICSEARCH_PASSWORD}" \

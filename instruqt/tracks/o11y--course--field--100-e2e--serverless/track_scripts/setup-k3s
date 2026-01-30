@@ -49,6 +49,7 @@ sudo apt-get -y install podman
 
 # ----------------------------------------- APPS
 
+source /workspace/workshop/instruqt/scripts/wait_on_es.sh
 source /workspace/workshop/instruqt/scripts/vars.sh
 
 source /workspace/workshop/instruqt/scripts/synthetics.sh

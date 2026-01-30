@@ -22,6 +22,9 @@ cd /workspace/workshop
 
 source /workspace/workshop/instruqt/scripts/serverless/create.sh
 
+source /workspace/workshop/instruqt/scripts/wait_on_es.sh
+source /workspace/workshop/instruqt/scripts/vars.sh
+
 source /workspace/workshop/instruqt/scripts/genai.sh
 source /workspace/workshop/instruqt/scripts/workflow.sh
 source /workspace/workshop/instruqt/scripts/streams.sh
