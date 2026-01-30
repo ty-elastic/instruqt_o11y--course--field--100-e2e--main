@@ -10,7 +10,7 @@ virtualmachines:
   memory: 4096
   cpus: 1
 - name: k3s
-  image: instruqt/k3s-v1-31-4
+  image: elastic/worker-k3s
   shell: /bin/bash
   memory: 16384
   cpus: 4
