@@ -29,3 +29,5 @@ source /workspace/workshop/instruqt/scripts/vars.sh
 source /workspace/workshop/instruqt/scripts/genai.sh
 source /workspace/workshop/instruqt/scripts/workflow.sh
 source /workspace/workshop/instruqt/scripts/streams.sh
+
+source /workspace/workshop/instruqt/scripts/integrations.sh

@@ -54,12 +54,15 @@ echo $ENROLLMENT_API_KEY_ID
 echo $ENROLLMENT_API_KEY
 
 # ------------- START AGENT
-podman run -d --net host \
-  --env FLEET_INSECURE=true \
-  --env FLEET_ENROLL=1 \
-  --env FLEET_URL=$FLEET_URL \
-  --env FLEET_ENROLLMENT_TOKEN=$ENROLLMENT_API_KEY \
-  --rm docker.elastic.co/elastic-agent/elastic-agent-complete:$AGENT_VERSION
+
+# podman run -d --net host \
+#   --env FLEET_INSECURE=true \
+#   --env FLEET_ENROLL=1 \
+#   --env FLEET_URL=$FLEET_URL \
+#   --env FLEET_ENROLLMENT_TOKEN=$ENROLLMENT_API_KEY \
+#   --rm docker.elastic.co/elastic-agent/elastic-agent-complete:$AGENT_VERSION
+
+envsubst < /workspace/workshop/instruqt/scripts/synthetics.yaml | kubectl apply -f -
 
 # ------------- CREATE PRIVATE MONITOR
 

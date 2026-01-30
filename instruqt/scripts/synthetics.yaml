@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: elastic-synthetics
+  labels:
+    name: elastic-synthetics
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: synthetics
+  namespace: elastic-synthetics
+  labels:
+    name: elastic-synthetics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: elastic-synthetics
+  template:
+    metadata:
+      labels:
+        name: elastic-synthetics
+    spec:
+      containers:
+        - name: elastic-agent
+          image: docker.elastic.co/elastic-agent/elastic-agent-complete:9.2.4
+          env:
+            - name: FLEET_INSECURE
+              value: true
+            - name: FLEET_ENROLL
+              value: 1      
+            - name: FLEET_URL
+              value: $FLEET_URL 
+            - name: FLEET_ENROLLMENT_TOKEN
+              value: $ENROLLMENT_API_KEY               
+      restartPolicy: Always
