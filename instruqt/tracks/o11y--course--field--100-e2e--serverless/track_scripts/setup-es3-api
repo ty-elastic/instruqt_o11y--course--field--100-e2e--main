@@ -16,8 +16,11 @@ export COURSE=o11y--course--field--100-e2e
 export GITHUB_REPO=https://github.com/ty-elastic/instruqt_$COURSE--main
 
 mkdir -p /workspace/workshop
-git clone $GITHUB_REPO /workspace/workshop
+git clone --filter=blob:none --no-checkout $GITHUB_REPO /workspace/workshop
 cd /workspace/workshop
+git sparse-checkout init
+git sparse-checkout set instruqt/scripts
+git checkout main
 
 # ----------------------------------------- SETUP SERVERLESS
 
