@@ -70,7 +70,7 @@ agent variable set ES_USERNAME `jq -r --arg region "$REGIONS" '.[$region].creden
 agent variable set ES_PASSWORD `jq -r --arg region "$REGIONS" '.[$region].credentials.password' /tmp/project_results.json`
 agent variable set ES_DEPLOYMENT_ID `jq -r --arg region "$REGIONS" '.[$region].id' /tmp/project_results.json`
 
-BASE64=$(echo -n "admin:${ELASTICSEARCH_PASSWORD}" | base64)
+ELASTICSEARCH_AUTH_BASE64=$(echo -n "admin:${ELASTICSEARCH_PASSWORD}" | base64)
 KIBANA_URL_WITHOUT_PROTOCOL=$(echo $KIBANA_URL | sed -e 's#http[s]\?://##g')
 
 
@@ -205,7 +205,7 @@ FLEET_URL=$(jq -r '.[].endpoints.fleet' "$JSON_FILE")
 ELASTICSEARCH_APIKEY=$(jq -r '.[].credentials.api_key' "$JSON_FILE")
 ELASTICSEARCH_USER=$(jq -r '.[].credentials.username' "$JSON_FILE")
 ELASTICSEARCH_PASSWORD=$(jq -r '.[].credentials.password' "$JSON_FILE")
-ELASTICSEARCH_AUTH_BASE64=$(echo -n "$ELASTICSEARCH_USER:$ELASTICSEARCH_PASSWORD" | base64)
+ELASTICSEARCH_AUTH_BASE64=$ELASTICSEARCH_AUTH_BASE64
 EOF
 }
 
@@ -235,7 +235,7 @@ server {
     proxy_set_header Connection "";
     #proxy_hide_header Content-Security-Policy;
     proxy_set_header X-Scheme $scheme;
-    proxy_set_header Authorization "Basic '${BASE64}'";
+    proxy_set_header Authorization "Basic '${ELASTICSEARCH_AUTH_BASE64}'";
     proxy_set_header Accept-Encoding "";
     proxy_redirect off;
     proxy_http_version 1.1;
