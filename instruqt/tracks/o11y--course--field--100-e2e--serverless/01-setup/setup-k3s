@@ -44,4 +44,9 @@ cd /workspace/workshop
 
 # ----------------------------------------- SETUP
 
+source /workspace/workshop/instruqt/scripts/vars.sh
+
 source /workspace/workshop/instruqt/scripts/synthetics.sh
+
+cd /workspace/workshop
+./build.sh -o true -c $INSTRUQT_TRACK_SLUG -d true -b false -s all -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY
