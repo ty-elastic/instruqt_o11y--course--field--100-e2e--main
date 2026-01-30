@@ -48,7 +48,7 @@ cd /workspace/workshop
 source /workspace/workshop/instruqt/scripts/wait_on_es.sh
 source /workspace/workshop/instruqt/scripts/vars.sh
 
-source /workspace/workshop/instruqt/scripts/synthetics.sh
+#source /workspace/workshop/instruqt/scripts/synthetics.sh
 
 cd /workspace/workshop
 ./build.sh -o serverless -c $COURSE -d true -b false -s all -j $ELASTICSEARCH_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443
