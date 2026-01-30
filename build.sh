@@ -14,10 +14,10 @@ build_lib=false
 deploy_otel=false
 deploy_service=false
 
-elasticsearch_es_endpoint="a"
-elasticsearch_rum_endpoint="http://kubernetes-vm:8200"
-elasticsearch_kibana_endpoint="b"
-elasticsearch_api_key="c"
+elasticsearch_es_endpoint="na"
+elasticsearch_rum_endpoint="na"
+elasticsearch_kibana_endpoint="na"
+elasticsearch_api_key="na"
 
 unameOut="$(uname -s)"
 case "${unameOut}" in
@@ -188,7 +188,7 @@ for current_region in "${regions[@]}"; do
                             kubectl -n $namespace rollout restart deployment/$current_service
                         fi
 
-                        if [ -z "$elasticsearch_kibana_endpoint" ]; then
+                        if [ "$elasticsearch_kibana_endpoint" == "na" ]; then
                             echo "skipping deployment annotation"
                         else
                             echo "adding deployment annotation"

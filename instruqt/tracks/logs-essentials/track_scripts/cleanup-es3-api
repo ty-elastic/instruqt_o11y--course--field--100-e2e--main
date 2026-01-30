@@ -1,0 +1,17 @@
+#!/bin/bash
+echo "Cleaning up the project"
+
+echo "Project type: $PROJECT_TYPE"
+echo "Regions: $REGIONS"
+
+export DEPLOYMENT_ID=`agent variable get ES_DEPLOYMENT_ID`
+echo "Deployment ID: $DEPLOYMENT_ID"
+
+python3 bin/es3-api.py \
+   --operation delete \
+   --project-type $PROJECT_TYPE \
+   --regions $REGIONS \
+   --project-id $DEPLOYMENT_ID \
+   --api-key $PME_CLOUD_INSTRUQT_API_KEY
+
+echo "Done"

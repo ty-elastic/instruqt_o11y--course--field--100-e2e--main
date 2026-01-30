@@ -1,0 +1,25 @@
+slug: logs-essentials
+id: qy5ydscujcx4
+title: Get Started with Elastic Observability Logs Essentials
+description: ""
+icon: ""
+tags:
+- co.elastic.workshops.production
+- co.elastic.workshops.production.get-started-with-elastic-observability-logs-essentials
+- co.elastic.workshops
+owner: elastic-pmm
+developers:
+- tyrone.bekiares@elastic.co
+- brandon.gordon@elastic.co
+idle_timeout: 3600
+timelimit: 10800
+lab_config:
+  extend_ttl: 3600
+  sidebar_enabled: true
+  feedback_recap_enabled: true
+  feedback_tab_enabled: false
+  loadingMessages: true
+  override_challenge_layout: false
+  hideStopButton: false
+checksum: "4986138554308397616"
+enhanced_loading: false
