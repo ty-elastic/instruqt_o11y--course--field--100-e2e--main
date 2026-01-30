@@ -1,5 +1,6 @@
 #!/bin/bash
 set -euxo pipefail
+set +x
 
 wait_for_instruqt_bootstrap() {
     # Wait for the Instruqt host bootstrap to finish
@@ -52,7 +53,7 @@ sudo apt-get -y install podman
 source /workspace/workshop/instruqt/scripts/wait_on_es.sh
 source /workspace/workshop/instruqt/scripts/vars.sh
 
-source /workspace/workshop/instruqt/scripts/synthetics.sh
+#source /workspace/workshop/instruqt/scripts/synthetics.sh
 
 cd /workspace/workshop
 ./build.sh -o serverless -c $COURSE -d true -b false -s all -j $ELASTICSEARCH_URL -i $ELASTICSEARCH_APIKEY

@@ -69,6 +69,8 @@ export ES_URL=`jq -r --arg region "$REGIONS" '.[$region].endpoints.elasticsearch
 export ELASTICSEARCH_AUTH_BASE64=$(echo -n "admin:${ELASTICSEARCH_PASSWORD}" | base64)
 export KIBANA_URL_WITHOUT_PROTOCOL=$(echo $KIBANA_URL | sed -e 's#http[s]\?://##g')
 
+agent variable set ES_DEPLOYMENT_ID `jq -r --arg region "$REGIONS" '.[$region].id' /tmp/project_results.json`
+
 # ---------------------------------------------------------- APIKEY
 echo "Generating API Key"
 output=$(curl -X POST -s -u "admin:${ELASTICSEARCH_PASSWORD}" \
