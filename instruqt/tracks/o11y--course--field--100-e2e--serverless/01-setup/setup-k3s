@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euxo pipefail
 
 wait_for_instruqt_bootstrap() {
     # Wait for the Instruqt host bootstrap to finish
@@ -34,20 +35,20 @@ wait_for_kubernetes_api
 
 # ----------------------------------------- CLONE CODE
 
-
 export COURSE=o11y--course--field--100-e2e
-export REPO=us-central1-docker.pkg.dev/elastic-sa/tbekiares
 export GITHUB_REPO=https://github.com/ty-elastic/instruqt_$COURSE--main
 
 mkdir -p /workspace/workshop
 git clone $GITHUB_REPO /workspace/workshop
 cd /workspace/workshop
 
-# ----------------------------------------- SETUP
+# ----------------------------------------- DEPS
 
 sudo apt-get update
 sudo apt-get -y install dnsutils
 sudo apt-get -y install podman
+
+# ----------------------------------------- APPS
 
 source /workspace/workshop/instruqt/scripts/vars.sh
 
