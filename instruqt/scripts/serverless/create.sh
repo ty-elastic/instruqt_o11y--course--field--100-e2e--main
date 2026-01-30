@@ -5,7 +5,7 @@ case "$PROJECT_TYPE" in
     "observability")
       PRODUCT_TIER="${PRODUCT_TIER:-complete}"
       echo "Project Tier: $PRODUCT_TIER"
-      python3 bin/es3-api.py \
+      python3 ~/bin/es3-api.py \
         --operation create \
         --project-type $PROJECT_TYPE \
         --product-tier $PRODUCT_TIER \
@@ -17,7 +17,7 @@ case "$PROJECT_TYPE" in
     "elasticsearch")
       OPTIMIZED_FOR="${OPTIMIZED_FOR:-general_purpose}"
       echo "Optimized for: $OPTIMIZED_FOR"
-      python3 bin/es3-api.py \
+      python3 ~/bin/es3-api.py \
         --operation create \
         --project-type $PROJECT_TYPE \
         --optimized-for $OPTIMIZED_FOR \
@@ -27,7 +27,7 @@ case "$PROJECT_TYPE" in
         --wait-for-ready
         ;;
     "security")
-      python3 bin/es3-api.py \
+      python3 ~/bin/es3-api.py \
         --operation create \
         --project-type $PROJECT_TYPE \
         --regions $REGIONS \

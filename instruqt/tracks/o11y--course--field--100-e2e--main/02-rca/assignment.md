@@ -78,7 +78,7 @@ Let's first debug this problem manually:
 6. Scroll down to `Transactions` and select `POST /trade/request`
 7. Search for
 ```
-status.code :"Error" 
+status.code :"Error"
 ```
 8. Scroll down to the waterfall graph and note the rippling error from database `INSERT` back up through the `Trader` application
 9. Click `View related error` on the failed `INSERT trades.trades` span
@@ -99,7 +99,7 @@ After some time, multiple failure alerts will fire.
 2. Navigate to `Observability` > `Alerts`
 3. Note the 3 releated failure alerts
 
-As these alerts fire, workflows are automatically triggered 
+As these alerts fire, workflows are automatically triggered
 
 
 2. Navigate to `Workflows`

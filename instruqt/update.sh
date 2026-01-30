@@ -26,21 +26,18 @@ for dir in ./tracks/*/; do
     if [[ "$course" == "all" || "$course" == "$current_course" ]]; then
 
       if [ "$build" = "true" ]; then
-        cd ../observability_ai_assistant_proxy
+
+        cd ../assets
         ./build.sh -c $current_course
         cd ../instruqt
 
-        cd ../workflow
+        cd ../utils/remote
         ./build.sh -c $current_course
-        cd ../instruqt
+        cd ../../instruqt
 
-        cd ../remote
+        cd ../utils/cpuhog
         ./build.sh -c $current_course
-        cd ../instruqt
-
-        cd ../cpuhog
-        ./build.sh -c $current_course
-        cd ../instruqt
+        cd ../../instruqt
 
         cd ..
         ./build.sh -c $current_course -b true -x true -s all
