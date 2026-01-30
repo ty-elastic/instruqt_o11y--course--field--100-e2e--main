@@ -34,9 +34,10 @@ wait_for_kubernetes_api
 
 # ----------------------------------------- CLONE CODE
 
-export INSTRUQT_TRACK_SLUG=o11y--course--field--100-e2e--main
+
+export COURSE=o11y--course--field--100-e2e
 export REPO=us-central1-docker.pkg.dev/elastic-sa/tbekiares
-export GITHUB_REPO=https://github.com/ty-elastic/instruqt_$INSTRUQT_TRACK_SLUG
+export GITHUB_REPO=https://github.com/ty-elastic/instruqt_$COURSE--main
 
 mkdir -p /workspace/workshop
 git clone $GITHUB_REPO /workspace/workshop
@@ -49,4 +50,4 @@ source /workspace/workshop/instruqt/scripts/vars.sh
 source /workspace/workshop/instruqt/scripts/synthetics.sh
 
 cd /workspace/workshop
-./build.sh -o true -c $INSTRUQT_TRACK_SLUG -d true -b false -s all -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY
+./build.sh -o true -c $COURSE -d true -b false -s all -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY
