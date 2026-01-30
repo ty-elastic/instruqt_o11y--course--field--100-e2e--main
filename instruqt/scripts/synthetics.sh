@@ -47,7 +47,7 @@ ENROLLMENT=$(echo $output | jq -r '.items[] | select (.policy_id == "'$POLICY_ID
 
 ENROLLMENT_ID=$(echo $ENROLLMENT | jq -r '.id')
 ENROLLMENT_API_KEY_ID=$(echo $ENROLLMENT | jq -r '.api_key_id')
-ENROLLMENT_API_KEY=$(echo $ENROLLMENT | jq -r '.api_key')
+export ENROLLMENT_API_KEY=$(echo $ENROLLMENT | jq -r '.api_key')
 
 echo $ENROLLMENT_ID
 echo $ENROLLMENT_API_KEY_ID
