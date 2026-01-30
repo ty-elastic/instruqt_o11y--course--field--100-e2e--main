@@ -29,7 +29,7 @@ spec:
             - name: FLEET_INSECURE
               value: "true"
             - name: FLEET_ENROLL
-              value: 1      
+              value: "1"
             - name: FLEET_URL
               value: $FLEET_URL 
             - name: FLEET_ENROLLMENT_TOKEN
