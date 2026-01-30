@@ -21,6 +21,8 @@ cd /workspace/workshop
 
 # ----------------------------------------- SETUP SERVERLESS
 
-source /workspace/workshop/instruqt/scripts/serverless/serverless.sh
+source /workspace/workshop/instruqt/scripts/serverless/create.sh
+
 source /workspace/workshop/instruqt/scripts/genai.sh
 source /workspace/workshop/instruqt/scripts/workflow.sh
+source /workspace/workshop/instruqt/scripts/streams.sh

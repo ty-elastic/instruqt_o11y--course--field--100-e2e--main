@@ -1,7 +1,5 @@
 #!/bin/bash
 
-
-
 wait_for_instruqt_bootstrap() {
     # Wait for the Instruqt host bootstrap to finish
     until [ -f /opt/instruqt/bootstrap/host-bootstrap-completed ]
@@ -33,3 +31,17 @@ setup_bash_shell
 
 # Wait for the Kubernetes API server to become available
 wait_for_kubernetes_api
+
+# ----------------------------------------- CLONE CODE
+
+export INSTRUQT_TRACK_SLUG=o11y--course--field--100-e2e--main
+export REPO=us-central1-docker.pkg.dev/elastic-sa/tbekiares
+export GITHUB_REPO=https://github.com/ty-elastic/instruqt_$INSTRUQT_TRACK_SLUG
+
+mkdir -p /workspace/workshop
+git clone $GITHUB_REPO /workspace/workshop
+cd /workspace/workshop
+
+# ----------------------------------------- SETUP
+
+source /workspace/workshop/instruqt/scripts/synthetics.sh
