@@ -18,6 +18,7 @@ elasticsearch_es_endpoint="na"
 elasticsearch_rum_endpoint="http://127.0.0.1:6741"
 elasticsearch_kibana_endpoint="na"
 elasticsearch_api_key="na"
+elasticsearch_otlp_endpoint="na"
 
 unameOut="$(uname -s)"
 case "${unameOut}" in
@@ -26,7 +27,7 @@ case "${unameOut}" in
     *)          machine="UNKNOWN:${unameOut}"
 esac
 
-while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:w:" opt
+while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:" opt
 do
    case "$opt" in
       a ) arch="$OPTARG" ;;
@@ -46,6 +47,7 @@ do
       h ) elasticsearch_kibana_endpoint="$OPTARG" ;;
       i ) elasticsearch_api_key="$OPTARG" ;;
       j ) elasticsearch_es_endpoint="$OPTARG" ;;
+      k ) elasticsearch_otlp_endpoint="$OPTARG" ;;
 
       w ) assets="$OPTARG" ;;
    esac
@@ -129,6 +131,7 @@ for current_region in "${regions[@]}"; do
         kubectl --namespace opentelemetry-operator-system delete secret generic elastic-secret-otel
         kubectl create secret generic elastic-secret-otel \
             --namespace opentelemetry-operator-system \
+            --from-literal=elastic_otlp_endpoint="$elasticsearch_otlp_endpoint" \
             --from-literal=elastic_endpoint="$elasticsearch_es_endpoint" \
             --from-literal=elastic_api_key="$elasticsearch_api_key"
 
