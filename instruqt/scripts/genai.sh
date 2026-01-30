@@ -1,4 +1,4 @@
-export $(cat $HOME/.env | xargs)
+source /workspace/workshop/instruqt/scripts/serverless/load_vars.sh
 
 echo "Configuring GenAI"
 output=$(curl -X POST -s -u "admin:${ELASTICSEARCH_PASSWORD}" \

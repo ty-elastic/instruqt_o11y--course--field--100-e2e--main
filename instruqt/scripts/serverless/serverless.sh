@@ -197,13 +197,14 @@ create_env_file() {
     mkdir -p "/usr/share/nginx/html"
     # Write environment variables to $HOME/.env with export, extracting values directly with jq
     cat > "/usr/share/nginx/html/env" <<EOF
-export APM_URL=$(jq -r '.[].endpoints.apm' "$JSON_FILE")
-export ELASTICSEARCH_URL=$(jq -r '.[].endpoints.elasticsearch' "$JSON_FILE")
-export INGEST_URL=$(jq -r '.[].endpoints.ingest' "$JSON_FILE")
-export KIBANA_URL=$(jq -r '.[].endpoints.kibana' "$JSON_FILE")
-export FLEET_URL=$(jq -r '.[].endpoints.fleet' "$JSON_FILE")
-export ELASTICSEARCH_USER=$(jq -r '.[].credentials.username' "$JSON_FILE")
-export ELASTICSEARCH_PASSWORD=$(jq -r '.[].credentials.password' "$JSON_FILE")
+APM_URL=$(jq -r '.[].endpoints.apm' "$JSON_FILE")
+ELASTICSEARCH_URL=$(jq -r '.[].endpoints.elasticsearch' "$JSON_FILE")
+INGEST_URL=$(jq -r '.[].endpoints.ingest' "$JSON_FILE")
+KIBANA_URL=$(jq -r '.[].endpoints.kibana' "$JSON_FILE")
+FLEET_URL=$(jq -r '.[].endpoints.fleet' "$JSON_FILE")
+ELASTICSEARCH_USER=$(jq -r '.[].credentials.username' "$JSON_FILE")
+ELASTICSEARCH_PASSWORD=$(jq -r '.[].credentials.password' "$JSON_FILE")
+ELASTICSEARCH_AUTH_BASE64=$(echo -n "$ELASTICSEARCH_USER:$ELASTICSEARCH_PASSWORD" | base64)
 EOF
 }
 
@@ -214,7 +215,7 @@ echo "Configure NGINX"
 # Configure nginx
 echo '
 server {
-  listen 8080 default_server;
+  listen 9000 default_server;
   server_name kibana;
   location /nginx_status {
     stub_status on;
@@ -262,3 +263,4 @@ server {
 
 echo "Restart NGINX"
 systemctl restart nginx
+
