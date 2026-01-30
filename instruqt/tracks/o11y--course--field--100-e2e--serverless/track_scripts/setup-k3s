@@ -64,11 +64,12 @@ cd /workspace/workshop
 source /workspace/workshop/instruqt/scripts/wait_on_es.sh
 source /workspace/workshop/instruqt/scripts/vars.sh
 
-INGEST_URL_NO_PREFIX=${strip_hostname INGEST_URL}
+INGEST_URL_NO_PREFIX=$(strip_hostname $INGEST_URL)
 retry_command_lin check_host $INGEST_URL_NO_PREFIX
 cd /workspace/workshop
 ./build.sh -o serverless -c $COURSE -d true -b false -s all -j $ELASTICSEARCH_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443
 
-FLEET_URL_NO_PREFIX=${strip_hostname FLEET_URL}
+FLEET_URL_NO_PREFIX=$(strip_hostname $FLEET_URL)
 retry_command_lin check_host $FLEET_URL_NO_PREFIX
 source /workspace/workshop/instruqt/scripts/synthetics.sh
+

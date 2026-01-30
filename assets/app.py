@@ -529,8 +529,10 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, ai_conne
     elif action == 'load':
         load_workflows(kibana_host, auth, es_host, ai_connector, ai_proxy, snow_host, snow_auth)
         load_rules(kibana_host, auth, es_host, connect_alerts)
+        load_new_knowledge(es_host, auth)
         load_agent_tools(kibana_host, auth)
         load_agents(kibana_host, auth)
+        run_workflow(kibana_host, auth, 'setup')
         print('done')
 
     elif action == 'backup':
