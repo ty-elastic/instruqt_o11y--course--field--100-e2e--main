@@ -1,7 +1,7 @@
 arch=linux/amd64
 build=true
-course=all
-track=o11y--course--field--100-e2e--main
+course=o11y--course--field--100-e2e
+track=o11y--course--field--100-e2e--serverless
 while getopts "a:b:c:d:" opt
 do
    case "$opt" in
@@ -19,32 +19,32 @@ cd ../..
 for dir in ./tracks/*/; do
   echo $dir
   if [[ -d "$dir" ]]; then
-    current_course=$(basename "$dir")
-    echo $current_course
-    echo $course
+    current_track=$(basename "$dir")
+    echo $current_track
+    echo $track
     
-    if [[ "$course" == "all" || "$course" == "$current_course" ]]; then
+    if [[ "$track" == "all" || "$track" == "$current_track" ]]; then
 
       if [ "$build" = "true" ]; then
 
         cd ../assets
-        ./build.sh -c $current_course
+        ./build.sh -c $course
         cd ../instruqt
 
         cd ../utils/remote
-        ./build.sh -c $current_course
+        ./build.sh -c $course
         cd ../../instruqt
 
         cd ../utils/cpuhog
-        ./build.sh -c $current_course
+        ./build.sh -c $course
         cd ../../instruqt
 
         cd ..
-        ./build.sh -c $current_course -b true -x true -s all
+        ./build.sh -c $course -b true -x true -s all
         cd instruqt
       fi
 
-      cd tracks/$current_course
+      cd tracks/$current_track
 
       for diag in diagrams/*.mmd; do
         diag_base=$(basename "$diag")

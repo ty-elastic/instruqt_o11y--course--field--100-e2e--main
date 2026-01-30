@@ -1,4 +1,4 @@
-source /workspace/workshop/instruqt/scripts/serverless/vars.sh
+source /workspace/workshop/instruqt/scripts/vars.sh
 
 echo "Configuring Workflows"
 output=$(curl -X POST -s -u "admin:${ELASTICSEARCH_PASSWORD}" \

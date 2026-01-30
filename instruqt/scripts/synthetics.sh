@@ -1,6 +1,6 @@
-source /opt/workshops/elastic-retry.sh
+source /workspace/workshop/instruqt/scripts/vars.sh
 
-export $(curl http://kubernetes-vm:9000/env | xargs)
+AGENT_VERSION=9.2.2
 
 ####################################################################### CREATE POLICY
 POLICY_NUM=0
@@ -57,9 +57,9 @@ echo $ENROLLMENT_API_KEY
 podman run -d --net host \
   --env FLEET_INSECURE=true \
   --env FLEET_ENROLL=1 \
-  --env FLEET_URL=https://fleet-server-agent-http.default.svc:8220 \
+  --env FLEET_URL=$FLEET_URL \
   --env FLEET_ENROLLMENT_TOKEN=$ENROLLMENT_API_KEY \
-  --rm docker.elastic.co/elastic-agent/elastic-agent-complete:9.2.2
+  --rm docker.elastic.co/elastic-agent/elastic-agent-complete:$AGENT_VERSION
 
 # ------------- CREATE PRIVATE MONITOR
 

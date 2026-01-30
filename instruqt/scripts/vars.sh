@@ -1,4 +1,5 @@
-source /opt/workshops/elastic-retry.sh
+source /workspace/workshop/instruqt/scripts/retry.sh
+
 export $(curl http://kubernetes-vm:9000/env | xargs)
 
 if ! host es3-api > /dev/null; then
