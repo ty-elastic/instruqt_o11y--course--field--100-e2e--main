@@ -31,7 +31,7 @@ spec:
             - name: FLEET_ENROLL
               value: "1"
             - name: FLEET_URL
-              value: $FLEET_URL 
+              value: "$FLEET_URL"
             - name: FLEET_ENROLLMENT_TOKEN
-              value: $ENROLLMENT_API_KEY               
+              value: "$ENROLLMENT_API_KEY"
       restartPolicy: Always
