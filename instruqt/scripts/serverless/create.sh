@@ -176,7 +176,8 @@ create_env_file
 
 # ---------------------------------------------------------- NGIX
 
-echo "Configure NGINX"
+
+echo "Configure NGINX proxy"
 # Configure nginx
 cat > "/etc/nginx/conf.d/default.conf" <<EOF
 server {
