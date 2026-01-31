@@ -10,10 +10,10 @@ strip_hostname() {
 check_host() {
     host_stripped=$(strip_hostname $1)
     if host "$host_stripped" > /dev/null; then
-        echo "host reachable"
+        echo "$1 reachable"
         return 0
     else
-        echo "host not yet reachable"
+        echo "$1 not yet reachable"
         return 1
     fi
 }

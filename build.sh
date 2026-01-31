@@ -153,6 +153,8 @@ for current_region in "${regions[@]}"; do
         #./build.sh -r $repo -c $course -a $arch
         export COURSE=$course
         export REPO=$repo
+        export JOB_ID=$(( $RANDOM ))
+        echo $JOB_ID
         export elasticsearch_kibana_endpoint=$elasticsearch_kibana_endpoint
         export elasticsearch_es_endpoint=$elasticsearch_es_endpoint
         export elasticsearch_api_key=$elasticsearch_api_key  

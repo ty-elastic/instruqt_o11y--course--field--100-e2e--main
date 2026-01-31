@@ -36,7 +36,6 @@ wait_for_kubernetes_api
 # ----------------------------------------- CLONE CODE
 
 export COURSE=o11y--course--field--100-e2e
-export REPO=us-central1-docker.pkg.dev/elastic-sa/tbekiares
 export GITHUB_REPO=https://github.com/ty-elastic/instruqt_$COURSE--main
 
 mkdir -p /workspace/workshop

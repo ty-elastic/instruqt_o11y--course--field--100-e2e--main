@@ -197,8 +197,9 @@ def delete_existing_workflow(kibana_server, kibana_auth, es_host, workflow_name)
     for workflow in resp.json()['results']:
         try:
         
-            print(workflow['name'])
+            
             if workflow['name'] == workflow_name:
+                print(f"deleting {workflow['name']}")
                 delete_body = {
                     "ids": [f"{workflow['id']}"]
                 }
@@ -234,7 +235,7 @@ def load_workflows(kibana_server, kibana_auth, es_host, ai_connector, ai_proxy, 
                         parsed = yaml.load(fileo)
                         
                         delete_existing_workflow(kibana_server, kibana_auth, es_host, parsed['name'])
-                        print(parsed['name'])
+                        print(f"loading {parsed['name']}")
                         
                         # parsed['consts']['kbn_host'] = kibana_server
                         # parsed['consts']['kbn_auth'] = kibana_auth
@@ -354,6 +355,8 @@ def load_agent_tools(kibana_server, kibana_auth):
                     #content = file.read()
                     tool = json.load(fileo)
                     del tool['readonly']
+
+                    print(f"loading tool {tool['id']}")
 
                     if tool['type'] == 'workflow':
                         for workflow in workflows_resp.json()['results']:
