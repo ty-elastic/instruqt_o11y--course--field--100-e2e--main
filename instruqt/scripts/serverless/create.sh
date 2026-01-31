@@ -178,7 +178,7 @@ create_env_file
 
 echo "Configure NGINX"
 # Configure nginx
-echo "
+cat <<EOF > /etc/nginx/conf.d/default.conf
 server {
   listen 9000 default_server;
   server_name env;
@@ -208,8 +208,8 @@ server {
     proxy_set_header Authorization 'Basic ${ELASTICSEARCH_AUTH_BASE64}';
     proxy_set_header Accept-Encoding '';
 
-    proxy_set_header Content-Security-Policy 'script-src ''self'' https://kibana.estccdn.com; worker-src blob: ''self''; style-src ''unsafe-inline'' ''self'' https://kibana.estccdn.com; style-src-elem ''unsafe-inline'' ''self'' https://kibana.estccdn.com'
-    add_header Content-Security-Policy 'script-src ''self'' https://kibana.estccdn.com; worker-src blob: ''self''; style-src ''unsafe-inline'' ''self'' https://kibana.estccdn.com; style-src-elem ''unsafe-inline'' ''self'' https://kibana.estccdn.com'
+    proxy_set_header Content-Security-Policy "script-src 'self' https://kibana.estccdn.com; worker-src blob: 'self'; style-src 'unsafe-inline' 'self' https://kibana.estccdn.com; style-src-elem 'unsafe-inline' 'self' https://kibana.estccdn.com"
+    add_header Content-Security-Policy "script-src 'self' https://kibana.estccdn.com; worker-src blob: 'self'; style-src 'unsafe-inline' 'self' https://kibana.estccdn.com; style-src-elem 'unsafe-inline' 'self' https://kibana.estccdn.com"
 
     proxy_redirect off;
     proxy_http_version 1.1;
@@ -227,14 +227,14 @@ server {
   server_name elasticsearch;
 
   location / {
-    proxy_pass ${ES_URL};
+    proxy_pass '${ES_URL}';
     proxy_connect_timeout       300;
     proxy_send_timeout          300;
     proxy_read_timeout          300;
     send_timeout                300;
   }
 }
-" > /etc/nginx/conf.d/default.conf
+EOF
 
 echo "Restart NGINX"
 systemctl restart nginx
