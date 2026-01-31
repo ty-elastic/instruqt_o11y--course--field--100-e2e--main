@@ -24,23 +24,6 @@ setup_bash_shell() {
     echo "complete -F __start_kubectl k" >> /root/.bashrc
 }
 
-check_host() {
-    if host "$1" > /dev/null; then
-        echo "host reachable"
-        return 0
-    else
-        echo "host not yet reachable"
-        return 1
-    fi
-}
-
-strip_hostname() {
-    local url="${1#*://}"  # Remove protocol (http:// or https://)
-    url="${url%%/*}"       # Remove trailing paths (everything after /)
-    url="${url%%:*}"       # Remove port (everything after :)
-    echo "$url"
-}
-
 # Wait for the Instruqt host bootstrap to finish
 wait_for_instruqt_bootstrap
 
@@ -62,14 +45,9 @@ cd /workspace/workshop
 
 # ----------------------------------------- APPS
 
-source /workspace/workshop/instruqt/scripts/wait_on_es.sh
-source /workspace/workshop/instruqt/scripts/vars.sh
+source /workspace/workshop/instruqt/scripts/vars.sh -w true
 
-FLEET_URL_NO_PREFIX=$(strip_hostname $FLEET_URL)
-retry_command_lin check_host $FLEET_URL_NO_PREFIX
 source /workspace/workshop/instruqt/scripts/synthetics.sh
 
-INGEST_URL_NO_PREFIX=$(strip_hostname $INGEST_URL)
-retry_command_lin check_host $INGEST_URL_NO_PREFIX
 cd /workspace/workshop
 ./build.sh -o serverless -c $COURSE -d true -b false -s all -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -w true -y false
