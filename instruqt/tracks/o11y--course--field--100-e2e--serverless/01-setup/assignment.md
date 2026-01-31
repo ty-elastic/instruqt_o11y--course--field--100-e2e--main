@@ -9,15 +9,15 @@ tabs:
   type: service
   hostname: es3-api
   path: /app/dashboards#/list?_g=(filters:!(),refreshInterval:(pause:!f,value:30000),time:(from:now-30m,to:now))
-  port: 9000
+  port: 9100
 - id: yxqjd199fxhh
   title: Elastic-Breakout
   type: service
   hostname: es3-api
   path: /app/dashboards#/list?_g=(filters:!(),refreshInterval:(pause:!f,value:30000),time:(from:now-30m,to:now))
-  port: 9000
+  port: 9100
   new_window: true
-- id: aq8oaqxxd2nc
+- id: ur9rpyszttdr
   title: Trader
   type: service
   hostname: k3s
