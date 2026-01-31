@@ -178,7 +178,7 @@ create_env_file
 
 echo "Configure NGINX"
 # Configure nginx
-cat <<EOF > /etc/nginx/conf.d/default.conf
+cat > "/etc/nginx/conf.d/default.conf" <<EOF
 server {
   listen 9000 default_server;
   server_name env;
