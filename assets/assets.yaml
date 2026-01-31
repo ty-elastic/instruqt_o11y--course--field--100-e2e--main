@@ -19,5 +19,6 @@ spec:
             - "$elasticsearch_api_key"    
             - "load"
       restartPolicy: Never
+      imagePullPolicy: Always
 ---
 
