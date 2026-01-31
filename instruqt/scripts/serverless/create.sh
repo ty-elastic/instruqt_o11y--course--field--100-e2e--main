@@ -201,6 +201,10 @@ server {
     proxy_set_header X-Scheme $scheme;
     proxy_set_header Authorization "Basic '${ELASTICSEARCH_AUTH_BASE64}'";
     proxy_set_header Accept-Encoding "";
+
+    proxy_set_header Content-Security-Policy 'script-src ''self'' https://kibana.estccdn.com; worker-src blob: ''self''; style-src ''unsafe-inline'' ''self'' https://kibana.estccdn.com; style-src-elem ''unsafe-inline'' ''self'' https://kibana.estccdn.com'
+    add_header Content-Security-Policy 'script-src ''self'' https://kibana.estccdn.com; worker-src blob: ''self''; style-src ''unsafe-inline'' ''self'' https://kibana.estccdn.com; style-src-elem ''unsafe-inline'' ''self'' https://kibana.estccdn.com'
+
     proxy_redirect off;
     proxy_http_version 1.1;
     client_max_body_size 20M;
