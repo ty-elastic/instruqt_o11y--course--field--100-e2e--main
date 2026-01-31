@@ -8,6 +8,7 @@ spec:
       containers:
         - image: $REPO/assets:$COURSE
           name: assets
+          imagePullPolicy: Always
           command:
             - "python"
             - "/python-docker/app.py"
@@ -19,6 +20,5 @@ spec:
             - "$elasticsearch_api_key"    
             - "load"
       restartPolicy: Never
-      imagePullPolicy: Always
 ---
 
