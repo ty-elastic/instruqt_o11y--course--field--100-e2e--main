@@ -17,7 +17,7 @@ tabs:
   path: /app/dashboards#/list?_g=(filters:!(),refreshInterval:(pause:!f,value:30000),time:(from:now-30m,to:now))
   port: 9100
   new_window: true
-- id: ur9rpyszttdr
+- id: aq8oaqxxd2nc
   title: Trader
   type: service
   hostname: k3s
