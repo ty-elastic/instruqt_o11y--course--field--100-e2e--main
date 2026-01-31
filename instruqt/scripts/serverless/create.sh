@@ -204,7 +204,7 @@ server {
     proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
     proxy_set_header Connection '';
     proxy_set_header X-Scheme $scheme;
-    proxy_set_header Authorization 'Basic ${ELASTICSEARCH_AUTH_BASE64}';
+    proxy_set_header Authorization "Basic ${ELASTICSEARCH_AUTH_BASE64}";
     proxy_set_header Accept-Encoding '';
 
     proxy_hide_header Content-Security-Policy;
@@ -217,7 +217,7 @@ server {
     proxy_http_version 1.1;
 
     client_max_body_size 20M;
-    
+
     proxy_read_timeout          600;
     proxy_send_timeout          300;
     send_timeout                300;
