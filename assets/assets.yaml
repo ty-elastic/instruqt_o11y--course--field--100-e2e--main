@@ -9,8 +9,8 @@ spec:
         - image: $REPO/assets:$COURSE
           name: assets
           command:
-            - "/python-docker/python"
-            - "app.py"
+            - "python"
+            - "/python-docker/app.py"
             - "--kibana_host"
             - "$elasticsearch_kibana_endpoint"
             - "--es_host"
