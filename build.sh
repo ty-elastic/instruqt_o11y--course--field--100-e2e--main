@@ -13,6 +13,7 @@ build_service=false
 build_lib=false
 deploy_otel=false
 deploy_service=false
+annotations=true
 
 elasticsearch_es_endpoint="na"
 elasticsearch_rum_endpoint="http://127.0.0.1:6741"
@@ -27,7 +28,7 @@ case "${unameOut}" in
     *)          machine="UNKNOWN:${unameOut}"
 esac
 
-while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:" opt
+while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:" opt
 do
    case "$opt" in
       a ) arch="$OPTARG" ;;
@@ -50,6 +51,7 @@ do
       k ) elasticsearch_otlp_endpoint="$OPTARG" ;;
 
       w ) assets="$OPTARG" ;;
+      y ) annotations="$OPTARG" ;;
    esac
 done
 
@@ -191,9 +193,7 @@ for current_region in "${regions[@]}"; do
                             kubectl -n $namespace rollout restart deployment/$current_service
                         fi
 
-                        if [ "$elasticsearch_kibana_endpoint" == "na" ]; then
-                            echo "skipping deployment annotation"
-                        else
+                        if [ "$annotations" = "true" ]; then
                             echo "adding deployment annotation"
                             if [ "$machine" == "Mac" ]; then
                                 ts=$(date -z utc +%FT%TZ)

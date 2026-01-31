@@ -1,5 +1,5 @@
 arch=linux/amd64
-build=false
+build=true
 course=o11y--course--field--100-e2e
 track=o11y--course--field--100-e2e--serverless
 while getopts "a:b:c:d:" opt
