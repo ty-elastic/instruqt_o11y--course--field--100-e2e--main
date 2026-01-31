@@ -197,7 +197,7 @@ server {
     proxy_pass '${KIBANA_URL}';
     proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
     proxy_set_header Connection "";
-    #proxy_hide_header Content-Security-Policy;
+    proxy_hide_header Content-Security-Policy;
     proxy_set_header X-Scheme $scheme;
     proxy_set_header Authorization "Basic '${ELASTICSEARCH_AUTH_BASE64}'";
     proxy_set_header Accept-Encoding "";
