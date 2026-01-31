@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: assets
+spec:
+  template:
+    spec:
+      containers:
+        - image: $REPO/assets:$COURSE
+          name: assets
+          command:
+            - "/python-docker/python"
+            - "app.py"
+            - "--kibana_host"
+            - "$elasticsearch_kibana_endpoint"
+            - "--es_host"
+            - "$elasticsearch_es_endpoint"    
+            - "--es_apikey"
+            - "$elasticsearch_api_key"    
+            - "load"
+      restartPolicy: Never
+---
+

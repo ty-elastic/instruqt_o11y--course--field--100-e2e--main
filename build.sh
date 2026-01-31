@@ -148,13 +148,14 @@ for current_region in "${regions[@]}"; do
 
     if [ "$assets" = "true" ]; then
         cd assets
-        ./build.sh -r $repo -c $course -a $arch
-        docker run --network host $repo/assets:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key load_workflows
-        docker run --network host $repo/assets:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key load_alerts --connect_alerts True
-        docker run --network host $repo/assets:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key load_knowledge
-        docker run --network host $repo/assets:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key load_tools
-        docker run --network host $repo/assets:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key load_agents
-        docker run --network host $repo/assets:$course --kibana_host $elasticsearch_kibana_endpoint --es_host $elasticsearch_es_endpoint --es_apikey $elasticsearch_api_key run_setup
+        #./build.sh -r $repo -c $course -a $arch
+        export COURSE=$course
+        export REPO=$repo
+        export elasticsearch_kibana_endpoint=$elasticsearch_kibana_endpoint
+        export elasticsearch_es_endpoint=$elasticsearch_es_endpoint
+        export elasticsearch_api_key=$elasticsearch_api_key  
+        envsubst < assets.yaml
+        envsubst < assets.yaml | kubectl apply -f -
         cd ..
     fi
 
@@ -185,7 +186,6 @@ for current_region in "${regions[@]}"; do
                         envsubst < k8s/yaml/$current_service.yaml | kubectl delete -f -
                     else
                         echo "deploying $current_service to region $REGION"
-                        envsubst < k8s/yaml/$current_service.yaml
                         envsubst < k8s/yaml/$current_service.yaml | kubectl apply -f -
                         if [ "$deploy_service" = "force" ]; then
                             kubectl -n $namespace rollout restart deployment/$current_service

@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euxo pipefail
+#set -euxo pipefail
 set +x
 
 wait_for_instruqt_bootstrap() {
@@ -53,6 +53,7 @@ wait_for_kubernetes_api
 # ----------------------------------------- CLONE CODE
 
 export COURSE=o11y--course--field--100-e2e
+export REPO=us-central1-docker.pkg.dev/elastic-sa/tbekiares
 export GITHUB_REPO=https://github.com/ty-elastic/instruqt_$COURSE--main
 
 mkdir -p /workspace/workshop
@@ -64,12 +65,11 @@ cd /workspace/workshop
 source /workspace/workshop/instruqt/scripts/wait_on_es.sh
 source /workspace/workshop/instruqt/scripts/vars.sh
 
-INGEST_URL_NO_PREFIX=$(strip_hostname $INGEST_URL)
-retry_command_lin check_host $INGEST_URL_NO_PREFIX
-cd /workspace/workshop
-./build.sh -o serverless -c $COURSE -d true -b false -s all -j $ELASTICSEARCH_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443
-
 FLEET_URL_NO_PREFIX=$(strip_hostname $FLEET_URL)
 retry_command_lin check_host $FLEET_URL_NO_PREFIX
 source /workspace/workshop/instruqt/scripts/synthetics.sh
 
+INGEST_URL_NO_PREFIX=$(strip_hostname $INGEST_URL)
+retry_command_lin check_host $INGEST_URL_NO_PREFIX
+cd /workspace/workshop
+./build.sh -o serverless -c $COURSE -d true -b false -s all -j $ELASTICSEARCH_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -w true
