@@ -177,69 +177,65 @@ create_env_file
 # ---------------------------------------------------------- NGINX
 
 
-# echo "Configure NGINX proxy"
-# # Configure nginx
-# cat > "/etc/nginx/conf.d/default.conf" <<EOF
-# server {
-#   listen 9000 default_server;
-#   server_name env;
+echo "Configure NGINX proxy"
+# Configure nginx
+cat > "/etc/nginx/conf.d/default.conf" <<EOF
+server {
+  listen 9000 default_server;
+  server_name env;
 
-#   location /nginx_status {
-#     stub_status on;
-#     allow 127.0.0.1;
-#     deny all;
-#   }
+  location /nginx_status {
+    stub_status on;
+    allow 127.0.0.1;
+    deny all;
+  }
   
-#   location /env {
-#     alias /usr/share/nginx/html/env;
-#   }
-# }
+  location /env {
+    alias /usr/share/nginx/html/env;
+  }
+}
 
-# server {
-#   listen 9100 default_server;
-#   server_name kibana;
+server {
+  listen 9100 default_server;
+  server_name kibana;
 
-#   location / {
-#     proxy_set_header Host $KIBANA_URL_WITHOUT_PROTOCOL;
-#     proxy_pass $KIBANA_URL;
-#     proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
-#     proxy_set_header Connection '';
-#     proxy_set_header X-Scheme $scheme;
-#     proxy_set_header Authorization "Basic $ELASTICSEARCH_AUTH_BASE64";
-#     proxy_set_header Accept-Encoding '';
+  location / {
+    proxy_set_header Host $KIBANA_URL_WITHOUT_PROTOCOL;
+    proxy_pass $KIBANA_URL;
+    proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
+    proxy_set_header Connection '';
+    proxy_set_header X-Scheme $scheme;
+    proxy_set_header Authorization "Basic $ELASTICSEARCH_AUTH_BASE64";
+    proxy_set_header Accept-Encoding '';
 
-#     proxy_hide_header Content-Security-Policy;
-#     proxy_set_header Content-Security-Policy "script-src 'self' https://kibana.estccdn.com; worker-src blob: 'self'; style-src 'unsafe-inline' 'self' https://kibana.estccdn.com; style-src-elem 'unsafe-inline' 'self' https://kibana.estccdn.com";
-#     add_header Content-Security-Policy "script-src 'self' https://kibana.estccdn.com; worker-src blob: 'self'; style-src 'unsafe-inline' 'self' https://kibana.estccdn.com; style-src-elem 'unsafe-inline' 'self' https://kibana.estccdn.com";
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains;";
 
-#     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains;";
+    proxy_redirect off;
+    proxy_http_version 1.1;
 
-#     proxy_redirect off;
-#     proxy_http_version 1.1;
+    client_max_body_size 20M;
 
-#     client_max_body_size 20M;
+    proxy_read_timeout          600;
+    proxy_send_timeout          300;
+    send_timeout                300;
+    proxy_connect_timeout       300;
+ }
+}
 
-#     proxy_read_timeout          600;
-#     proxy_send_timeout          300;
-#     send_timeout                300;
-#     proxy_connect_timeout       300;
-#  }
-# }
+server {
+  listen 9200;
+  server_name elasticsearch;
 
-# server {
-#   listen 9200;
-#   server_name elasticsearch;
+  location / {
+    proxy_pass $ES_URL;
+    proxy_connect_timeout       300;
+    proxy_send_timeout          300;
+    proxy_read_timeout          300;
+    send_timeout                300;
+  }
+}
+EOF
 
-#   location / {
-#     proxy_pass $ES_URL;
-#     proxy_connect_timeout       300;
-#     proxy_send_timeout          300;
-#     proxy_read_timeout          300;
-#     send_timeout                300;
-#   }
-# }
-# EOF
-
-# echo "Restart NGINX"
-# systemctl restart nginx
+echo "Restart NGINX"
+systemctl restart nginx
 
