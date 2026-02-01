@@ -209,8 +209,8 @@ server {
     proxy_set_header Accept-Encoding '';
 
     proxy_hide_header Content-Security-Policy;
-    proxy_set_header Content-Security-Policy "script-src 'self' https://kibana.estccdn.com; worker-src blob: 'self'; style-src 'unsafe-inline' 'self' https://kibana.estccdn.com; style-src-elem 'unsafe-inline' 'self' https://kibana.estccdn.com";
-    add_header Content-Security-Policy "script-src 'self' https://kibana.estccdn.com; worker-src blob: 'self'; style-src 'unsafe-inline' 'self' https://kibana.estccdn.com; style-src-elem 'unsafe-inline' 'self' https://kibana.estccdn.com";
+    # proxy_set_header Content-Security-Policy "script-src 'self' https://kibana.estccdn.com; worker-src blob: 'self'; style-src 'unsafe-inline' 'self' https://kibana.estccdn.com; style-src-elem 'unsafe-inline' 'self' https://kibana.estccdn.com";
+    # add_header Content-Security-Policy "script-src 'self' https://kibana.estccdn.com; worker-src blob: 'self'; style-src 'unsafe-inline' 'self' https://kibana.estccdn.com; style-src-elem 'unsafe-inline' 'self' https://kibana.estccdn.com";
 
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains;";
 
