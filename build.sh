@@ -38,7 +38,7 @@ check_otel() {
 }
 
 check_assets() {
-    kubectl wait --for=condition=complete job/$1 --timeout=120s
+    kubectl wait --for=condition=complete job/assets-$1 --timeout=120s
 }
 
 notifier_endpoint=""
