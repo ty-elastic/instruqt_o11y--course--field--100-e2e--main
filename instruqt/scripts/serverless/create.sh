@@ -210,7 +210,7 @@ server {
 
     proxy_hide_header Content-Security-Policy;
     # proxy_set_header Content-Security-Policy "script-src 'self' https://kibana.estccdn.com; worker-src blob: 'self'; style-src 'unsafe-inline' 'self' https://kibana.estccdn.com; style-src-elem 'unsafe-inline' 'self' https://kibana.estccdn.com";
-    # add_header Content-Security-Policy "script-src 'self' https://kibana.estccdn.com; worker-src blob: 'self'; style-src 'unsafe-inline' 'self' https://kibana.estccdn.com; style-src-elem 'unsafe-inline' 'self' https://kibana.estccdn.com";
+    add_header script-src "'report-sample' 'self' kibana.estccdn.com; worker-src 'report-sample' 'self' blob: kibana.estccdn.com; style-src 'report-sample' 'self' 'unsafe-inline' *.elastic.co:* *.elstc.co:* kibana.estccdn.com; object-src 'report-sample' 'none'; connect-src 'self' https:; font-src 'self' *.elastic.co:* *.elstc.co:* kibana.estccdn.com; img-src 'self' *.elastic.co:* *.elstc.co:* data: blob: kibana.estccdn.com; report-to violations-endpoint; frame-ancestors 'self'";
 
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains;";
 
