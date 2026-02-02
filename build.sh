@@ -1,3 +1,42 @@
+retry_command_lin() {
+    local max_attempts=256
+    local timeout=2
+    local attempt=1
+    local exit_code=0
+
+    while [ $attempt -le $max_attempts ]
+    do
+        "$@"
+        exit_code=$?
+
+        if [ $exit_code -eq 0 ]; then
+            break
+        fi
+
+        echo "Attempt $attempt failed! Retrying in $timeout seconds..."
+        sleep $timeout
+        attempt=$(( attempt + 1 ))
+    done
+
+    if [ $exit_code -ne 0 ]; then
+        echo "Command $@ failed after $attempt attempts!"
+    fi
+
+    return $exit_code
+}
+
+check_otel() {
+    kubectl wait --for=condition=Ready pods --all -n opentelemetry-operator-system --timeout=120s
+
+    if kubectl describe otelinst -n opentelemetry-operator-system | grep -q "No resources found"; then
+        echo "otel operator not yet ready"
+        return 1
+    else
+        echo "otel operator ready"
+        return 0
+    fi
+}
+
 notifier_endpoint=""
 
 arch=linux/amd64
@@ -222,6 +261,8 @@ for current_region in "${regions[@]}"; do
     fi
 
     if [ "$deploy_otel" != "false" ]; then
+        retry_command_lin check_otel
+        echo "restarting deployment"
         kubectl -n $namespace rollout restart deployment
     fi
 done
