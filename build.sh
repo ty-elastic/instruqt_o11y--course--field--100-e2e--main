@@ -187,21 +187,6 @@ for current_region in "${regions[@]}"; do
         #sleep 30
     fi
 
-    if [ "$assets" = "true" ]; then
-        cd assets
-        #./build.sh -r $repo -c $course -a $arch
-        export COURSE=$course
-        export REPO=$repo
-        export JOB_ID=$(( $RANDOM ))
-        echo $JOB_ID
-        export elasticsearch_kibana_endpoint=$elasticsearch_kibana_endpoint
-        export elasticsearch_es_endpoint=$elasticsearch_es_endpoint
-        export elasticsearch_api_key=$elasticsearch_api_key  
-        envsubst < assets.yaml
-        envsubst < assets.yaml | kubectl apply -f -
-        cd ..
-    fi
-
     if [[ "$deploy_service" == "true" || "$deploy_service" == "delete" || "$deploy_service" == "force" ]]; then
         export COURSE=$course
         export REPO=$repo
@@ -265,6 +250,23 @@ for current_region in "${regions[@]}"; do
         echo "restarting deployment"
         kubectl -n $namespace rollout restart deployment
     fi
+
+
+    if [ "$assets" = "true" ]; then
+        cd assets
+        #./build.sh -r $repo -c $course -a $arch
+        export COURSE=$course
+        export REPO=$repo
+        export JOB_ID=$(( $RANDOM ))
+        echo $JOB_ID
+        export elasticsearch_kibana_endpoint=$elasticsearch_kibana_endpoint
+        export elasticsearch_es_endpoint=$elasticsearch_es_endpoint
+        export elasticsearch_api_key=$elasticsearch_api_key  
+        envsubst < assets.yaml
+        envsubst < assets.yaml | kubectl apply -f -
+        cd ..
+    fi
+
 done
 
 
