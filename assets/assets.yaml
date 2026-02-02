@@ -2,6 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: assets-$JOB_ID
+  group: assets
 spec:
   template:
     spec:

@@ -37,6 +37,10 @@ check_otel() {
     fi
 }
 
+check_assets() {
+    kubectl wait --for=condition=complete job/$1 --timeout=120s
+}
+
 notifier_endpoint=""
 
 arch=linux/amd64
@@ -265,6 +269,8 @@ for current_region in "${regions[@]}"; do
         envsubst < assets.yaml
         envsubst < assets.yaml | kubectl apply -f -
         cd ..
+
+        retry_command_lin check_assets $JOB_ID
     fi
 
 done
