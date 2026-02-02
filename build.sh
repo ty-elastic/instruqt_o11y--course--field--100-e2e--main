@@ -145,7 +145,7 @@ for current_region in "${regions[@]}"; do
         cd ../..
 
         kubectl -n opentelemetry-operator-system rollout restart deployment
-        sleep 30
+        #sleep 30
     fi
 
     if [ "$assets" = "true" ]; then
@@ -219,6 +219,10 @@ for current_region in "${regions[@]}"; do
                 fi
             done
         fi
+    fi
+
+    if [ "$deploy_otel" != "false" ]; then
+        kubectl -n $namespace rollout restart deployment
     fi
 done
 
