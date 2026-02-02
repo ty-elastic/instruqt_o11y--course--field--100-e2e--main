@@ -5,5 +5,5 @@
   "private_locations": ["host-1"],
   "schedule": 1,
   "service.name": "trader-app-web",
-  "inline_script": "step('Go to http://http://proxy-ext.trading-1.svc.cluster.local:8081/', async () => {await page.goto('http://http://proxy-ext.trading-1.svc.cluster.local:8081/'); await page.getByRole('button', { name: 'Request Trade Make a trade' }).click(); await page.getByRole('button', { name: 'Submit' }).click(); await page.waitForTimeout(5000);});"
+  "inline_script": "step('Go to http://proxy-ext.trading-1.svc.cluster.local:8081/', async () => {await page.goto('http://proxy-ext.trading-1.svc.cluster.local:8081/'); await page.getByRole('button', { name: 'Request Trade Make a trade' }).click(); await page.getByRole('button', { name: 'Submit' }).click(); await page.waitForTimeout(5000);});"
 }
