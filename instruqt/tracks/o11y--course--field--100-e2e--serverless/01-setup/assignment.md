@@ -26,17 +26,12 @@ tabs:
   hostname: es3-api
   path: /app/dashboards#/list?_g=(filters:!(),refreshInterval:(pause:!f,value:30000),time:(from:now-30m,to:now))
   port: 9100
-  custom_request_headers:
-  - key: Content-Security-Policy
-    value: 'script-src ''self'' https://kibana.estccdn.com; worker-src blob: ''self'';
-      style-src ''unsafe-inline'' ''self'' https://kibana.estccdn.com; style-src-elem
-      ''unsafe-inline'' ''self'' https://kibana.estccdn.com'
+  new_window: true
   custom_response_headers:
   - key: Content-Security-Policy
     value: 'script-src ''self'' https://kibana.estccdn.com; worker-src blob: ''self'';
       style-src ''unsafe-inline'' ''self'' https://kibana.estccdn.com; style-src-elem
       ''unsafe-inline'' ''self'' https://kibana.estccdn.com'
-  new_window: true
 - id: ip5dkifrpofc
   title: Trader
   type: service

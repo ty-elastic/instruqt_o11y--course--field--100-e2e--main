@@ -223,47 +223,45 @@ def load_workflows(kibana_server, kibana_auth, es_host, ai_connector, ai_proxy, 
     for root, dirs, files in os.walk(directory_path):
         for file in files:
             if file.endswith(target_extension):
-                try:
-                    full_path = os.path.join(root, file)
-                    with open(full_path, 'r') as fileo:
-                        #content = file.read()  # Read the entire content of the file
-                        #parsed = yaml.load(content)
-                        #content = file.read()
-                        #print(content)
-                        #print(full_path)
-                        
-                        yaml = MyYAML()
+                full_path = os.path.join(root, file)
+                with open(full_path, 'r') as fileo:
+                    #content = file.read()  # Read the entire content of the file
+                    #parsed = yaml.load(content)
+                    #content = file.read()
+                    #print(content)
+                    #print(full_path)
+                    
+                    yaml = MyYAML()
 
-                        parsed = yaml.load(fileo)
-                        
-                        delete_existing_workflow(kibana_server, kibana_auth, es_host, parsed['name'])
-                        print(f"loading {parsed['name']}")
-                        
-                        # parsed['consts']['kbn_host'] = kibana_server
-                        # parsed['consts']['kbn_auth'] = kibana_auth
-                        # parsed['consts']['es_host'] = es_host    
-                        # parsed['consts']['ai_connector'] = ai_connector   
-                        # parsed['consts']['ai_proxy'] = ai_proxy  
-                        # parsed['consts']['snow_host'] = snow_host   
-                        # parsed['consts']['snow_auth'] = snow_auth              
-                        
-                        yaml = MyYAML()
-                        yaml.width = float("inf") # Set the width attribute of the YAML instance
+                    parsed = yaml.load(fileo)
+                    
+                    delete_existing_workflow(kibana_server, kibana_auth, es_host, parsed['name'])
+                    print(f"loading {parsed['name']}")
+                    
+                    # parsed['consts']['kbn_host'] = kibana_server
+                    # parsed['consts']['kbn_auth'] = kibana_auth
+                    # parsed['consts']['es_host'] = es_host    
+                    # parsed['consts']['ai_connector'] = ai_connector   
+                    # parsed['consts']['ai_proxy'] = ai_proxy  
+                    # parsed['consts']['snow_host'] = snow_host   
+                    # parsed['consts']['snow_auth'] = snow_auth              
+                    
+                    yaml = MyYAML()
+                    yaml.width = float("inf") # Set the width attribute of the YAML instance
 
-                        #yaml.dump(parsed)
-                        out = yaml.dump(parsed)
-                        body = {
-                            "yaml": out
-                        }
-                        #print(out)
-                        
+                    #yaml.dump(parsed)
+                    out = yaml.dump(parsed)
+                    body = {
+                        "yaml": out
+                    }
+                    #print(out)
+                    
 
-                        resp = requests.post(f"{kibana_server}/api/workflows",
-                                            json=body,
-                                            headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
-                        print(resp.json())
-                except Exception as e:
-                    print(e)
+                    resp = requests.post(f"{kibana_server}/api/workflows",
+                                        json=body,
+                                        headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+                    print(resp.json())
+
 
 #
 
@@ -533,10 +531,11 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, ai_conne
         print('done')
     elif action == 'load':
         load_workflows(kibana_host, auth, es_host, ai_connector, ai_proxy, snow_host, snow_auth)
+        load_new_knowledge(es_host, auth)
         load_agent_tools(kibana_host, auth)
         load_agents(kibana_host, auth)
         load_rules(kibana_host, auth, es_host, connect_alerts)
-        load_new_knowledge(es_host, auth)
+
         run_workflow(kibana_host, auth, 'setup')
         load_synthetics(kibana_host, auth)
         print('done')
