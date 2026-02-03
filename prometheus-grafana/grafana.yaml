@@ -46,14 +46,20 @@ spec:
     spec:
       containers:
         - env:
-            - name: GF_AUTH_BASIC_ENABLED
-              value: "false"
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: "grafana"
+            - name: GF_SECURITY_ADMIN_USER
+              value: "admin"
+
             - name: GF_AUTH_DISABLE_LOGIN_FORM
               value: "true"
             - name: GF_AUTH_ANONYMOUS_ENABLED
               value: "true"
             - name: GF_AUTH_ANONYMOUS_ORG_ROLE
               value: "Admin"
+            - name: GF_AUTH_ANONYMOUS_ORG_NAME
+              value: "Main Org."
+
           image: grafana/grafana
           name: grafana
           ports:
