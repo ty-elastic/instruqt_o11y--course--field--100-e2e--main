@@ -38,15 +38,15 @@ tabs:
   hostname: k3s
   path: /
   port: 8081
-- id: kr5jkc770z5f
+- id: acj1llndlxop
   title: Code
   type: code
-  hostname: host-1
+  hostname: k3s
   path: /workspace/workshop/src
-- id: kr5jkc770z5g
+- id: fqewbjcpqcys
   title: K8s YAML
   type: code
-  hostname: host-1
+  hostname: k3s
   path: /workspace/workshop/k8s/yaml
 - id: qr48xrusvahx
   title: eshost
