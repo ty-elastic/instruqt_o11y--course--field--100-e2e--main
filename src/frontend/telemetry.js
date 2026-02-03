@@ -102,7 +102,7 @@ export function initOpenTelemetry(config) {
 
 const apm = initOpenTelemetry({
   logLevel: 'info',
-  endpoint: '${ELASTICSEARCH_RUM_FE_ENDPOINT}',
+  endpoint: '/telemetry',
   resourceAttributes: {
     'service.name': '${SERVICE_NAME}',
     'service.version': '${SERVICE_VERSION}',
