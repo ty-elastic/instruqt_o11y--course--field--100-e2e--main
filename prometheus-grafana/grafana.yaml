@@ -73,13 +73,14 @@ kind: Service
 metadata:
   labels:
     service: grafana
-  name: grafana
+  name: grafana-ext
   namespace: grafana
 spec:
   ports:
     - name: "3000"
       port: 3000
       targetPort: 3000
+  type: LoadBalancer
   selector:
     service: grafana
 ---

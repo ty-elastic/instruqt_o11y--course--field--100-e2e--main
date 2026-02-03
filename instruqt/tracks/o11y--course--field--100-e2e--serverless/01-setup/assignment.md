@@ -46,7 +46,7 @@ tabs:
   title: k3shost
   type: terminal
   hostname: k3s
-- id: ip5dkifrpofz
+- id: s1uqc0oc3nlk
   title: Grafana
   type: service
   hostname: k3s
