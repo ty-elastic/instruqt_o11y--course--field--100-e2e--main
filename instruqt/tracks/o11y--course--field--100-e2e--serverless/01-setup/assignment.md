@@ -46,6 +46,12 @@ tabs:
   title: k3shost
   type: terminal
   hostname: k3s
+- id: ip5dkifrpofz
+  title: Grafana
+  type: service
+  hostname: k3s
+  path: /
+  port: 3000
 difficulty: basic
 timelimit: 43200
 enhanced_loading: null
