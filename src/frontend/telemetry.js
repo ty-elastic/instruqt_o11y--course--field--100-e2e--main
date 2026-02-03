@@ -94,11 +94,18 @@ export function initOpenTelemetry(config) {
   // Register instrumentations
   registerInstrumentations({
     instrumentations: [
-      getWebAutoInstrumentations(),
+    getWebAutoInstrumentations({
+      // load custom configuration for xml-http-request instrumentation
+      '@opentelemetry/instrumentation-user-interaction': {
+        eventNames: ['submit', 'click'],
+      },
+    }),
       new LongTaskInstrumentation(),
     ],
   });
 }
+
+
 
 const apm = initOpenTelemetry({
   logLevel: 'info',

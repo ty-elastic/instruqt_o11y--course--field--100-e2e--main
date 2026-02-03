@@ -59,7 +59,6 @@ deploy_service=false
 annotations=true
 
 elasticsearch_es_endpoint="na"
-elasticsearch_rum_endpoint="http://127.0.0.1:6741"
 elasticsearch_kibana_endpoint="na"
 elasticsearch_api_key="na"
 elasticsearch_otlp_endpoint="na"
@@ -87,7 +86,6 @@ do
       r ) region="$OPTARG" ;;
       v ) service_version="$OPTARG" ;;
 
-      g ) elasticsearch_rum_endpoint="$OPTARG" ;;
       h ) elasticsearch_kibana_endpoint="$OPTARG" ;;
       i ) elasticsearch_api_key="$OPTARG" ;;
       j ) elasticsearch_es_endpoint="$OPTARG" ;;
@@ -151,7 +149,7 @@ for current_region in "${regions[@]}"; do
 
     if [ "$build_service" = "true" ]; then
         cd ./src
-        ./build.sh -k $service_version -r $repo -s $service -c $course -a $arch -n $namespace -g $elasticsearch_rum_endpoint -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key
+        ./build.sh -k $service_version -r $repo -s $service -c $course -a $arch -n $namespace
         cd ..
     fi
 
@@ -196,14 +194,12 @@ for current_region in "${regions[@]}"; do
         export REPO=$repo
         export NAMESPACE=$namespace
         export REGION=$current_region
-        export ELASTICSEARCH_RUM_ENDPOINT=$elasticsearch_rum_endpoint
 
         export SERVICE_VERSION=$service_version
         export NOTIFIER_ENDPOINT=$notifier_endpoint
 
         export JOB_ID=$(( $RANDOM ))
         echo $JOB_ID
-        echo ELASTICSEARCH_RUM_ENDPOINT=$ELASTICSEARCH_RUM_ENDPOINT
 
         envsubst < k8s/yaml/_namespace.yaml | kubectl apply -f -
 
@@ -254,7 +250,6 @@ for current_region in "${regions[@]}"; do
         echo "restarting deployment"
         kubectl -n $namespace rollout restart deployment
     fi
-
 
     if [ "$assets" = "true" ]; then
         cd assets
