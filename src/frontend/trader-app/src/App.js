@@ -12,8 +12,6 @@ import { v4 as uuidv4 } from 'uuid';
 import axios from "axios";
 import { Route, NavLink, HashRouter, BrowserRouter, Routes } from "react-router-dom";
 
-import { ApmRoutes } from '@elastic/apm-rum-react'
-
 // set sessionId on OTel baggage
 var sessionId = uuidv4();
 axios.defaults.headers.common['baggage'] = `com.example.client_session_id=${sessionId}`;
@@ -24,13 +22,13 @@ function App() {
       <div className="App">
         <TraderAppBar />
         <div className="content">
-          <ApmRoutes>
+          <Routes>
             <Route exact path="/" element={<Trade />} />
             <Route path="/market" element={<Market />} />
             <Route path="/error" element={<Error />} />
             <Route path="/test" element={<Test />} />
             <Route path="/train" element={<Train />} />
-          </ApmRoutes>
+          </Routes>
         </div>
       </div>
     </HashRouter>

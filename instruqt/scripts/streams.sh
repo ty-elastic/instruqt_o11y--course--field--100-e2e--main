@@ -8,3 +8,8 @@ output=$(curl -X POST -s -u "admin:${ELASTICSEARCH_PASSWORD}" \
   -H "kbn-xsrf: true" \
   -H 'x-elastic-internal-origin: Kibana' \
   -d '{"changes":{"observability:streamsEnableSignificantEvents":true}}')
+
+curl -X POST -s -u "admin:${ELASTICSEARCH_PASSWORD}" \
+    "$KIBANA_URL/api/streams/_enable" \
+    --header "kbn-xsrf: true"
+

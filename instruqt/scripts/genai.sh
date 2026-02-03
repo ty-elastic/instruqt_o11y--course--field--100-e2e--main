@@ -7,4 +7,4 @@ output=$(curl -X POST -s -u "admin:${ELASTICSEARCH_PASSWORD}" \
   -H 'Content-Type: application/json' \
   -H "kbn-xsrf: true" \
   -H 'x-elastic-internal-origin: Kibana' \
-  -d '{"changes":{"aiAssistant:preferredChatExperience": "agent"}}')
+  -d '{"changes":{"aiAssistant:preferredChatExperience": "agent", "genAiSettings:defaultAIConnector": "Anthropic-Claude-Sonnet-4-5"}}')

@@ -11,15 +11,14 @@ server {
     real_ip_recursive on;
 
     # APM
-    location /intake/ {
+    location /v1/ {
         include cors.conf;
-
-        proxy_pass_request_headers on;
-
         proxy_http_version 1.1;
-        proxy_pass $ELASTICSEARCH_RUM_ENDPOINT/intake/;
+        proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;  
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_pass http://opentelemetry-kube-stack-daemon-collector.opentelemetry-operator-system.svc.cluster.local:4318;
     }
 
     # API

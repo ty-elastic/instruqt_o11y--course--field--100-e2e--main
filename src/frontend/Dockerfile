@@ -1,10 +1,11 @@
 FROM node:20 as frontend
 
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends gettext-base && \
+    rm -rf /var/lib/apt/lists/*
+
 ARG ELASTICSEARCH_RUM_FE_ENDPOINT="/"
-ARG ELASTICSEARCH_RUM_CREDENTIALS=true
 ARG NAMESPACE
-ARG ELASTICSEARCH_KIBANA_ENDPOINT
-ARG ELASTICSEARCH_APIKEY
 ARG SERVICE_VERSION
 ARG SERVICE_NAME="trader-app-web"
 
@@ -18,26 +19,11 @@ RUN npm install
 
 COPY trader-app/src src
 COPY trader-app/public public
+COPY telemetry.js .
 
-RUN echo "\
-    import { init as initApm } from '@elastic/apm-rum'; \n\
-    const apm = initApm({ \n\
-        serviceName: '${SERVICE_NAME}', \n\
-        serverUrl: '${ELASTICSEARCH_RUM_FE_ENDPOINT}', \n\
-        sendCredentials: ${ELASTICSEARCH_RUM_CREDENTIALS}, \n\
-        serviceVersion: '${SERVICE_VERSION}', \n\
-        environment: '${NAMESPACE}' \n\
-    }); \n\
-    export default apm; \n\
-" > src/rum.js;
-RUN echo "import apm from './rum';\n" | cat - src/index.js > temp && mv temp src/index.js;
+RUN envsubst < telemetry.js > src/telemetry.js
+RUN echo "import apm from './telemetry';\n" | cat - src/index.js > temp && mv temp src/index.js;
 
 RUN npm run build
-
-# COPY upload_source_map.sh build/
-# RUN export ELASTICSEARCH_APIKEY=$ELASTICSEARCH_APIKEY
-# RUN export SERVICE_NAME=$SERVICE_NAME
-# RUN export SERVICE_VERSION=$SERVICE_VERSION
-# RUN cd build && ./upload_source_map.sh || true
 
 CMD rm -rf /build/* && cp -r /app/build/. /build/
