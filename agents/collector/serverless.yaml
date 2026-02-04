@@ -184,8 +184,8 @@ collectors:
   daemon:
     fullnameOverride: "opentelemetry-kube-stack-daemon"
     env:
-      - name: ELASTIC_AGENT_OTEL
-        value: '"true"'
+      # - name: ELASTIC_AGENT_OTEL
+      #   value: '"true"'
     volumeMounts:
       - name: varlogpods
         mountPath: /var/log/pods
