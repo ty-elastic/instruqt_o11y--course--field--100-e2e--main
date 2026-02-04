@@ -215,7 +215,7 @@ def delete_existing_workflow(kibana_server, kibana_auth, es_host, workflow_name)
             print(e)        
                 
 
-def load_workflows(kibana_server, kibana_auth, es_host, ai_connector, ai_proxy, snow_host, snow_auth):
+def load_workflows(kibana_server, kibana_auth, es_host, remote_host = None):
 
     directory_path = "workflows"
     target_extension = ".yaml"
@@ -237,7 +237,11 @@ def load_workflows(kibana_server, kibana_auth, es_host, ai_connector, ai_proxy, 
                     
                     delete_existing_workflow(kibana_server, kibana_auth, es_host, parsed['name'])
                     print(f"loading {parsed['name']}")
-                    
+
+                    if 'consts' in parsed:
+                        if 'remote_host' in parsed['consts'] and remote_host is not None:
+                            parsed['consts']['remote_host'] = remote_host
+
                     # parsed['consts']['kbn_host'] = kibana_server
                     # parsed['consts']['kbn_auth'] = kibana_auth
                     # parsed['consts']['es_host'] = es_host    
@@ -469,9 +473,10 @@ def run_workflow(kibana_server, kibana_auth, workflow_name):
 @click.option('--snow_host', default="TBD", help='snow host')
 @click.option('--snow_authbasic', default="TBD", help='basic for auth')
 @click.option('--ai_connector', default="Elastic-Managed-LLM", help='ai connector id')
+@click.option('--remote_host', default=None, help='remote host url')
 @click.option('--ai_proxy', default="https://tbekiares-demo-aiassistantv2-1059491012611.us-central1.run.app", help='ai proxy host')
 @click.argument('action')
-def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, ai_connector, ai_proxy, action, snow_host, snow_authbasic):
+def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, ai_connector, ai_proxy, action, snow_host, snow_authbasic, remote_host):
     
     config = dotenv_values()
     for key, value in config.items():
@@ -530,7 +535,7 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, ai_conne
         load_agent_tools(kibana_host, auth)
         print('done')
     elif action == 'load':
-        load_workflows(kibana_host, auth, es_host, ai_connector, ai_proxy, snow_host, snow_auth)
+        load_workflows(kibana_host, auth, es_host, remote_host)
         load_new_knowledge(es_host, auth)
         load_agent_tools(kibana_host, auth)
         load_agents(kibana_host, auth)

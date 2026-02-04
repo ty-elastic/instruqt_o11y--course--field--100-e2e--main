@@ -1,0 +1,27 @@
+name: alert_handler
+enabled: true
+description: Perform RCA on alerts
+tags:
+  - "training"
+triggers:
+  - type: alert
+steps:
+- name: foreach_alert
+  type: foreach
+  foreach: '{{ event.alerts }}'
+  steps:
+  - name: correlate
+    type: kibana.request
+    with:
+      method: POST
+      path: /api/agent_builder/converse
+      headers:
+        kbn-xsrf: 'true'
+      body:
+        agent_id: observability.agent
+        input: |
+          Perform Root Cause Analysis on this alert: 
+          ```json
+          {{ foreach.item | json }}
+          ```
+

@@ -63,6 +63,7 @@ elasticsearch_es_endpoint="na"
 elasticsearch_kibana_endpoint="na"
 elasticsearch_api_key="na"
 elasticsearch_otlp_endpoint="na"
+remote_endpoint="na"
 
 unameOut="$(uname -s)"
 case "${unameOut}" in
@@ -71,7 +72,7 @@ case "${unameOut}" in
     *)          machine="UNKNOWN:${unameOut}"
 esac
 
-while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:" opt
+while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:" opt
 do
    case "$opt" in
       a ) arch="$OPTARG" ;;
@@ -88,6 +89,7 @@ do
       v ) service_version="$OPTARG" ;;
 
       p ) profiling="$OPTARG" ;;
+      e ) remote_endpoint="$OPTARG" ;;
 
       h ) elasticsearch_kibana_endpoint="$OPTARG" ;;
       i ) elasticsearch_api_key="$OPTARG" ;;
@@ -280,6 +282,12 @@ for current_region in "${regions[@]}"; do
         retry_command_lin check_assets $JOB_ID
     fi
 
+    if [ "$remote_endpoint" != "na" ]; then
+        cd utils/remote
+        envsubst < remote.yaml | kubectl apply -f -
+        cd ../..
+    fi
+    
 done
 
 

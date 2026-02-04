@@ -14,5 +14,7 @@ virtualmachines:
   shell: /bin/bash
   memory: 16384
   cpus: 4
+  allow_external_ingress:
+  - high-ports 
 secrets:
 - name: ESS_CLOUD_API_KEY
