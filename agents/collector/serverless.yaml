@@ -249,13 +249,11 @@ collectors:
 
                   - set(time, Time(attributes["_meta.date"], "%Y-%m-%dT%H:%M:%SZ"))
                   - set(severity_text, attributes["_meta.logLevelName"])
-                  - set(severity_number, attributes["_meta.logLevelId"])
+                  - set(severity_number, Int(attributes["_meta.logLevelId"]))
                   - delete_matching_keys(attributes, "_meta\\..*")
 
                   - set(body, attributes["0"])
                   - delete_key(attributes, "0")
-
-                  - replace_all_patterns(attributes, "key", "\\d+\\.", "")
         resource/logs_routing:
           attributes:
             - key: data_stream.dataset
