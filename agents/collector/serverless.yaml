@@ -192,10 +192,17 @@ collectors:
       - name: varlogpods
         mountPath: /var/log/pods
         readOnly: true
+      - name: debugfs
+        mountPath: /sys/kernel/debug
+        readOnly: true
     volumes:
       - name: varlogpods
         hostPath:
           path: /var/log/pods
+      - name: debugfs
+        hostPath:
+          path: /sys/kernel/debug
+          type: Directory
     presets:
       logsCollection:
         enabled: false # Enable/disable the collection of node's logs.
@@ -214,7 +221,7 @@ collectors:
         add:
           - SYS_ADMIN
     hostPID: true
-    
+
     scrape_configs_file: "" # [Prometheus metrics](https://github.com/open-telemetry/opentelemetry-helm-charts/tree/main/charts/opentelemetry-kube-stack#scrape_configs_file-details)
     config:
       extensions:
