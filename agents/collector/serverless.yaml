@@ -370,9 +370,9 @@ collectors:
               - "service.version"
               - "service.instance.id"
       connectors:
-        profilingmetrics:
+        profilingmetrics: {}
       receivers:
-        profiling:
+        profiling: {}
 
         # [OTLP Receiver](https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver)
         otlp:
