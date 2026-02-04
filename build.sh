@@ -36,7 +36,7 @@ case "${unameOut}" in
     *)          machine="UNKNOWN:${unameOut}"
 esac
 
-while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:g:" opt
+while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:" opt
 do
    case "$opt" in
       a ) arch="$OPTARG" ;;
@@ -229,8 +229,10 @@ for current_region in "${regions[@]}"; do
         cd ../..
     fi
 
-    if [ "$grafana" != "true" ]; then
-        envsubst < /workspace/workshop/prometheus-grafana/grafana.yaml | kubectl apply -f -
+    if [ "$grafana" = "true" ]; then
+        cd prometheus-grafana
+        envsubst < grafana.yaml | kubectl apply -f -
+        cd ..
     fi
     
 done
