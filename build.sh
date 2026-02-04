@@ -51,6 +51,7 @@ namespace_base=trading
 region=1
 service_version="1.0"
 assets=false
+profiling=false
 
 build_service=false
 build_lib=false
@@ -70,7 +71,7 @@ case "${unameOut}" in
     *)          machine="UNKNOWN:${unameOut}"
 esac
 
-while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:" opt
+while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:" opt
 do
    case "$opt" in
       a ) arch="$OPTARG" ;;
@@ -85,6 +86,8 @@ do
 
       r ) region="$OPTARG" ;;
       v ) service_version="$OPTARG" ;;
+
+      p ) profiling="$OPTARG" ;;
 
       h ) elasticsearch_kibana_endpoint="$OPTARG" ;;
       i ) elasticsearch_api_key="$OPTARG" ;;
@@ -249,6 +252,11 @@ for current_region in "${regions[@]}"; do
         retry_command_lin check_otel
         echo "restarting deployment"
         kubectl -n $namespace rollout restart deployment
+    fi
+
+    if [ "$profiling" = "true" ]; then
+        echo "enabling profiling"
+        kubectl apply -f agents/collector/profiler.yaml
     fi
 
     if [ "$assets" = "true" ]; then
