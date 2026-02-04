@@ -19,8 +19,8 @@ defaultCRConfig:
   image:
     repository: "docker.elastic.co/elastic-agent/elastic-agent"
     tag: "9.3.0"
-  command:
-    - "/otelcol"
+  command.name: "/otelcol"
+  command.args: 
     - "--config=/conf/collector.yaml"
     - "--feature-gates=service.profilesSupport"
   targetAllocator:
