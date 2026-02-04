@@ -165,7 +165,7 @@ for current_region in "${regions[@]}"; do
     if [ "$deploy_otel" != "false" ]; then
         # ---------- COLLECTOR
         if [ "$deploy_otel" = "true" ]; then
-            deploy_otel="values"
+            deploy_otel="stack"
         fi
 
         echo "deploying $deploy_otel.yaml"
