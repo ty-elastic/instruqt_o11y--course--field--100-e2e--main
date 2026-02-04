@@ -248,7 +248,7 @@ collectors:
             log_statements:
               - context: log
                 conditions:
-                  - body != nil and Substring(body, 0, 2) == "{\""
+                  - body != nil and Len(body) >= 2 and Substring(body, 0, 2) == "{\""
                 statements:
                   - set(cache, ParseJSON(body))
                   - flatten(cache, "")
