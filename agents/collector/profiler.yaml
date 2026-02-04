@@ -66,12 +66,14 @@ spec:
               mountPath: /sys/kernel/debug
               readOnly: true
           securityContext:
+            runAsUser: 0
+            runAsGroup: 0
             privileged: true
-            procMount: "Unmasked"
+            #procMount: "Unmasked"
             capabilities:
               add:
                 - SYS_ADMIN
-      hostUsers: false
+      #hostUsers: false
       hostPID: true
       restartPolicy: Always
       volumes:
