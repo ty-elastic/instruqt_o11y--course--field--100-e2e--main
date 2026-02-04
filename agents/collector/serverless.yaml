@@ -17,13 +17,8 @@ crds:
   create: true # Install the OpenTelemetry Operator CRDs.
 defaultCRConfig:
   image:
-    repository: "docker.elastic.co/elastic-agent/elastic-agent"
-    tag: "9.3.0"
-  command:
-    name: "/otelcol"
-    args: 
-      - "--config=/conf/collector.yaml"
-      - "--feature-gates=service.profilesSupport"
+    repository: "us-central1-docker.pkg.dev/elastic-sa/tbekiares/collector"
+    tag: "o11y--course--field--100-e2e"
   targetAllocator:
     enabled: false # Enable/disable the Operator's Target allocator.
     # Refer to: https://github.com/open-telemetry/opentelemetry-operator/tree/main/cmd/otel-allocator
