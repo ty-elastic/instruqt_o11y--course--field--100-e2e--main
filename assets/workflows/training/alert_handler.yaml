@@ -10,7 +10,7 @@ steps:
   type: foreach
   foreach: '{{ event.alerts }}'
   steps:
-  - name: correlate
+  - name: rca
     type: kibana.request
     with:
       method: POST
@@ -24,4 +24,30 @@ steps:
           ```json
           {{ foreach.item | json }}
           ```
+          Output format: respond only in valid JSON format with no newlines, no extra spaces, and with no prefixes or postfixes (DO NOT USE ```json prefix and ``` postfix) in your response!
+          * output a JSON field called 'title' that summarizes the attached alert in a few words
+          * output a JSON field called 'description' that provides a detailed summary of the alert
+          * output a JSON field called 'severity' with a value of 'low', 'medium', 'high', or 'critical' based on an analysis of the alert
+
+  - name: rca_parse
+    type: console
+    with:
+      message: ${{ steps.rca.output.response.message | json_parse }}
+
+  - name: create_new_case
+    type: kibana.createCaseDefaultSpace
+    with:
+      connector:
+        id: 'none'
+        name: 'none'
+        type: .none
+        fields:
+      description: '{{ steps.rca_parse.output.description }}'
+      owner: observability
+      settings:
+        syncAlerts: true
+      severity: '{{ steps.rca_parse.output.severity }}'
+      tags:
+      - training
+      title: '{{ steps.rca_parse.output.title }}'
 
