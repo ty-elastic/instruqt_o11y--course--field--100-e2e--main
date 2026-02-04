@@ -208,15 +208,12 @@ collectors:
     securityContext: # Run the daemon as the root user and group for proper metrics collection.
       runAsUser: 0
       runAsGroup: 0
-      # The following capabilities are needed for Universal Profiling.
-      # More fine graded capabilities are only available for newer Linux kernels.
-      # If you are using the Universal Profiling integration, please uncomment these lines before applying.
-      procMount: "Unmasked"
+      # ebpf
       privileged: true
       capabilities:
         add:
           - SYS_ADMIN
-    hostPID: true # Allows access to the host's PID namespace
+    hostPID: true
     
     scrape_configs_file: "" # [Prometheus metrics](https://github.com/open-telemetry/opentelemetry-helm-charts/tree/main/charts/opentelemetry-kube-stack#scrape_configs_file-details)
     config:
