@@ -250,17 +250,17 @@ collectors:
                 conditions:
                   - body != nil and Len(body) >= 2 and Substring(body, 0, 2) == "{\""
                 statements:
-                  - set(cache, ParseJSON(body))
-                  - flatten(cache, "")
-                  - merge_maps(attributes, cache, "upsert")
+                  # - set(cache, ParseJSON(body))
+                  # - flatten(cache, "")
+                  # - merge_maps(attributes, cache, "upsert")
 
-                  - set(time, Time(attributes["_meta.date"], "%Y-%m-%dT%H:%M:%SZ"))
-                  - set(severity_text, attributes["_meta.logLevelName"])
-                  - set(severity_number, Int(attributes["_meta.logLevelId"]))
-                  - delete_matching_keys(attributes, "_meta\\..*")
+                  # - set(time, Time(attributes["_meta.date"], "%Y-%m-%dT%H:%M:%SZ"))
+                  # - set(severity_text, attributes["_meta.logLevelName"])
+                  # - set(severity_number, Int(attributes["_meta.logLevelId"]))
+                  # - delete_matching_keys(attributes, "_meta\\..*")
 
-                  - set(body, attributes["0"])
-                  - delete_key(attributes, "0")
+                  # - set(body, attributes["0"])
+                  # - delete_key(attributes, "0")
         resource/logs_routing:
           attributes:
             - key: data_stream.dataset
