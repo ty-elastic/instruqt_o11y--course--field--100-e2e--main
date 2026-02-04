@@ -52,7 +52,7 @@ tabs:
   title: OTel Operator YAML
   type: code
   hostname: k3s
-  path: /workspace/workshop/agents/collector
+  path: /workspace/workshop/agents/apm
 - id: qr48xrusvahx
   title: eshost
   type: terminal
