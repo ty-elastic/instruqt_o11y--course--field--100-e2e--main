@@ -25,11 +25,3 @@ git checkout main
 # ----------------------------------------- SETUP SERVERLESS
 
 source /workspace/workshop/instruqt/scripts/serverless/create.sh
-
-source /workspace/workshop/instruqt/scripts/vars.sh -w true
-
-source /workspace/workshop/instruqt/scripts/genai.sh
-source /workspace/workshop/instruqt/scripts/workflow.sh
-source /workspace/workshop/instruqt/scripts/streams.sh
-
-source /workspace/workshop/instruqt/scripts/integrations.sh

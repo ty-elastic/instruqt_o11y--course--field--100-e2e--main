@@ -48,7 +48,7 @@ tabs:
   type: code
   hostname: k3s
   path: /workspace/workshop/k8s/yaml
-- id: fqewbjcpqcyt
+- id: ded3xt94i2f7
   title: OTel Operator YAML
   type: code
   hostname: k3s
