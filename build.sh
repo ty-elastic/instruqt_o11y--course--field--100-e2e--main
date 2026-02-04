@@ -257,6 +257,10 @@ for current_region in "${regions[@]}"; do
     if [ "$profiling" = "true" ]; then
         echo "enabling profiling"
         kubectl apply -f agents/collector/profiler.yaml
+
+        curl -X POST "$elasticsearch_kibana_endpoint/api/fleet/epm/packages/profilingmetrics_otel/0.0.2" \
+            -H 'kbn-xsrf: true' \
+            -H "Authorization: ApiKey ${elasticsearch_api_key}"
     fi
 
     if [ "$assets" = "true" ]; then
