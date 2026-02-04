@@ -95,7 +95,7 @@ export function initOpenTelemetry(config) {
   registerInstrumentations({
     instrumentations: [
     getWebAutoInstrumentations({
-      // load custom configuration for xml-http-request instrumentation
+      // load custom configuration for instrumentation-user-interaction
       '@opentelemetry/instrumentation-user-interaction': {
         eventNames: ['submit', 'click'],
       },

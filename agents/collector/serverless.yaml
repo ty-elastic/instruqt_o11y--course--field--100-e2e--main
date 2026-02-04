@@ -18,7 +18,11 @@ crds:
 defaultCRConfig:
   image:
     repository: "docker.elastic.co/elastic-agent/elastic-agent"
-    tag: "9.2.4"
+    tag: "9.3.0"
+  command:
+    - "/otelcol"
+    - "--config=/conf/collector.yaml"
+    - "--feature-gates=service.profilesSupport"
   targetAllocator:
     enabled: false # Enable/disable the Operator's Target allocator.
     # Refer to: https://github.com/open-telemetry/opentelemetry-operator/tree/main/cmd/otel-allocator
@@ -367,7 +371,15 @@ collectors:
               - "service.name"
               - "service.version"
               - "service.instance.id"
+      connectors:
+        profilingmetrics:
+          by_frame: true
+          by_frametype: true
+          by_classification: true
       receivers:
+        profiling:
+          SamplesPerSecond: 19
+
         # [OTLP Receiver](https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver)
         otlp:
           protocols:
@@ -506,6 +518,9 @@ collectors:
       service:
         extensions: [k8s_observer]
         pipelines:
+          profiles:
+            receivers: [ profiling ]
+            exporters: [ profilingmetrics ]
           # Disable default non used kube-stack Helm Chart pipelines
           logs: null
           metrics: null
@@ -532,6 +547,7 @@ collectors:
             receivers:
               - kubeletstats
               - hostmetrics
+              - profilingmetrics
             processors:
               - batch/metrics
               - k8sattributes
@@ -610,9 +626,9 @@ collectors:
         otlp:
           protocols:
             grpc:
-              endpoint: ${env:MY_POD_IP}:4317
+              endpoint: ${env:OTEL_K8S_POD_IP}:4317
             http:
-              endpoint: ${env:MY_POD_IP}:4318
+              endpoint: ${env:OTEL_K8S_POD_IP}:4318
       processors: {}
       exporters:
         debug:
@@ -673,12 +689,12 @@ instrumentation:
     type: parentbased_traceidratio # Sampler type
     argument: "1.0" # Sampling rate set to 100% (all traces are sampled).
   java:
-    image: docker.elastic.co/observability/elastic-otel-javaagent:1.6.0
+    image: docker.elastic.co/observability/elastic-otel-javaagent:1.7.0
   nodejs:
-    image: docker.elastic.co/observability/elastic-otel-node:1.5.0
+    image: docker.elastic.co/observability/elastic-otel-node:1.6.0
   dotnet:
     image: docker.elastic.co/observability/elastic-otel-dotnet:1.1.0
   python:
-    image: docker.elastic.co/observability/elastic-otel-python:1.9.0
+    image: docker.elastic.co/observability/elastic-otel-python:1.10.0
   go:
     image: ghcr.io/open-telemetry/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.23.0
