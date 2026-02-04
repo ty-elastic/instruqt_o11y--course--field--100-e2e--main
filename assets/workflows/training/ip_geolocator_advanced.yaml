@@ -1,5 +1,5 @@
 version: "1"
-name: ip_geolocator
+name: ip_geolocator_advanced
 description: "Geolocate an IP address using a public API"
 enabled: true
 tags:
@@ -18,37 +18,46 @@ triggers:
   - type: manual
 
 steps:
-  - name: get_geolocation
-    type: http
-    with:
-      url: "{{ consts.ip_api_base_url }}/{{ inputs.ip_address }}"
-      method: GET
-    on-failure:
-      retry:
-        max-attempts: 2
-        delay: 1s
+  - name: test_address
+    type: if
+    condition: 'inputs.ip_address : 0.0.0.0'
+    steps:
+    - name: bad_ip
+      type: console
+      with:
+        message: "malformed IP: {{ inputs.ip_address }}"
+    else:
+    - name: get_geolocation
+      type: http
+      with:
+        url: "{{ consts.ip_api_base_url }}/{{ inputs.ip_address }}"
+        method: GET
+      on-failure:
+        retry:
+          max-attempts: 2
+          delay: 1s
 
-  - name: print_location
-    type: console
-    with:
-      message: >-
-        {% assign status = steps.get_geolocation.output.data.status %}
-        {% assign cc = steps.get_geolocation.output.data.countryCode %}
-        {% assign city = steps.get_geolocation.output.data.city %}
-        {% assign country = steps.get_geolocation.output.data.country %}
-        {% assign europe = "AL,AD,AT,BA,BE,BG,BY,CH,HR,CY,CZ,DE,DK,EE,ES,FI,FO,FR,GB,GG,GI,GR,HU,IE,IM,IS,IT,JE,LI,LT,LU,LV,MC,MD,ME,MK,MT,NL,NO,PL,PT,RO,RS,SE,SI,SK,SM,UA,VA" %}
-        {% assign asia = "AE,AM,AZ,BH,BD,BN,BT,KH,CN,GE,HK,ID,IL,IN,IQ,IR,JO,JP,KG,KR,KW,KZ,LA,LB,LK,MM,MN,MO,MY,NP,OM,PH,PK,QA,SA,SG,SY,TH,TJ,TL,TM,TW,UZ,VN,YE" %}
+    - name: print_location
+      type: console
+      with:
+        message: >-
+          {% assign status = steps.get_geolocation.output.data.status %}
+          {% assign cc = steps.get_geolocation.output.data.countryCode %}
+          {% assign city = steps.get_geolocation.output.data.city %}
+          {% assign country = steps.get_geolocation.output.data.country %}
+          {% assign europe = "AL,AD,AT,BA,BE,BG,BY,CH,HR,CY,CZ,DE,DK,EE,ES,FI,FO,FR,GB,GG,GI,GR,HU,IE,IM,IS,IT,JE,LI,LT,LU,LV,MC,MD,ME,MK,MT,NL,NO,PL,PT,RO,RS,SE,SI,SK,SM,UA,VA" %}
+          {% assign asia = "AE,AM,AZ,BH,BD,BN,BT,KH,CN,GE,HK,ID,IL,IN,IQ,IR,JO,JP,KG,KR,KW,KZ,LA,LB,LK,MM,MN,MO,MY,NP,OM,PH,PK,QA,SA,SG,SY,TH,TJ,TL,TM,TW,UZ,VN,YE" %}
 
-        {% if status == "success" %}
-          {% if cc == "US" %}
-            🇺🇸 United States-based IP from {{ city }}.
-          {% elsif europe contains cc %}
-            🇪🇺 Europe-based IP from {{ city }}, {{ country }}.
-          {% elsif asia contains cc %}
-            🌏 Asia-based IP from {{ city }}, {{ country }}.
+          {% if status == "success" %}
+            {% if cc == "US" %}
+              🇺🇸 United States-based IP from {{ city }}.
+            {% elsif europe contains cc %}
+              🇪🇺 Europe-based IP from {{ city }}, {{ country }}.
+            {% elsif asia contains cc %}
+              🌏 Asia-based IP from {{ city }}, {{ country }}.
+            {% else %}
+              🌍 IP from {{ country }}.
+            {% endif %}
           {% else %}
-            🌍 IP from {{ country }}.
+            This IP could not be geolocated (private or unknown range).
           {% endif %}
-        {% else %}
-          This IP could not be geolocated (private or unknown range).
-        {% endif %}

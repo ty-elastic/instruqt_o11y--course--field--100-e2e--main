@@ -190,17 +190,10 @@ collectors:
       - name: varlogpods
         mountPath: /var/log/pods
         readOnly: true
-      - name: debugfs
-        mountPath: /sys/kernel/debug
-        readOnly: true
     volumes:
       - name: varlogpods
         hostPath:
           path: /var/log/pods
-      - name: debugfs
-        hostPath:
-          path: /sys/kernel/debug
-          type: Directory
     presets:
       logsCollection:
         enabled: false # Enable/disable the collection of node's logs.
@@ -213,14 +206,6 @@ collectors:
     securityContext: # Run the daemon as the root user and group for proper metrics collection.
       runAsUser: 0
       runAsGroup: 0
-      # ebpf
-      privileged: true
-      #procMount: "Unmasked"
-      capabilities:
-        add:
-          - SYS_ADMIN
-    hostPID: true
-
     scrape_configs_file: "" # [Prometheus metrics](https://github.com/open-telemetry/opentelemetry-helm-charts/tree/main/charts/opentelemetry-kube-stack#scrape_configs_file-details)
     config:
       extensions:
@@ -380,11 +365,7 @@ collectors:
               - "service.name"
               - "service.version"
               - "service.instance.id"
-      connectors:
-        profilingmetrics: {}
       receivers:
-        profiling: {}
-
         # [OTLP Receiver](https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver)
         otlp:
           protocols:
@@ -523,9 +504,6 @@ collectors:
       service:
         extensions: [k8s_observer]
         pipelines:
-          profiles:
-            receivers: [ profiling ]
-            exporters: [ profilingmetrics ]
           # Disable default non used kube-stack Helm Chart pipelines
           logs: null
           metrics: null
@@ -552,7 +530,6 @@ collectors:
             receivers:
               - kubeletstats
               - hostmetrics
-              - profilingmetrics
             processors:
               - batch/metrics
               - k8sattributes
@@ -562,7 +539,6 @@ collectors:
               - resourcedetection/aks
               - resource/hostname
               - resource/cloud
-              - resource/environment
             exporters:
               # - debug
               - otlp/gateway
