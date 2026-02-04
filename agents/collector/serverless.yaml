@@ -217,6 +217,7 @@ collectors:
       runAsGroup: 0
       # ebpf
       privileged: true
+      procMount: "Unmasked"
       capabilities:
         add:
           - SYS_ADMIN
