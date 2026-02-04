@@ -46,10 +46,7 @@ cd /workspace/workshop
 
 source /workspace/workshop/instruqt/scripts/vars.sh -w true
 
-source /workspace/workshop/instruqt/scripts/synthetics.sh
-
 cd /workspace/workshop
-echo "http://$HOSTNAME.$_SANDBOX_ID.instruqt.io:43210"
-./build.sh -o serverless -c $COURSE -d true -b false -s all -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -w true -y false -p true -e http://$HOSTNAME.$_SANDBOX_ID.instruqt.io:43210
+./build.sh -o serverless -c $COURSE -d true -b false -s all -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -g true -w true -p true -e http://$HOSTNAME.$_SANDBOX_ID.instruqt.io:43210
 
-envsubst < /workspace/workshop/prometheus-grafana/grafana.yaml | kubectl apply -f -
+

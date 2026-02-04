@@ -1,41 +1,4 @@
-retry_command_lin() {
-    local max_attempts=256
-    local timeout=2
-    local attempt=1
-    local exit_code=0
-
-    while [ $attempt -le $max_attempts ]
-    do
-        "$@"
-        exit_code=$?
-
-        if [ $exit_code -eq 0 ]; then
-            break
-        fi
-
-        echo "Attempt $attempt failed! Retrying in $timeout seconds..."
-        sleep $timeout
-        attempt=$(( attempt + 1 ))
-    done
-
-    if [ $exit_code -ne 0 ]; then
-        echo "Command $@ failed after $attempt attempts!"
-    fi
-
-    return $exit_code
-}
-
-check_otel() {
-    kubectl wait --for=condition=Ready pods --all -n opentelemetry-operator-system --timeout=120s
-
-    if kubectl describe otelinst -n opentelemetry-operator-system | grep -q "No resources found"; then
-        echo "otel operator not yet ready"
-        return 1
-    else
-        echo "otel operator ready"
-        return 0
-    fi
-}
+source assets/scripts/retry.sh
 
 check_assets() {
     kubectl wait --for=condition=complete job/assets-$1 --timeout=120s
@@ -52,12 +15,13 @@ region=1
 service_version="1.0"
 assets=false
 profiling=false
+grafana=false
 
 build_service=false
 build_lib=false
 deploy_otel=false
 deploy_service=false
-annotations=true
+annotations=false
 
 elasticsearch_es_endpoint="na"
 elasticsearch_kibana_endpoint="na"
@@ -72,13 +36,15 @@ case "${unameOut}" in
     *)          machine="UNKNOWN:${unameOut}"
 esac
 
-while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:" opt
+while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:g:" opt
 do
    case "$opt" in
       a ) arch="$OPTARG" ;;
       c ) course="$OPTARG" ;;
       s ) service="$OPTARG" ;;
       l ) local="$OPTARG" ;;
+
+      g ) grafana="$OPTARG" ;;
 
       b ) build_service="$OPTARG" ;;
       x ) build_lib="$OPTARG" ;;
@@ -170,28 +136,7 @@ for current_region in "${regions[@]}"; do
             deploy_otel="stack"
         fi
 
-        echo "deploying $deploy_otel.yaml"
-
-        helm repo add open-telemetry 'https://open-telemetry.github.io/opentelemetry-helm-charts' --force-update
-
-        kubectl create namespace opentelemetry-operator-system
-
-        kubectl --namespace opentelemetry-operator-system delete secret generic elastic-secret-otel
-        kubectl create secret generic elastic-secret-otel \
-            --namespace opentelemetry-operator-system \
-            --from-literal=elastic_otlp_endpoint="$elasticsearch_otlp_endpoint" \
-            --from-literal=elastic_endpoint="$elasticsearch_es_endpoint" \
-            --from-literal=elastic_api_key="$elasticsearch_api_key"
-
-        cd agents/collector
-        helm upgrade --install opentelemetry-kube-stack open-telemetry/opentelemetry-kube-stack \
-        --namespace opentelemetry-operator-system \
-        --values "$deploy_otel.yaml" \
-        --version '0.12.4'
-        cd ../..
-
-        kubectl -n opentelemetry-operator-system rollout restart deployment
-        #sleep 30
+        assets/scripts/otel.sh  -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint -w false -o $deploy_otel
     fi
 
     if [[ "$deploy_service" == "true" || "$deploy_service" == "delete" || "$deploy_service" == "force" ]]; then
@@ -251,40 +196,16 @@ for current_region in "${regions[@]}"; do
     fi
 
     if [ "$deploy_otel" != "false" ]; then
-        retry_command_lin check_otel
-        echo "restarting deployment"
-        kubectl -n $namespace rollout restart deployment
+        assets/scripts/otel.sh  -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint -w true -o $deploy_otel
     fi
 
     if [ "$profiling" = "true" ]; then
-        echo "enabling profiling"
-        kubectl apply -f agents/collector/profiler.yaml
-
-        output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/api/fleet/epm/packages/profilingmetrics_otel/0.0.2" \
-            -H 'kbn-xsrf: true' \
-            -H "Authorization: ApiKey ${elasticsearch_api_key}")
-
-        echo "Configuring custom dashboards"
-        curl -X POST "$elasticsearch_kibana_endpoint/internal/kibana/settings" \
-            -H 'kbn-xsrf: true' \
-            -H 'x-elastic-internal-origin: Kibana' \
-            -H "Authorization: ApiKey ${elasticsearch_api_key}" \
-            -H 'Content-Type: application/json' \
-            -d '{"changes":{"observability:enableInfrastructureAssetCustomDashboards": true}}'
-
-        DASHBOARD=$(echo $output | jq -r '.items[] | select (.type == "dashboard")')
-        DASHBOARD_ID=$(echo $DASHBOARD | jq -r '.id')
-        echo $DASHBOARD_ID
-
-        curl -X POST "$elasticsearch_kibana_endpoint/api/infra/host/custom-dashboards" \
-            -H 'kbn-xsrf: true' \
-            -H 'x-elastic-internal-origin: Kibana' \
-            -H "Authorization: ApiKey ${elasticsearch_api_key}" \
-            -H 'Content-Type: application/json' \
-            -d '{"dashboardSavedObjectId": "'$DASHBOARD_ID'", "dashboardFilterAssetIdEnabled":true}'
+        assets/scripts/profiling.sh -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
     fi
 
     if [ "$assets" = "true" ]; then
+        assets/scripts/features.sh  -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+
         cd assets
         #./build.sh -r $repo -c $course -a $arch
         export COURSE=$course
@@ -306,6 +227,10 @@ for current_region in "${regions[@]}"; do
         cd utils/remote
         envsubst < remote.yaml | kubectl apply -f -
         cd ../..
+    fi
+
+    if [ "$grafana" != "true" ]; then
+        envsubst < /workspace/workshop/prometheus-grafana/grafana.yaml | kubectl apply -f -
     fi
     
 done

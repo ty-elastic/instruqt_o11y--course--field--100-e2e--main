@@ -1,6 +1,18 @@
-source /workspace/workshop/instruqt/scripts/retry.sh
+source assets/scripts/retry.sh
 
-AGENT_VERSION=9.2.2
+while getopts "n:h:i:j:k:" opt
+do
+   case "$opt" in
+      n ) namespace="$OPTARG" ;;
+
+      h ) elasticsearch_kibana_endpoint="$OPTARG" ;;
+      i ) elasticsearch_api_key="$OPTARG" ;;
+      j ) elasticsearch_es_endpoint="$OPTARG" ;;
+      k ) elasticsearch_otlp_endpoint="$OPTARG" ;;
+   esac
+done
+
+AGENT_VERSION=9.3.0
 
 ####################################################################### CREATE POLICY
 POLICY_NUM=0
@@ -8,9 +20,9 @@ POLICY_NUM=0
 create_policy() {
     ((POLICY_NUM++))
 
-    output=$(curl -s -X POST "$KIBANA_URL/api/fleet/agent_policies?sys_monitoring=false" \
+    output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/api/fleet/agent_policies?sys_monitoring=false" \
       --header 'Content-Type: application/json' \
-      --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
+      -H "Authorization: ApiKey ${elasticsearch_api_key}" \
       --header 'kbn-xsrf: true' \
       --data '{
       "name": "Synthetics '$POLICY_NUM'",
@@ -36,9 +48,9 @@ create_policy() {
 }
 retry_command_lin create_policy
 
-output=$(curl -s -X GET "$KIBANA_URL/api/fleet/enrollment_api_keys" \
+output=$(curl -s -X GET "$elasticsearch_kibana_endpoint/api/fleet/enrollment_api_keys" \
   --header 'Content-Type: application/json' \
-  --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
+  -H "Authorization: ApiKey ${elasticsearch_api_key}" \
   --header 'kbn-xsrf: true')
 #echo $output
 
@@ -55,13 +67,13 @@ echo $ENROLLMENT_API_KEY
 
 # ------------- START AGENT
 
-envsubst < /workspace/workshop/instruqt/scripts/synthetics.yaml | kubectl apply -f -
+envsubst < agents/synthetics/synthetics.yaml | kubectl apply -f -
 
 # ------------- CREATE PRIVATE MONITOR
 
 curl \
- -X POST "$KIBANA_URL/api/synthetics/private_locations" \
- --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
+ -X POST "$elasticsearch_kibana_endpoint/api/synthetics/private_locations" \
+ -H "Authorization: ApiKey ${elasticsearch_api_key}" \
  --header "Content-Type: application/json" \
  --header 'kbn-xsrf: true' \
  --data '{
@@ -75,5 +87,3 @@ curl \
       "*"
     ]
 }'
-
-
