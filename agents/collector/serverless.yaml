@@ -17,8 +17,10 @@ crds:
   create: true # Install the OpenTelemetry Operator CRDs.
 defaultCRConfig:
   image:
-    repository: "us-central1-docker.pkg.dev/elastic-sa/tbekiares/collector"
-    tag: "o11y--course--field--100-e2e"
+    # repository: "us-central1-docker.pkg.dev/elastic-sa/tbekiares/collector"
+    # tag: "o11y--course--field--100-e2e"
+    repository: "docker.elastic.co/elastic-agent/elastic-agent"
+    tag: "9.3.0"
   targetAllocator:
     enabled: false # Enable/disable the Operator's Target allocator.
     # Refer to: https://github.com/open-telemetry/opentelemetry-operator/tree/main/cmd/otel-allocator
@@ -184,8 +186,8 @@ collectors:
   daemon:
     fullnameOverride: "opentelemetry-kube-stack-daemon"
     env:
-      # - name: ELASTIC_AGENT_OTEL
-      #   value: '"true"'
+      - name: ELASTIC_AGENT_OTEL
+        value: '"true"'
     volumeMounts:
       - name: varlogpods
         mountPath: /var/log/pods
@@ -369,12 +371,8 @@ collectors:
               - "service.instance.id"
       connectors:
         profilingmetrics:
-          by_frame: true
-          by_frametype: true
-          by_classification: true
       receivers:
         profiling:
-          SamplesPerSecond: 19
 
         # [OTLP Receiver](https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver)
         otlp:
