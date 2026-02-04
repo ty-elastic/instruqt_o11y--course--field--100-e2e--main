@@ -48,6 +48,11 @@ tabs:
   type: code
   hostname: k3s
   path: /workspace/workshop/k8s/yaml
+- id: fqewbjcpqcyt
+  title: OTel Operator YAML
+  type: code
+  hostname: k3s
+  path: /workspace/workshop/agents/collector
 - id: qr48xrusvahx
   title: eshost
   type: terminal

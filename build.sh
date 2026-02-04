@@ -260,9 +260,28 @@ for current_region in "${regions[@]}"; do
         echo "enabling profiling"
         kubectl apply -f agents/collector/profiler.yaml
 
-        curl -X POST "$elasticsearch_kibana_endpoint/api/fleet/epm/packages/profilingmetrics_otel/0.0.2" \
+        output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/api/fleet/epm/packages/profilingmetrics_otel/0.0.2" \
             -H 'kbn-xsrf: true' \
-            -H "Authorization: ApiKey ${elasticsearch_api_key}"
+            -H "Authorization: ApiKey ${elasticsearch_api_key}")
+
+        echo "Configuring custom dashboards"
+        curl -X POST "$elasticsearch_kibana_endpoint/internal/kibana/settings" \
+            -H 'kbn-xsrf: true' \
+            -H 'x-elastic-internal-origin: Kibana' \
+            -H "Authorization: ApiKey ${elasticsearch_api_key}" \
+            -H 'Content-Type: application/json' \
+            -d '{"changes":{"observability:enableInfrastructureAssetCustomDashboards": true}}'
+
+        DASHBOARD=$(echo $output | jq -r '.items[] | select (.type == "dashboard")')
+        DASHBOARD_ID=$(echo $DASHBOARD | jq -r '.id')
+        echo $DASHBOARD_ID
+
+        curl -X POST "$elasticsearch_kibana_endpoint/api/infra/host/custom-dashboards" \
+            -H 'kbn-xsrf: true' \
+            -H 'x-elastic-internal-origin: Kibana' \
+            -H "Authorization: ApiKey ${elasticsearch_api_key}" \
+            -H 'Content-Type: application/json' \
+            -d '{"dashboardSavedObjectId": "'$DASHBOARD_ID'", "dashboardFilterAssetIdEnabled":true}'
     fi
 
     if [ "$assets" = "true" ]; then

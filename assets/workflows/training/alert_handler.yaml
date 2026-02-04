@@ -25,9 +25,9 @@ steps:
           {{ foreach.item | json }}
           ```
           Output format: respond only in valid JSON format with no newlines, no extra spaces, and with no prefixes or postfixes (DO NOT USE ```json prefix and ``` postfix) in your response!
-          * output a JSON field called 'title' that summarizes the attached alert in a few words
-          * output a JSON field called 'description' that provides a detailed summary of the alert
-          * output a JSON field called 'severity' with a value of 'low', 'medium', 'high', or 'critical' based on an analysis of the alert
+          * output a JSON field called 'title' that summarizes the attached alert in a few words.
+          * output a JSON field called 'description' that provides a detailed summary of the alert. Use valid markdown format with emojis where appropriate in the value of the 'description' field.
+          * output a JSON field called 'severity' with a value of 'low', 'medium', 'high', or 'critical' based on an analysis of the alert.
 
   - name: rca_parse
     type: console
