@@ -16,5 +16,4 @@ assets/scripts/apm.sh -n $namespace -h $elasticsearch_kibana_endpoint -i $elasti
 assets/scripts/genai.sh -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 assets/scripts/integrations.sh -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 assets/scripts/streams.sh -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
-assets/scripts/synthetics.sh -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 assets/scripts/workflow.sh -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint

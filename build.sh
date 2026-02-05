@@ -16,12 +16,14 @@ service_version="1.0"
 assets=false
 profiling=false
 grafana=false
+features=false
 
 build_service=false
 build_lib=false
 deploy_otel=false
 deploy_service=false
 annotations=false
+synthetics=false
 
 elasticsearch_es_endpoint="na"
 elasticsearch_kibana_endpoint="na"
@@ -36,7 +38,7 @@ case "${unameOut}" in
     *)          machine="UNKNOWN:${unameOut}"
 esac
 
-while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:" opt
+while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:" opt
 do
    case "$opt" in
       a ) arch="$OPTARG" ;;
@@ -44,6 +46,7 @@ do
       s ) service="$OPTARG" ;;
       l ) local="$OPTARG" ;;
 
+      f ) features="$OPTARG" ;;
       g ) grafana="$OPTARG" ;;
 
       b ) build_service="$OPTARG" ;;
@@ -61,6 +64,8 @@ do
       i ) elasticsearch_api_key="$OPTARG" ;;
       j ) elasticsearch_es_endpoint="$OPTARG" ;;
       k ) elasticsearch_otlp_endpoint="$OPTARG" ;;
+
+      m ) synthetics="$OPTARG" ;;
 
       w ) assets="$OPTARG" ;;
       y ) annotations="$OPTARG" ;;
@@ -128,6 +133,10 @@ for current_region in "${regions[@]}"; do
         cd ./lib
         ./build.sh -r $repo -c $course -a $arch
         cd ..
+
+        cd ./assets
+        ./build.sh -r $repo -c $course -a $arch
+        cd .. 
     fi
 
     if [ "$deploy_otel" != "false" ]; then
@@ -203,11 +212,16 @@ for current_region in "${regions[@]}"; do
         assets/scripts/profiling.sh -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
     fi
 
-    if [ "$assets" = "true" ]; then
-        assets/scripts/features.sh  -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+    if [ "$synthetics" = "true" ]; then
+        assets/scripts/synthetics.sh -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+    fi
 
+    if [ "$features" = "true" ]; then
+        assets/scripts/features.sh  -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+    fi
+
+    if [ "$assets" = "true" ]; then
         cd assets
-        #./build.sh -r $repo -c $course -a $arch
         export COURSE=$course
         export REPO=$repo
         export JOB_ID=$(( $RANDOM ))
@@ -216,7 +230,6 @@ for current_region in "${regions[@]}"; do
         export elasticsearch_es_endpoint=$elasticsearch_es_endpoint
         export elasticsearch_api_key=$elasticsearch_api_key  
         export remote_endpoint=$remote_endpoint  
-        envsubst < assets.yaml
         envsubst < assets.yaml | kubectl apply -f -
         cd ..
 
