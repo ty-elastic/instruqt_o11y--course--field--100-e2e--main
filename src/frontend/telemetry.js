@@ -42,7 +42,7 @@ const {
   createSessionManager,
   SessionManager,
   DefaultIdGenerator,
-  LocalStorageSessionStore
+  createLocalStorageSessionStore
 } = require('@opentelemetry/web-common');
 
 const initDone = Symbol('OTEL initialized');
@@ -72,7 +72,7 @@ export function initOpenTelemetry(config) {
   // session manager
   const sessionManager = createSessionManager({
     sessionIdGenerator: createDefaultSessionIdGenerator(),
-    sessionStore: new LocalStorageSessionStore(),
+    sessionStore: createLocalStorageSessionStore(),
     maxDuration: 7200, // 4 hours
     inactivityTimeout: 1800 // 30 minutes
   });
