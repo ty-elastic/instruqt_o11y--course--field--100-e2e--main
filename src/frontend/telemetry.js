@@ -14,7 +14,8 @@ npm install @opentelemetry/api\
       @opentelemetry/exporter-logs-otlp-http\
       @opentelemetry/instrumentation\
       @opentelemetry/auto-instrumentations-web\
-      @opentelemetry/instrumentation-long-task
+      @opentelemetry/instrumentation-long-task\
+      @opentelemetry/web-common
   */
 
 import { diag, DiagConsoleLogger, trace, metrics } from '@opentelemetry/api';
@@ -33,6 +34,16 @@ import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { getWebAutoInstrumentations } from '@opentelemetry/auto-instrumentations-web';
 import { LongTaskInstrumentation } from '@opentelemetry/instrumentation-long-task';
+
+const {
+  createSessionSpanProcessor,
+  createSessionLogRecordProcessor,
+  createDefaultSessionIdGenerator,
+  createSessionManager,
+  SessionManager,
+  DefaultIdGenerator,
+  LocalStorageSessionStore
+} = require('@opentelemetry/web-common');
 
 const initDone = Symbol('OTEL initialized');
 
@@ -58,11 +69,23 @@ export function initOpenTelemetry(config) {
   const resource = resourceFromAttributes(resourceAttributes)
                               .merge(detectedResources);
 
+  // session manager
+  const sessionManager = createSessionManager({
+    sessionIdGenerator: createDefaultSessionIdGenerator(),
+    sessionStore: new LocalStorageSessionStore(),
+    maxDuration: 7200, // 4 hours
+    inactivityTimeout: 1800 // 30 minutes
+  });
+
+  // restore or start session
+  sessionManager.start();
+
   // Trace signal setup
   const tracesEndpoint = `${config.endpoint}/v1/traces`;
   const tracerProvider = new WebTracerProvider({
     resource,
     spanProcessors: [
+      createSessionSpanProcessor(sessionManager),
       new BatchSpanProcessor(new OTLPTraceExporter({
         url: tracesEndpoint,
       })),
@@ -87,7 +110,9 @@ export function initOpenTelemetry(config) {
 
   const loggerProvider = new LoggerProvider({
     resource: resource,
-    processors: [new BatchLogRecordProcessor(logExporter)]
+    processors: [
+      createSessionLogRecordProcessor(sessionManager),
+      new BatchLogRecordProcessor(logExporter)]
   });
   logs.setGlobalLoggerProvider(loggerProvider);
 

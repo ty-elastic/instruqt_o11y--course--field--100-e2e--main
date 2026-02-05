@@ -8,8 +8,7 @@ RUN --mount=type=cache,target=/root/.cache/pip pip3 install --root-user-action=i
 
 COPY app.py .
 COPY workflows workflows
-COPY rules rules
-COPY prompt prompt
+COPY rules ruless
 COPY knowledge knowledge
 COPY synthetics synthetics
 COPY agents agents
