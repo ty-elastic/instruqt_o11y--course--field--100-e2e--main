@@ -47,7 +47,4 @@ cd /workspace/workshop
 source /workspace/workshop/instruqt/scripts/vars.sh -w true
 
 cd /workspace/workshop
-./build.sh -c $COURSE -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -f true
-
-
-
+./build.sh -c $COURSE -d true -b false -s all -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -g true -m true -w true -p true -e http://$HOSTNAME.$_SANDBOX_ID.instruqt.io:43210
