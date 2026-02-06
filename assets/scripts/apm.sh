@@ -22,4 +22,4 @@ config_apm() {
         -d '{"environments":["'$namespace'"]}'
 }
 
-config_apm
+#config_apm
