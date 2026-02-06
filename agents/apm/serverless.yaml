@@ -617,7 +617,10 @@ collectors:
               conditions:
                 - resource.attributes["browser.user_agent"] != nil
               statements:
-                - set(resource.attributes["browser.user_agent"], UserAgent(resource.attributes["browser.user_agent"]))
+                - set(resource.attributes["tmp"], UserAgent(resource.attributes["browser.user_agent"]))
+                - flatten(resource.attributes["tmp"], "browser")
+                - merge_maps(resource.attributes, resource.attributes["tmp"], "upsert")
+                - delete_key(resource.attributes, "tmp")
       exporters:
         debug:
         otlp/ingest_logs:

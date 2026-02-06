@@ -16,10 +16,6 @@ config_profiling() {
     echo -e "enabling profiling\n"
     kubectl apply -f agents/profiling/profiler.yaml
 
-    output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/api/fleet/epm/packages/profilingmetrics_otel/0.0.2" \
-        -H 'kbn-xsrf: true' \
-        -H "Authorization: ApiKey ${elasticsearch_api_key}")
-
     echo -e "Configuring custom dashboards\n"
     curl -X POST "$elasticsearch_kibana_endpoint/internal/kibana/settings" \
         -H 'kbn-xsrf: true' \
@@ -27,6 +23,10 @@ config_profiling() {
         -H "Authorization: ApiKey ${elasticsearch_api_key}" \
         -H 'Content-Type: application/json' \
         -d '{"changes":{"observability:enableInfrastructureAssetCustomDashboards": true}}'
+
+    output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/api/fleet/epm/packages/profilingmetrics_otel/0.0.2" \
+        -H 'kbn-xsrf: true' \
+        -H "Authorization: ApiKey ${elasticsearch_api_key}")
 
     DASHBOARD=$(echo $output | jq -r '.items[] | select (.type == "dashboard")')
     DASHBOARD_ID=$(echo $DASHBOARD | jq -r '.id')
