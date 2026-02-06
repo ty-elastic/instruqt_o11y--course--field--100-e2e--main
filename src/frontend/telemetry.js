@@ -35,6 +35,8 @@ import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { getWebAutoInstrumentations } from '@opentelemetry/auto-instrumentations-web';
 import { LongTaskInstrumentation } from '@opentelemetry/instrumentation-long-task';
 
+import axios from "axios";
+
 const {
   createSessionSpanProcessor,
   createSessionLogRecordProcessor,
@@ -51,7 +53,7 @@ const initDone = Symbol('OTEL initialized');
 // - logLevel
 // - endpoint
 // - resourceAttributes
-export function initOpenTelemetry(config) {
+function initOpenTelemetry(config) {
   // To avoid multiple calls
   if (window[initDone]) {
     return;
@@ -64,7 +66,7 @@ export function initOpenTelemetry(config) {
   diag.info('OTEL bootstrap', config);
 
   // Resource definition
-  const resourceAttributes = { ...config.resourceAttributes, ...SDK_INFO };
+  const resourceAttributes = { 'data_stream.dataset': 'rum', ...config.resourceAttributes, ...SDK_INFO };
   const detectedResources = detectResources({ detectors: [browserDetector] });
   const resource = resourceFromAttributes(resourceAttributes)
                               .merge(detectedResources);
@@ -75,6 +77,17 @@ export function initOpenTelemetry(config) {
     sessionStore: createLocalStorageSessionStore(),
     maxDuration: 7200, // 4 hours
     inactivityTimeout: 1800 // 30 minutes
+  });
+
+  sessionManager.addObserver({
+    onSessionStarted: (newSession, previousSession) => {
+      console.log('Session started', newSession, previousSession);
+      axios.defaults.headers.common['baggage'] = `session.id=${newSession.id}`;
+    },
+    onSessionEnded: (session) => {
+      console.log('Session ended', session);
+      delete axios.defaults.headers.common['baggage'];
+    }
   });
 
   // restore or start session

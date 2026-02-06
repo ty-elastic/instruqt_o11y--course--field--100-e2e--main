@@ -31,10 +31,6 @@ for dir in ./tracks/*/; do
         ./build.sh -c $course
         cd ../instruqt
 
-        cd ../agents/collector
-        ./build.sh -c $course
-        cd ../../instruqt
-
         cd ../utils/remote
         ./build.sh -c $course
         cd ../../instruqt
