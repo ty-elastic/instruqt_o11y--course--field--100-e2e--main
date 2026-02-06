@@ -24,13 +24,22 @@ config_profiling() {
         -H 'Content-Type: application/json' \
         -d '{"changes":{"observability:enableInfrastructureAssetCustomDashboards": true}}'
 
-    output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/api/fleet/epm/packages/profilingmetrics_otel/0.0.2" \
+    output=$(curl -s -X GET "$elasticsearch_kibana_endpoint/api/fleet/epm/packages" \
+        -H 'kbn-xsrf: true' \
+        -H "Authorization: ApiKey ${elasticsearch_api_key}")
+
+    PROFILING_PACKAGE=$(echo $output | jq -r '.items[] | select (.name == "profilingmetrics_otel")')
+    PROFILING_PACKAGE_NAME=$(echo $PROFILING_PACKAGE | jq -r '.name')
+    PROFILING_PACKAGE_VERSION=$(echo $PROFILING_PACKAGE | jq -r '.version')
+    echo $PROFILING_PACKAGE_NAME
+    echo $PROFILING_PACKAGE_VERSION
+
+    output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/api/fleet/epm/packages/$PROFILING_PACKAGE_NAME/$PROFILING_PACKAGE_VERSION" \
         -H 'kbn-xsrf: true' \
         -H "Authorization: ApiKey ${elasticsearch_api_key}")
     echo $output
 
     DASHBOARD=$(echo $output | jq -r '.items[] | select (.type == "dashboard")')
-
     DASHBOARD_ID=$(echo $DASHBOARD | jq -r '.id')
     echo $DASHBOARD_ID
 
