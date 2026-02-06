@@ -1,4 +1,4 @@
-source assets/scripts/retry.sh
+source /workspace/workshop/instruqt/scripts/retry.sh
 
 echo "Project type: $PROJECT_TYPE"
 echo "Regions: $REGIONS"
