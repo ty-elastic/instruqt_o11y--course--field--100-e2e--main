@@ -617,7 +617,7 @@ collectors:
               conditions:
                 - resource.attributes["browser.user_agent"] != nil
               statements:
-                - set(resource.attributes["user_agent"], UserAgent(resource.attributes["browser.user_agent"]))
+                - set(resource.attributes["browser.user_agent"], UserAgent(resource.attributes["browser.user_agent"]))
       exporters:
         debug:
         otlp/ingest_logs:
