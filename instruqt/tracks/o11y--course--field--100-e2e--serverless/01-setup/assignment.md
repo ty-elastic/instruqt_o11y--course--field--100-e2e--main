@@ -79,7 +79,6 @@ Agentic RCA
 * Show fully agentic alert correlation and multi-signal RCA w/ context.
 
 # Technical Setup
-
 Before the demo, complete `Steady-State` and `Generate Alerts`.
 
 ## Steady-State
