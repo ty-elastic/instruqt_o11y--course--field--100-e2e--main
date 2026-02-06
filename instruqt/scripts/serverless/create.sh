@@ -1,3 +1,5 @@
+source assets/scripts/retry.sh
+
 echo "Project type: $PROJECT_TYPE"
 echo "Regions: $REGIONS"
 
@@ -113,45 +115,50 @@ mv $JSON_FILE.tmp $JSON_FILE
 
 # ---------------------------------------------------------- FLEET
 
-# Fetch the Fleet Server URL(s)
-if [ "$PROJECT_TYPE" = 'observability' ]; then
-  echo "Fetching Fleet Server URL"
+get_fleet_url() {
+  # Fetch the Fleet Server URL(s)
+  if [ "$PROJECT_TYPE" = 'observability' ]; then
+    echo "Fetching Fleet Server URL"
 
-  fleet_output=$(curl -s -u "admin:$ELASTICSEARCH_PASSWORD" \
-    -w "\n%{http_code}" \
-    -H "kbn-xsrf: true" \
-    "$KIBANA_URL/api/fleet/fleet_server_hosts")
+    fleet_output=$(curl -s -u "admin:$ELASTICSEARCH_PASSWORD" \
+      -w "\n%{http_code}" \
+      -H "kbn-xsrf: true" \
+      "$KIBANA_URL/api/fleet/fleet_server_hosts")
 
-  # Extract HTTP status code and response body
-  fleet_http_code=$(echo "$fleet_output" | tail -n1)
-  fleet_response=$(echo "$fleet_output" | sed '$d')
+    # Extract HTTP status code and response body
+    fleet_http_code=$(echo "$fleet_output" | tail -n1)
+    fleet_response=$(echo "$fleet_output" | sed '$d')
 
-  # Check if the Fleet API call was successful
-  if [ "$fleet_http_code" != "200" ]; then
-    echo "Warning: Failed to fetch Fleet Server URL. HTTP status: $fleet_http_code"
-    echo "Response: $fleet_response"
-    # Continue without fleet URL rather than exiting
-  else
-    # Extract Fleet URL and validate
-    export FLEET_URL=$(echo "$fleet_response" | jq -r '.items[0].host_urls[0] // empty')
-
-    if [ -z "$FLEET_URL" ]; then
-      echo "Warning: No Fleet Server URL found in response"
+    # Check if the Fleet API call was successful
+    if [ "$fleet_http_code" != "200" ]; then
+      echo "Warning: Failed to fetch Fleet Server URL. HTTP status: $fleet_http_code"
+      echo "Response: $fleet_response"
+      return 1
     else
-      echo "Fleet URL: $FLEET_URL"
+      # Extract Fleet URL and validate
+      export FLEET_URL=$(echo "$fleet_response" | jq -r '.items[0].host_urls[0] // empty')
 
-      # Update the JSON file with the Fleet URL
-      if ! jq --arg region "$REGIONS" --arg fleet "$FLEET_URL" \
-        '.[$region].endpoints = (.[$region].endpoints // {}) |
-         .[$region].endpoints.fleet = $fleet' \
-        $JSON_FILE > $JSON_FILE.tmp; then
-        echo "Error: Failed to update JSON with Fleet URL"
-        exit 1
+      if [ -z "$FLEET_URL" ]; then
+        echo "Warning: No Fleet Server URL found in response"
+        return 1
+      else
+        echo "Fleet URL: $FLEET_URL"
+
+        # Update the JSON file with the Fleet URL
+        if ! jq --arg region "$REGIONS" --arg fleet "$FLEET_URL" \
+          '.[$region].endpoints = (.[$region].endpoints // {}) |
+          .[$region].endpoints.fleet = $fleet' \
+          $JSON_FILE > $JSON_FILE.tmp; then
+          echo "Error: Failed to update JSON with Fleet URL"
+          return 1
+        fi
+        mv $JSON_FILE.tmp $JSON_FILE
+        return 0
       fi
-      mv $JSON_FILE.tmp $JSON_FILE
     fi
   fi
-fi
+}
+retry_command_lin get_fleet_url
 
 echo "Configuration saved successfully to $JSON_FILE"
 
