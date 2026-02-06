@@ -309,12 +309,16 @@ def load_rules(kibana_server, kibana_auth, es_host, connect_alerts=True):
 
     directory_path = "rules"
     target_extension = ".json"
+
+    print("LOAD RULES")
     
     for root, dirs, files in os.walk(directory_path):
         for file in files:
             if file.endswith(target_extension):
                 full_path = os.path.join(root, file)
                 with open(full_path, 'r') as fileo:
+                    print("LOADING RULE")
+
                     #content = file.read()
                     rule = json.load(fileo)
                     if connect_alerts:
