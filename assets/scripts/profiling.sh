@@ -27,8 +27,10 @@ config_profiling() {
     output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/api/fleet/epm/packages/profilingmetrics_otel/0.0.2" \
         -H 'kbn-xsrf: true' \
         -H "Authorization: ApiKey ${elasticsearch_api_key}")
+    echo $output
 
     DASHBOARD=$(echo $output | jq -r '.items[] | select (.type == "dashboard")')
+
     DASHBOARD_ID=$(echo $DASHBOARD | jq -r '.id')
     echo $DASHBOARD_ID
 
