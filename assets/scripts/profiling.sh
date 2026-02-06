@@ -39,6 +39,8 @@ config_profiling() {
       echo "Response: $fleet_response"
       return 1
     else
+        echo "fleet packages: $fleet_http_code"
+
         PROFILING_PACKAGE=$(echo $fleet_response | jq -r '.items[] | select (.name == "profilingmetrics_otel")')
         PROFILING_PACKAGE_NAME=$(echo $PROFILING_PACKAGE | jq -r '.name')
         PROFILING_PACKAGE_VERSION=$(echo $PROFILING_PACKAGE | jq -r '.version')
