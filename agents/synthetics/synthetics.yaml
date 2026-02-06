@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: elastic-agent
-          image: docker.elastic.co/elastic-agent/elastic-agent-complete:9.2.4
+          image: docker.elastic.co/elastic-agent/elastic-agent-complete:$AGENT_VERSION
           env:
             - name: FLEET_INSECURE
               value: "true"
