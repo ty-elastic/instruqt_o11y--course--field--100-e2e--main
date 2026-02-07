@@ -148,12 +148,12 @@ for current_region in "${regions[@]}"; do
         assets/scripts/otel.sh  -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint -w false -o $deploy_otel
     fi
 
-    if [[ "$deploy_service" == "true" || "$deploy_service" == "delete" || "$deploy_service" == "force" ]]; then
-        export COURSE=$course
-        export REPO=$repo
-        export NAMESPACE=$namespace
-        export REGION=$current_region
+    export COURSE=$course
+    export REPO=$repo
+    export NAMESPACE=$namespace
+    export REGION=$current_region
 
+    if [[ "$deploy_service" == "true" || "$deploy_service" == "delete" || "$deploy_service" == "force" ]]; then
         export SERVICE_VERSION=$service_version
         export NOTIFIER_ENDPOINT=$notifier_endpoint
 
@@ -222,8 +222,6 @@ for current_region in "${regions[@]}"; do
 
     if [ "$assets" = "true" ]; then
         cd assets
-        export COURSE=$course
-        export REPO=$repo
         export JOB_ID=$(( $RANDOM ))
         echo $JOB_ID
         export elasticsearch_kibana_endpoint=$elasticsearch_kibana_endpoint
