@@ -13,68 +13,76 @@ do
 done
 
 config_profiling_agent() {
-    echo -e "enabling profiling\n"
+    printf "$FUNCNAME...\n"
     kubectl apply -f agents/profiling/profiler.yaml
 }
 config_profiling_agent
 
 config_profiling() {
+    printf "$FUNCNAME...\n"
+
     output=$(curl -s -X GET "$elasticsearch_kibana_endpoint/api/fleet/epm/packages" \
         -w "\n%{http_code}" \
         -H 'kbn-xsrf: true' \
+        -H 'x-elastic-internal-origin: Kibana' \
         -H "Authorization: ApiKey ${elasticsearch_api_key}")
 
-    # Extract HTTP status code and response body
-    fleet_http_code=$(echo "$output" | tail -n1)
-    fleet_response=$(echo "$output" | sed '$d')
-
-    # Check if the Fleet API call was successful
-    if [ "$fleet_http_code" != "200" ]; then
-      echo "Warning: Failed to fetch integrations: $fleet_http_code"
-      echo "Response: $fleet_response"
-      return 1
-    fi
-
-    echo "fleet packages: $fleet_http_code"
-
-    PROFILING_PACKAGE=$(echo $fleet_response | jq -r '.items[] | select (.name == "profilingmetrics_otel")')
-    PROFILING_PACKAGE_NAME=$(echo $PROFILING_PACKAGE | jq -r '.name')
-    PROFILING_PACKAGE_VERSION=$(echo $PROFILING_PACKAGE | jq -r '.version')
-    echo $PROFILING_PACKAGE_NAME
-    echo $PROFILING_PACKAGE_VERSION
-
-    if [[ -z "$PROFILING_PACKAGE_NAME" ]]; then
-        echo "PROFILING_PACKAGE_NAME is unset"
+    # Extract HTTP status code
+    http_code=$(echo "$output" | tail -n1)
+    http_response=$(echo "$output" | sed '$d')
+    if [ "$http_code" != "200" ]; then
+        printf "$FUNCNAME...ERROR $http_code: $http_response\n"
         return 1
     fi
+
+    PROFILING_PACKAGE=$(echo $http_response | jq -r '.items[] | select (.name == "profilingmetrics_otel")')
+    PROFILING_PACKAGE_NAME=$(echo $PROFILING_PACKAGE | jq -r '.name')
+    PROFILING_PACKAGE_VERSION=$(echo $PROFILING_PACKAGE | jq -r '.version')
+    # echo $PROFILING_PACKAGE_NAME
+    # echo $PROFILING_PACKAGE_VERSION
+
+    if [[ -z "$PROFILING_PACKAGE_NAME" ]]; then
+        printf "$FUNCNAME...ERROR: PROFILING_PACKAGE_NAME is unset\n"
+        return 1
+    fi
+    printf "$FUNCNAME...PROFILING_PACKAGE_NAME=$PROFILING_PACKAGE_NAME, PROFILING_PACKAGE_VERSION=$PROFILING_PACKAGE_VERSION\n"
 
     output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/api/fleet/epm/packages/$PROFILING_PACKAGE_NAME/$PROFILING_PACKAGE_VERSION" \
         -w "\n%{http_code}" \
         -H 'kbn-xsrf: true' \
+        -H 'x-elastic-internal-origin: Kibana' \
         -H "Authorization: ApiKey ${elasticsearch_api_key}")
-    echo $output
 
-    fleet_http_code=$(echo "$output" | tail -n1)
-    fleet_response=$(echo "$output" | sed '$d')
-
-    if [ "$fleet_http_code" != "200" ]; then
-        echo "Warning: Failed to fetch integrations: $fleet_response"
-        echo "Response: $fleet_response"
+    # Extract HTTP status code
+    http_code=$(echo "$output" | tail -n1)
+    http_response=$(echo "$output" | sed '$d')
+    if [ "$http_code" != "200" ]; then
+        printf "$FUNCNAME...ERROR $http_code: $http_response\n"
         return 1
     fi
 
-    DASHBOARD=$(echo $output | jq -r '.items[] | select (.type == "dashboard")')
+    DASHBOARD=$(echo $http_response | jq -r '.items[] | select (.type == "dashboard")')
     DASHBOARD_ID=$(echo $DASHBOARD | jq -r '.id')
-    echo $DASHBOARD_ID
 
-    echo -e "Set custom dashboard\n"
-    curl -X POST "$elasticsearch_kibana_endpoint/api/infra/host/custom-dashboards" \
+    printf "$FUNCNAME...DASHBOARD_ID=$DASHBOARD_ID\n"
+
+    output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/api/infra/host/custom-dashboards" \
+        -w "\n%{http_code}" \
         -H 'kbn-xsrf: true' \
         -H 'x-elastic-internal-origin: Kibana' \
         -H "Authorization: ApiKey ${elasticsearch_api_key}" \
         -H 'Content-Type: application/json' \
-        -d '{"dashboardSavedObjectId": "'$DASHBOARD_ID'", "dashboardFilterAssetIdEnabled":true}'
+        -d '{"dashboardSavedObjectId": "'$DASHBOARD_ID'", "dashboardFilterAssetIdEnabled":true}')
 
+    # Extract HTTP status code
+    http_code=$(echo "$output" | tail -n1)
+    http_response=$(echo "$output" | sed '$d')
+    if [ "$http_code" != "200" ]; then
+        printf "$FUNCNAME...ERROR $http_code: $http_response\n"
+        #return 1
+    fi
+
+    printf "$FUNCNAME...SUCCESS\n"
     return 0
 }
 retry_command_lin config_profiling
