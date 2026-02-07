@@ -73,6 +73,8 @@ create_serverless_prj() {
   export KIBANA_URL_WITHOUT_PROTOCOL=$(echo $KIBANA_URL | sed -e 's#http[s]\?://##g')
 
   agent variable set ES_DEPLOYMENT_ID `jq -r --arg region "$REGIONS" '.[$region].id' /tmp/project_results.json`
+
+  printf "$FUNCNAME...SUCCESS\n"
 }
 create_serverless_prj
 
@@ -114,6 +116,8 @@ generate_es_apikey() {
     exit 1
   fi
   mv $JSON_FILE.tmp $JSON_FILE
+
+  printf "$FUNCNAME...SUCCESS\n"
 }
 generate_es_apikey
 
