@@ -17,66 +17,94 @@ export AGENT_VERSION=9.3.0
 ####################################################################### CREATE POLICY
 POLICY_NUM=0
 
-create_policy() {
-    ((POLICY_NUM++))
+create_synthetics_policy() {
+  printf "$FUNCNAME...\n"
 
-    output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/api/fleet/agent_policies?sys_monitoring=false" \
-      --header 'Content-Type: application/json' \
+  ((POLICY_NUM++))
+
+  output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/api/fleet/agent_policies?sys_monitoring=false" \
+      -w "\n%{http_code}" \
+      -H 'kbn-xsrf: true' \
+      -H 'x-elastic-internal-origin: Kibana' \
       -H "Authorization: ApiKey ${elasticsearch_api_key}" \
-      --header 'kbn-xsrf: true' \
-      --data '{
-      "name": "Synthetics '$POLICY_NUM'",
-      "description": "",
-      "namespace": "default",
-      "monitoring_enabled": [
-        "logs",
-        "metrics"
-      ]
-    }')
+      -H 'Content-Type: application/json' \
+      -d '{
+    "name": "Synthetics '$POLICY_NUM'",
+    "description": "",
+    "namespace": "default",
+    "monitoring_enabled": [
+      "logs",
+      "metrics"
+    ]
+  }')
 
-    #echo $output
-    POLICY_ID=$(echo $output | jq -r '.item.id')
-    echo $POLICY_ID
+  http_code=$(echo "$output" | tail -n1)
+  http_response=$(echo "$output" | sed '$d')
+  if [ "$http_code" != "200" ]; then
+    printf "$FUNCNAME...ERROR $http_code: $http_response\n"
+    return 1
+  fi
 
-    if [ "${POLICY_ID}" = "null" ]; then
-        echo "agent: fleet not ready on attempt $attempt: $output"
+    POLICY_ID=$(echo $http_response | jq -r '.item.id')
+
+    if [[ -z "$POLICY_ID" ]]; then
+        printf "$FUNCNAME...ERROR: POLICY_ID is unset\n"
         return 1
-    else
-        echo "agent: agent policy created on $attempt"
-        return 0
     fi
+    printf "$FUNCNAME...POLICY_ID=$POLICY_ID\n"
+
+    printf "$FUNCNAME...SUCCESS\n"
+    return 0
 }
-retry_command_lin create_policy
+retry_command_lin create_synthetics_policy
 
-output=$(curl -s -X GET "$elasticsearch_kibana_endpoint/api/fleet/enrollment_api_keys" \
-  --header 'Content-Type: application/json' \
-  -H "Authorization: ApiKey ${elasticsearch_api_key}" \
-  --header 'kbn-xsrf: true')
-#echo $output
+config_synthetics_agent() {
+    printf "$FUNCNAME...\n"
 
-ENROLLMENT=$(echo $output | jq -r '.items[] | select (.policy_id == "'$POLICY_ID'")')
-#echo $ENROLLMENT
+    output=$(curl -s -X GET "$elasticsearch_kibana_endpoint/api/fleet/enrollment_api_keys" \
+        -w "\n%{http_code}" \
+        -H 'kbn-xsrf: true' \
+        -H 'x-elastic-internal-origin: Kibana' \
+        -H "Authorization: ApiKey ${elasticsearch_api_key}")
 
-ENROLLMENT_ID=$(echo $ENROLLMENT | jq -r '.id')
-ENROLLMENT_API_KEY_ID=$(echo $ENROLLMENT | jq -r '.api_key_id')
-export ENROLLMENT_API_KEY=$(echo $ENROLLMENT | jq -r '.api_key')
+    # Extract HTTP status code
+    http_code=$(echo "$output" | tail -n1)
+    http_response=$(echo "$output" | sed '$d')
+    if [ "$http_code" != "200" ]; then
+        printf "$FUNCNAME...ERROR $http_code: $http_response\n"
+        return 1
+    fi
 
-echo $ENROLLMENT_ID
-echo $ENROLLMENT_API_KEY_ID
-echo $ENROLLMENT_API_KEY
+  ENROLLMENT=$(echo $http_response | jq -r '.items[] | select (.policy_id == "'$POLICY_ID'")')
 
-# ------------- START AGENT
+  ENROLLMENT_ID=$(echo $ENROLLMENT | jq -r '.id')
+  ENROLLMENT_API_KEY_ID=$(echo $ENROLLMENT | jq -r '.api_key_id')
+  export ENROLLMENT_API_KEY=$(echo $ENROLLMENT | jq -r '.api_key')
 
-envsubst < agents/synthetics/synthetics.yaml | kubectl apply -f -
+    if [[ -z "$ENROLLMENT_API_KEY" ]]; then
+        printf "$FUNCNAME...ERROR: ENROLLMENT_API_KEY is unset\n"
+        return 1
+    fi
+
+    printf "$FUNCNAME...ENROLLMENT_API_KEY=$ENROLLMENT_API_KEY\n"
+
+    envsubst < agents/synthetics/synthetics.yaml | kubectl apply -f -
+    printf "$FUNCNAME...SUCCESS\n"
+}
+config_synthetics_agent
 
 # ------------- CREATE PRIVATE MONITOR
 
-curl \
- -X POST "$elasticsearch_kibana_endpoint/api/synthetics/private_locations" \
- -H "Authorization: ApiKey ${elasticsearch_api_key}" \
- --header "Content-Type: application/json" \
- --header 'kbn-xsrf: true' \
- --data '{
+config_synthetics_private_location() {
+  printf "$FUNCNAME...\n"
+
+  output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/api/synthetics/private_locations" \
+      -w "\n%{http_code}" \
+      -H 'kbn-xsrf: true' \
+      -H 'x-elastic-internal-origin: Kibana' \
+      -H "Authorization: ApiKey ${elasticsearch_api_key}" \
+      -H 'Content-Type: application/json' \
+      -d '{
     "label": "host-1",
     "agentPolicyId": "'$POLICY_ID'",
     "geo": {
@@ -86,4 +114,16 @@ curl \
     "spaces": [
       "*"
     ]
-}'
+}')
+
+  # Extract HTTP status code
+  http_code=$(echo "$output" | tail -n1)
+  http_response=$(echo "$output" | sed '$d')
+  if [ "$http_code" != "200" ]; then
+    printf "$FUNCNAME...ERROR $http_code: $http_response\n"
+    return 1
+  fi
+  printf "$FUNCNAME...SUCCESS\n"
+  return 0
+}
+config_synthetics_private_location

@@ -15,6 +15,7 @@ done
 config_profiling_agent() {
     printf "$FUNCNAME...\n"
     kubectl apply -f agents/profiling/profiler.yaml
+    printf "$FUNCNAME...SUCCESS\n"
 }
 config_profiling_agent
 
