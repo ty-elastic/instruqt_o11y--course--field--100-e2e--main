@@ -141,7 +141,7 @@ get_fleet_url() {
   fi
 
   # Extract Fleet URL and validate
-  export FLEET_URL=$(echo "$fleet_response" | jq -r '.items[0].host_urls[0] // empty')
+  export FLEET_URL=$(echo "$http_response" | jq -r '.items[0].host_urls[0] // empty')
 
   if [ -z "$FLEET_URL" ]; then
     printf "$FUNCNAME...ERROR: FLEET_URL is unset\n"
