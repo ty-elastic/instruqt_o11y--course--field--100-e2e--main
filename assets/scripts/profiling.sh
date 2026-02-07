@@ -46,10 +46,9 @@ config_profiling() {
     echo $PROFILING_PACKAGE_VERSION
 
     echo "here"
-
+    
     if [[ -z "$PROFILING_PACKAGE_NAME" ]]; then
-        echo "PROFILING_PACKAGE_NAME is unset: $fleet_response"
-        echo "here2"
+        echo "PROFILING_PACKAGE_NAME is unset"
         return 1
     fi
 
