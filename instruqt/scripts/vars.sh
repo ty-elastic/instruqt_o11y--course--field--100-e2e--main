@@ -2,9 +2,9 @@ source /workspace/workshop/instruqt/scripts/retry.sh
 
 check_host() {
     local host_stripped="${1#*://}"  # Remove protocol (http:// or https://)
-    host_stripped="${url%%/*}"       # Remove trailing paths (everything after /)
-    host_stripped="${url%%:*}"       # Remove port (everything after :)
-    #echo "$host_stripped"
+    host_stripped="${host_stripped%%/*}"       # Remove trailing paths (everything after /)
+    host_stripped="${host_stripped%%:*}"       # Remove port (everything after :)
+    echo "$host_stripped"
 
     if host "$host_stripped" > /dev/null; then
         printf "HOST: $1...reachable\n"
