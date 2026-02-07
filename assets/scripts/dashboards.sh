@@ -13,12 +13,24 @@ do
 done
 
 config_dashboards() {
-    echo -e "Configuring custom dashboards\n"
-    curl -X POST "$elasticsearch_kibana_endpoint/internal/kibana/settings" \
-        -H 'kbn-xsrf: true' \
-        -H 'x-elastic-internal-origin: Kibana' \
-        -H "Authorization: ApiKey ${elasticsearch_api_key}" \
-        -H 'Content-Type: application/json' \
-        -d '{"changes":{"observability:enableInfrastructureAssetCustomDashboards": true}}'
+   printf "$FUNCNAME...\n"
+
+   output=$(curl -X POST "$elasticsearch_kibana_endpoint/internal/kibana/settings" \
+      -w "\n%{http_code}" \
+      -H 'kbn-xsrf: true' \
+      -H 'x-elastic-internal-origin: Kibana' \
+      -H "Authorization: ApiKey ${elasticsearch_api_key}" \
+      -H 'Content-Type: application/json' \
+      -d '{"changes":{"observability:enableInfrastructureAssetCustomDashboards": true}}')
+
+   # Extract HTTP status code
+   http_code=$(echo "$output" | tail -n1)
+   http_response=$(echo "$output" | sed '$d')
+   if [ "$http_code" != "200" ]; then
+      printf "$FUNCNAME...ERROR: $http_code: $http_response"
+      return 1
+   fi
+   printf "$FUNCNAME...SUCCESS\n"
+   return 0
 }
 config_dashboards
