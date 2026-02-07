@@ -12,17 +12,14 @@ do
    esac
 done
 
-config_profiling() {
+config_profiling_agent() {
     echo -e "enabling profiling\n"
     kubectl apply -f agents/profiling/profiler.yaml
+}
+config_profiling_agent
 
-    echo -e "Configuring custom dashboards\n"
-    curl -X POST "$elasticsearch_kibana_endpoint/internal/kibana/settings" \
-        -H 'kbn-xsrf: true' \
-        -H 'x-elastic-internal-origin: Kibana' \
-        -H "Authorization: ApiKey ${elasticsearch_api_key}" \
-        -H 'Content-Type: application/json' \
-        -d '{"changes":{"observability:enableInfrastructureAssetCustomDashboards": true}}'
+config_profiling() {
+    echo "top"
 
     output=$(curl -s -X GET "$elasticsearch_kibana_endpoint/api/fleet/epm/packages" \
         -w "\n%{http_code}" \
@@ -48,10 +45,15 @@ config_profiling() {
     echo $PROFILING_PACKAGE_NAME
     echo $PROFILING_PACKAGE_VERSION
 
+    echo "here"
+
     if [[ -z "$PROFILING_PACKAGE_NAME" ]]; then
         echo "PROFILING_PACKAGE_NAME is unset: $fleet_response"
+        echo "here2"
         return 1
     fi
+
+    echo "here3"
 
     output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/api/fleet/epm/packages/$PROFILING_PACKAGE_NAME/$PROFILING_PACKAGE_VERSION" \
         -w "\n%{http_code}" \
