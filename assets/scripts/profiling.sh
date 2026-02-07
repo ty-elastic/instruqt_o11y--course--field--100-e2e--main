@@ -81,4 +81,4 @@ config_profiling() {
 
     return 0
 }
-#retry_command_lin config_profiling
+retry_command_lin config_profiling

@@ -28,4 +28,4 @@ source /workspace/workshop/instruqt/scripts/serverless/create.sh
 source /workspace/workshop/instruqt/scripts/vars.sh -w true
 
 cd /workspace/workshop
-./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -f true -e http://$HOSTNAME.$_SANDBOX_ID.instruqt.io:43210
+./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -f true
