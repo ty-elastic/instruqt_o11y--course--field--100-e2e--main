@@ -19,8 +19,6 @@ config_profiling_agent() {
 config_profiling_agent
 
 config_profiling() {
-    echo "top"
-
     output=$(curl -s -X GET "$elasticsearch_kibana_endpoint/api/fleet/epm/packages" \
         -w "\n%{http_code}" \
         -H 'kbn-xsrf: true' \
@@ -83,4 +81,4 @@ config_profiling() {
 
     return 0
 }
-retry_command_lin config_profiling
+#retry_command_lin config_profiling
