@@ -205,7 +205,7 @@ for current_region in "${regions[@]}"; do
     fi
 
     if [ "$features" = "true" ]; then
-        assets/scripts/features.sh  -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+        assets/scripts/features_es.sh  -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
     fi
 
     if [ "$deploy_otel" != "false" ]; then
@@ -213,6 +213,7 @@ for current_region in "${regions[@]}"; do
     fi
 
     if [ "$profiling" = "true" ]; then
+        assets/scripts/features_dep.sh  -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
         assets/scripts/profiling.sh -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
     fi
 
