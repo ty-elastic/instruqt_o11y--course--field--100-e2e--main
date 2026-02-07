@@ -32,4 +32,5 @@ steps:
       type: user
       owner: observability
       comment: ⚡ Attempted `{{inputs.service_action}}` of `{{inputs.service_name}}`
-
+  on-failure:
+    continue: true
