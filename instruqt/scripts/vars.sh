@@ -4,7 +4,7 @@ check_host() {
     local host_stripped="${1#*://}"  # Remove protocol (http:// or https://)
     host_stripped="${host_stripped%%/*}"       # Remove trailing paths (everything after /)
     host_stripped="${host_stripped%%:*}"       # Remove port (everything after :)
-    echo "$host_stripped"
+    #echo "$host_stripped"
 
     if host "$host_stripped" > /dev/null; then
         printf "HOST: $1...reachable\n"
