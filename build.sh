@@ -158,7 +158,7 @@ for current_region in "${regions[@]}"; do
         export NOTIFIER_ENDPOINT=$notifier_endpoint
 
         export JOB_ID=$(( $RANDOM ))
-        echo $JOB_ID
+        #echo $JOB_ID
 
         envsubst < k8s/yaml/_namespace.yaml | kubectl apply -f -
 
@@ -224,7 +224,7 @@ for current_region in "${regions[@]}"; do
     if [ "$assets" = "true" ]; then
         cd assets
         export JOB_ID=$(( $RANDOM ))
-        echo $JOB_ID
+        #echo $JOB_ID
         export elasticsearch_kibana_endpoint=$elasticsearch_kibana_endpoint
         export elasticsearch_es_endpoint=$elasticsearch_es_endpoint
         export elasticsearch_api_key=$elasticsearch_api_key  

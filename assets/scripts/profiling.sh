@@ -12,6 +12,10 @@ do
    esac
 done
 
+# hardcode for setup speed, but need to update regularly
+PROFILING_PACKAGE_NAME=profilingmetrics_otel
+PROFILING_PACKAGE_VERSION=0.0.4
+
 config_profiling_agent() {
     printf "$FUNCNAME...\n"
     kubectl apply -f agents/profiling/profiler.yaml
@@ -22,32 +26,32 @@ config_profiling_agent
 config_profiling() {
     printf "$FUNCNAME...\n"
 
-    output=$(curl -s -X GET "$elasticsearch_kibana_endpoint/api/fleet/epm/packages" \
-        -w "\n%{http_code}" \
-        -H 'kbn-xsrf: true' \
-        -H 'x-elastic-internal-origin: Kibana' \
-        -H "Authorization: ApiKey ${elasticsearch_api_key}")
-
-    # Extract HTTP status code
-    http_code=$(echo "$output" | tail -n1)
-    http_response=$(echo "$output" | sed '$d')
-    if [ "$http_code" != "200" ]; then
-        printf "$FUNCNAME...ERROR $http_code: $http_response\n"
-        return 1
-    fi
-
-    PROFILING_PACKAGE=$(echo $http_response | jq -r '.items[] | select (.name == "profilingmetrics_otel")')
-    PROFILING_PACKAGE_NAME=$(echo $PROFILING_PACKAGE | jq -r '.name')
-    PROFILING_PACKAGE_VERSION=$(echo $PROFILING_PACKAGE | jq -r '.version')
-    # echo $PROFILING_PACKAGE_NAME
-    # echo $PROFILING_PACKAGE_VERSION
-
     if [[ -z "$PROFILING_PACKAGE_NAME" ]]; then
-        printf "$FUNCNAME...ERROR: PROFILING_PACKAGE_NAME is unset\n"
-        return 1
-    fi
-    printf "$FUNCNAME...PROFILING_PACKAGE_NAME=$PROFILING_PACKAGE_NAME, PROFILING_PACKAGE_VERSION=$PROFILING_PACKAGE_VERSION\n"
+        output=$(curl -s -X GET "$elasticsearch_kibana_endpoint/api/fleet/epm/packages" \
+            -w "\n%{http_code}" \
+            -H 'kbn-xsrf: true' \
+            -H 'x-elastic-internal-origin: Kibana' \
+            -H "Authorization: ApiKey ${elasticsearch_api_key}")
 
+        # Extract HTTP status code
+        http_code=$(echo "$output" | tail -n1)
+        http_response=$(echo "$output" | sed '$d')
+        if [ "$http_code" != "200" ]; then
+            printf "$FUNCNAME...ERROR $http_code: $http_response\n"
+            return 1
+        fi
+
+        PROFILING_PACKAGE=$(echo $http_response | jq -r '.items[] | select (.name == "profilingmetrics_otel")')
+        PROFILING_PACKAGE_NAME=$(echo $PROFILING_PACKAGE | jq -r '.name')
+        PROFILING_PACKAGE_VERSION=$(echo $PROFILING_PACKAGE | jq -r '.version')
+
+        if [[ -z "$PROFILING_PACKAGE_NAME" ]]; then
+            printf "$FUNCNAME...ERROR: PROFILING_PACKAGE_NAME is unset\n"
+            return 1
+        fi
+        printf "$FUNCNAME...PROFILING_PACKAGE_NAME=$PROFILING_PACKAGE_NAME, PROFILING_PACKAGE_VERSION=$PROFILING_PACKAGE_VERSION\n"
+    fi
+    
     output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/api/fleet/epm/packages/$PROFILING_PACKAGE_NAME/$PROFILING_PACKAGE_VERSION" \
         -w "\n%{http_code}" \
         -H 'kbn-xsrf: true' \
