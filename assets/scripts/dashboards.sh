@@ -12,10 +12,10 @@ do
    esac
 done
 
-config_dashboards() {
+config_dashboards_custom() {
    printf "$FUNCNAME...\n"
 
-   output=$(curl -X POST "$elasticsearch_kibana_endpoint/internal/kibana/settings" \
+   output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/internal/kibana/settings" \
       -w "\n%{http_code}" \
       -H 'kbn-xsrf: true' \
       -H 'x-elastic-internal-origin: Kibana' \
@@ -27,10 +27,10 @@ config_dashboards() {
    http_code=$(echo "$output" | tail -n1)
    http_response=$(echo "$output" | sed '$d')
    if [ "$http_code" != "200" ]; then
-      printf "$FUNCNAME...ERROR: $http_code: $http_response"
+      printf "$FUNCNAME...ERROR $http_code: $http_response\n"
       return 1
    fi
    printf "$FUNCNAME...SUCCESS\n"
    return 0
 }
-config_dashboards
+config_dashboards_custom

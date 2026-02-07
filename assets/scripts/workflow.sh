@@ -12,13 +12,25 @@ do
    esac
 done
 
-config_workflows() {
-  echo -e "Configuring Workflows\n"
-  curl -X POST "$elasticsearch_kibana_endpoint/internal/kibana/settings" \
-      -H 'Content-Type: application/json' \
+config_workflows_enable() {
+   printf "$FUNCNAME...\n"
+
+   output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/internal/kibana/settings" \
+      -w "\n%{http_code}" \
       -H 'kbn-xsrf: true' \
-      -H "Authorization: ApiKey ${elasticsearch_api_key}" \
       -H 'x-elastic-internal-origin: Kibana' \
-      -d '{"changes":{"workflows:ui:enabled":true}}'
+      -H "Authorization: ApiKey ${elasticsearch_api_key}" \
+      -H 'Content-Type: application/json' \
+      -d '{"changes":{"workflows:ui:enabled":true}}')
+
+   # Extract HTTP status code
+   http_code=$(echo "$output" | tail -n1)
+   http_response=$(echo "$output" | sed '$d')
+   if [ "$http_code" != "200" ]; then
+      printf "$FUNCNAME...ERROR $http_code: $http_response\n"
+      return 1
+   fi
+   printf "$FUNCNAME...SUCCESS\n"
+   return 0
 }
-config_workflows
+config_workflows_enable

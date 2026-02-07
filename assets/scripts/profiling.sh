@@ -43,14 +43,10 @@ config_profiling() {
     echo $PROFILING_PACKAGE_NAME
     echo $PROFILING_PACKAGE_VERSION
 
-    echo "here"
-    
     if [[ -z "$PROFILING_PACKAGE_NAME" ]]; then
         echo "PROFILING_PACKAGE_NAME is unset"
         return 1
     fi
-
-    echo "here3"
 
     output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/api/fleet/epm/packages/$PROFILING_PACKAGE_NAME/$PROFILING_PACKAGE_VERSION" \
         -w "\n%{http_code}" \

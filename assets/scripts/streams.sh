@@ -12,18 +12,46 @@ do
    esac
 done
 
-config_streams() {
-  echo -e "Configuring Streams\n"
-  curl -X POST "$elasticsearch_kibana_endpoint/internal/kibana/settings" \
-      -H 'Content-Type: application/json' \
-      -H 'kbn-xsrf: true' \
-      -H "Authorization: ApiKey ${elasticsearch_api_key}" \
-      -H 'x-elastic-internal-origin: Kibana' \
-      -d '{"changes":{"observability:streamsEnableSignificantEvents":true}}'
+config_streams_sigevents() {
+   printf "$FUNCNAME...\n"
 
-  curl -X POST "$elasticsearch_kibana_endpoint/api/streams/_enable" \
+   output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/internal/kibana/settings" \
+      -w "\n%{http_code}" \
       -H 'kbn-xsrf: true' \
+      -H 'x-elastic-internal-origin: Kibana' \
       -H "Authorization: ApiKey ${elasticsearch_api_key}" \
-      -H 'x-elastic-internal-origin: Kibana'
+      -H 'Content-Type: application/json' \
+      -d '{"changes":{"observability:streamsEnableSignificantEvents":true}}')
+
+   # Extract HTTP status code
+   http_code=$(echo "$output" | tail -n1)
+   http_response=$(echo "$output" | sed '$d')
+   if [ "$http_code" != "200" ]; then
+      printf "$FUNCNAME...ERROR $http_code: $http_response\n"
+      return 1
+   fi
+   printf "$FUNCNAME...SUCCESS\n"
+   return 0
 }
-config_streams
+config_streams_sigevents
+
+config_streams_wired() {
+   printf "$FUNCNAME...\n"
+
+   output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/api/streams/_enable" \
+      -w "\n%{http_code}" \
+      -H 'kbn-xsrf: true' \
+      -H 'x-elastic-internal-origin: Kibana' \
+      -H "Authorization: ApiKey ${elasticsearch_api_key}")
+
+   # Extract HTTP status code
+   http_code=$(echo "$output" | tail -n1)
+   http_response=$(echo "$output" | sed '$d')
+   if [ "$http_code" != "200" ]; then
+      printf "$FUNCNAME...ERROR $http_code: $http_response\n"
+      return 1
+   fi
+   printf "$FUNCNAME...SUCCESS\n"
+   return 0
+}
+config_streams_wired

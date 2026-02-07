@@ -12,13 +12,25 @@ do
    esac
 done
 
-config_integrations() {
-  echo -e "Configuring Fleet\n"
-  curl -X PUT "$elasticsearch_kibana_endpoint/api/fleet/settings" \
-      -H 'Content-Type: application/json' \
+config_integrations_prerelease() {
+   printf "$FUNCNAME...\n"
+
+   output=$(curl -s -X PUT "$elasticsearch_kibana_endpoint/api/fleet/settings" \
+      -w "\n%{http_code}" \
       -H 'kbn-xsrf: true' \
-      -H "Authorization: ApiKey ${elasticsearch_api_key}" \
       -H 'x-elastic-internal-origin: Kibana' \
-      -d '{"prerelease_integrations_enabled": true}'
+      -H "Authorization: ApiKey ${elasticsearch_api_key}" \
+      -H 'Content-Type: application/json' \
+      -d '{"prerelease_integrations_enabled": true}')
+
+   # Extract HTTP status code
+   http_code=$(echo "$output" | tail -n1)
+   http_response=$(echo "$output" | sed '$d')
+   if [ "$http_code" != "200" ]; then
+      printf "$FUNCNAME...ERROR $http_code: $http_response\n"
+      return 1
+   fi
+   printf "$FUNCNAME...SUCCESS\n"
+   return 0
 }
-config_integrations
+config_integrations_prerelease
