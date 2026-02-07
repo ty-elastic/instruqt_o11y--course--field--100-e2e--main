@@ -1,173 +1,180 @@
 source /workspace/workshop/instruqt/scripts/retry.sh
 
-echo "Project type: $PROJECT_TYPE"
-echo "Regions: $REGIONS"
+create_serverless_prj() {
+  printf "$FUNCNAME...\n"
+  printf "$PROJECT_TYPE in $REGIONS\n"
 
-export JSON_FILE='/tmp/project_results.json'
+  export JSON_FILE='/tmp/project_results.json'
 
-case "$PROJECT_TYPE" in
-    "observability")
-      PRODUCT_TIER="${PRODUCT_TIER:-complete}"
-      echo "Project Tier: $PRODUCT_TIER"
-      python3 ~/bin/es3-api.py \
-        --operation create \
-        --project-type $PROJECT_TYPE \
-        --product-tier $PRODUCT_TIER \
-        --regions $REGIONS \
-        --project-name $INSTRUQT_TRACK_SLUG-$INSTRUQT_PARTICIPANT_ID-`date '+%s'` \
-        --api-key $ESS_CLOUD_API_KEY \
-        --wait-for-ready
-        ;;
-    "elasticsearch")
-      OPTIMIZED_FOR="${OPTIMIZED_FOR:-general_purpose}"
-      echo "Optimized for: $OPTIMIZED_FOR"
-      python3 ~/bin/es3-api.py \
-        --operation create \
-        --project-type $PROJECT_TYPE \
-        --optimized-for $OPTIMIZED_FOR \
-        --regions $REGIONS \
-        --project-name $INSTRUQT_TRACK_SLUG-$INSTRUQT_PARTICIPANT_ID-`date '+%s'` \
-        --api-key $ESS_CLOUD_API_KEY \
-        --wait-for-ready
-        ;;
-    "security")
-      python3 ~/bin/es3-api.py \
-        --operation create \
-        --project-type $PROJECT_TYPE \
-        --regions $REGIONS \
-        --project-name $INSTRUQT_TRACK_SLUG-$INSTRUQT_PARTICIPANT_ID-`date '+%s'` \
-        --api-key $ESS_CLOUD_API_KEY \
-        --wait-for-ready
-        ;;
-    *)
-        echo "Error: Unknown project type '$PROJECT_TYPE'"
-        exit 1
-        ;;
-esac
+  case "$PROJECT_TYPE" in
+      "observability")
+        PRODUCT_TIER="${PRODUCT_TIER:-complete}"
+        printf "Project Tier: $PRODUCT_TIER\n"
+        python3 ~/bin/es3-api.py \
+          --operation create \
+          --project-type $PROJECT_TYPE \
+          --product-tier $PRODUCT_TIER \
+          --regions $REGIONS \
+          --project-name $INSTRUQT_TRACK_SLUG-$INSTRUQT_PARTICIPANT_ID-`date '+%s'` \
+          --api-key $ESS_CLOUD_API_KEY \
+          --wait-for-ready
+          ;;
+      "elasticsearch")
+        OPTIMIZED_FOR="${OPTIMIZED_FOR:-general_purpose}"
+        printf "Optimized for: $OPTIMIZED_FOR\n"
+        python3 ~/bin/es3-api.py \
+          --operation create \
+          --project-type $PROJECT_TYPE \
+          --optimized-for $OPTIMIZED_FOR \
+          --regions $REGIONS \
+          --project-name $INSTRUQT_TRACK_SLUG-$INSTRUQT_PARTICIPANT_ID-`date '+%s'` \
+          --api-key $ESS_CLOUD_API_KEY \
+          --wait-for-ready
+          ;;
+      "security")
+        python3 ~/bin/es3-api.py \
+          --operation create \
+          --project-type $PROJECT_TYPE \
+          --regions $REGIONS \
+          --project-name $INSTRUQT_TRACK_SLUG-$INSTRUQT_PARTICIPANT_ID-`date '+%s'` \
+          --api-key $ESS_CLOUD_API_KEY \
+          --wait-for-ready
+          ;;
+      *)
+          printf "Error: Unknown project type '$PROJECT_TYPE'\n"
+          exit 1
+          ;;
+  esac
 
-timeout=20
-counter=0
+  timeout=20
+  counter=0
 
-while [ $counter -lt $timeout ]; do
-    if [ -f "$JSON_FILE" ]; then
-        echo "File found, continuing..."
-        break
-    fi
+  while [ $counter -lt $timeout ]; do
+      if [ -f "$JSON_FILE" ]; then
+          printf "$JSON_FILE File found, continuing...\n"
+          break
+      fi
 
-    echo "Waiting for file $JSON_FILE... ($((counter + 1))/$timeout seconds)"
-    sleep 1
-    counter=$((counter + 1))
-done
+      printf "Waiting for file $JSON_FILE... ($((counter + 1))/$timeout seconds)\n"
+      sleep 1
+      counter=$((counter + 1))
+  done
 
-# Check if we timed out
-if [ $counter -eq $timeout ]; then
-    echo "Timeout: File $JSON_FILE not found after $timeout seconds"
-    exit 1
-fi
+  # Check if we timed out
+  if [ $counter -eq $timeout ]; then
+      printf "Timeout: File $JSON_FILE not found after $timeout seconds\n"
+      exit 1
+  fi
 
-export KIBANA_URL=`jq -r --arg region "$REGIONS" '.[$region].endpoints.kibana' $JSON_FILE`
-export ELASTICSEARCH_PASSWORD=`jq -r --arg region "$REGIONS" '.[$region].credentials.password' $JSON_FILE`
-export ES_URL=`jq -r --arg region "$REGIONS" '.[$region].endpoints.elasticsearch' $JSON_FILE`
-export ELASTICSEARCH_AUTH_BASE64=$(echo -n "admin:${ELASTICSEARCH_PASSWORD}" | base64)
-export KIBANA_URL_WITHOUT_PROTOCOL=$(echo $KIBANA_URL | sed -e 's#http[s]\?://##g')
+  export KIBANA_URL=`jq -r --arg region "$REGIONS" '.[$region].endpoints.kibana' $JSON_FILE`
+  export ELASTICSEARCH_PASSWORD=`jq -r --arg region "$REGIONS" '.[$region].credentials.password' $JSON_FILE`
+  export ES_URL=`jq -r --arg region "$REGIONS" '.[$region].endpoints.elasticsearch' $JSON_FILE`
+  export ELASTICSEARCH_AUTH_BASE64=$(echo -n "admin:${ELASTICSEARCH_PASSWORD}" | base64)
+  export KIBANA_URL_WITHOUT_PROTOCOL=$(echo $KIBANA_URL | sed -e 's#http[s]\?://##g')
 
-agent variable set ES_DEPLOYMENT_ID `jq -r --arg region "$REGIONS" '.[$region].id' /tmp/project_results.json`
+  agent variable set ES_DEPLOYMENT_ID `jq -r --arg region "$REGIONS" '.[$region].id' /tmp/project_results.json`
+}
+create_serverless_prj
 
 # ---------------------------------------------------------- APIKEY
-echo "Generating API Key"
-output=$(curl -X POST -s -u "admin:${ELASTICSEARCH_PASSWORD}" \
-  -w "\n%{http_code}" \
-  $ES_URL/_security/api_key \
-  -H 'Content-Type: application/json' \
-  -d '{"name": "collector"}')
 
-# Extract HTTP status code and response body
-http_code=$(echo "$output" | tail -n1)
-response_body=$(echo "$output" | sed '$d')
+generate_es_apikey() {
+  printf "$FUNCNAME...\n"
 
-# Check if the API call was successful
-if [ "$http_code" != "200" ]; then
-  echo "Error: Failed to generate API key. HTTP status: $http_code"
-  echo "Response: $response_body"
-  exit 1
-fi
+  output=$(curl -s -X POST "$ES_URL/_security/api_key" \
+      -w "\n%{http_code}" \
+      -H 'Content-Type: application/json' \
+      -u "admin:$ELASTICSEARCH_PASSWORD" \
+      -d '{"name": "demo"}')
 
-# Extract API key and validate it exists
-export ELASTICSEARCH_API_KEY=$(echo "$response_body" | jq -r '.encoded // empty')
-if [ -z "$ELASTICSEARCH_API_KEY" ]; then
-  echo "Error: Failed to extract API key from response"
-  echo "Response: $response_body"
-  exit 1
-fi
+  # Extract HTTP status code
+  http_code=$(echo "$output" | tail -n1)
+  http_response=$(echo "$output" | sed '$d')
+  if [ "$http_code" != "200" ]; then
+      printf "$FUNCNAME...ERROR $http_code: $http_response\n"
+      exit 1
+  fi
 
-echo "API Key generated successfully"
+  # Extract API key and validate it exists
+  export ELASTICSEARCH_API_KEY=$(echo "$http_response" | jq -r '.encoded // empty')
+  if [ -z "$ELASTICSEARCH_API_KEY" ]; then
+    printf "$FUNCNAME...ERROR: Failed to extract API key from response\n"
+    exit 1
+  fi
 
-# Update the JSON file with general api_key (with proper path creation)
-if ! jq --arg region "$REGIONS" --arg apikey "$ELASTICSEARCH_API_KEY" \
-  '.[$region] = (.[$region] // {}) |
-   .[$region].credentials = (.[$region].credentials // {}) |
-   .[$region].credentials.api_key = $apikey' \
-  $JSON_FILE > $JSON_FILE.tmp; then
-  echo "Error: Failed to update JSON with API key"
-  exit 1
-fi
-mv $JSON_FILE.tmp $JSON_FILE
+  printf "$FUNCNAME...ELASTICSEARCH_API_KEY=$ELASTICSEARCH_API_KEY\n"
+
+  # Update the JSON file with general api_key (with proper path creation)
+  if ! jq --arg region "$REGIONS" --arg apikey "$ELASTICSEARCH_API_KEY" \
+    '.[$region] = (.[$region] // {}) |
+    .[$region].credentials = (.[$region].credentials // {}) |
+    .[$region].credentials.api_key = $apikey' \
+    $JSON_FILE > $JSON_FILE.tmp; then
+    printf "$FUNCNAME...ERROR: Failed to update JSON with API key\n"
+    exit 1
+  fi
+  mv $JSON_FILE.tmp $JSON_FILE
+}
+generate_es_apikey
 
 # ---------------------------------------------------------- FLEET
 
 get_fleet_url() {
-  # Fetch the Fleet Server URL(s)
-  if [ "$PROJECT_TYPE" = 'observability' ]; then
-    echo "Fetching Fleet Server URL"
+  printf "$FUNCNAME...\n"
 
-    fleet_output=$(curl -s -u "admin:$ELASTICSEARCH_PASSWORD" \
+  output=$(curl -s -X GET "$KIBANA_URL/api/fleet/fleet_server_hosts" \
       -w "\n%{http_code}" \
-      -H "kbn-xsrf: true" \
-      "$KIBANA_URL/api/fleet/fleet_server_hosts")
+      -H 'kbn-xsrf: true' \
+      -H 'x-elastic-internal-origin: Kibana' \
+      -u "admin:$ELASTICSEARCH_PASSWORD")
 
-    # Extract HTTP status code and response body
-    fleet_http_code=$(echo "$fleet_output" | tail -n1)
-    fleet_response=$(echo "$fleet_output" | sed '$d')
-
-    # Check if the Fleet API call was successful
-    if [ "$fleet_http_code" != "200" ]; then
-      echo "Warning: Failed to fetch Fleet Server URL. HTTP status: $fleet_http_code"
-      echo "Response: $fleet_response"
+  # Extract HTTP status code
+  http_code=$(echo "$output" | tail -n1)
+  http_response=$(echo "$output" | sed '$d')
+  if [ "$http_code" != "200" ]; then
+      printf "$FUNCNAME...ERROR $http_code: $http_response\n"
       return 1
-    else
-      # Extract Fleet URL and validate
-      export FLEET_URL=$(echo "$fleet_response" | jq -r '.items[0].host_urls[0] // empty')
-
-      if [ -z "$FLEET_URL" ]; then
-        echo "Warning: No Fleet Server URL found in response"
-        return 1
-      else
-        echo "Fleet URL: $FLEET_URL"
-
-        # Update the JSON file with the Fleet URL
-        if ! jq --arg region "$REGIONS" --arg fleet "$FLEET_URL" \
-          '.[$region].endpoints = (.[$region].endpoints // {}) |
-          .[$region].endpoints.fleet = $fleet' \
-          $JSON_FILE > $JSON_FILE.tmp; then
-          echo "Error: Failed to update JSON with Fleet URL"
-          return 1
-        fi
-        mv $JSON_FILE.tmp $JSON_FILE
-        return 0
-      fi
-    fi
   fi
-}
-retry_command_lin get_fleet_url
 
-echo "Configuration saved successfully to $JSON_FILE"
+  # Extract Fleet URL and validate
+  export FLEET_URL=$(echo "$fleet_response" | jq -r '.items[0].host_urls[0] // empty')
+
+  if [[ -z "$FLEET_URL" ]]; then
+    printf "$FUNCNAME...ERROR: FLEET_URL is unset\n"
+    return 1
+  fi
+
+  printf "$FUNCNAME...FLEET_URL=$FLEET_URL\n"
+
+  # Update the JSON file with the Fleet URL
+  if ! jq --arg region "$REGIONS" --arg fleet "$FLEET_URL" \
+    '.[$region].endpoints = (.[$region].endpoints // {}) |
+    .[$region].endpoints.fleet = $fleet' \
+    $JSON_FILE > $JSON_FILE.tmp; then
+    printf "$FUNCNAME...ERROR: Failed to update JSON with Fleet URL\n"
+    return 1
+  fi
+
+  mv $JSON_FILE.tmp $JSON_FILE
+  
+  printf "$FUNCNAME...SUCCESS\n"
+  return 0
+}
+# Fetch the Fleet Server URL(s)
+if [ "$PROJECT_TYPE" = 'observability' ]; then
+  retry_command_lin get_fleet_url
+fi
+
+printf "Configuration saved successfully to $JSON_FILE\n"
 
 # ---------------------------------------------------------- ENV
 
 create_env_file() {
-    mkdir -p "/usr/share/nginx/html"
-    # Write environment variables to $HOME/.env with export, extracting values directly with jq
-    cat > "/usr/share/nginx/html/env" <<EOF
+  printf "$FUNCNAME...\n"
+
+  mkdir -p "/usr/share/nginx/html"
+  # Write environment variables to $HOME/.env with export, extracting values directly with jq
+  cat > "/usr/share/nginx/html/env" <<EOF
 APM_URL=$(jq -r '.[].endpoints.apm' "$JSON_FILE")
 ELASTICSEARCH_URL=$(jq -r '.[].endpoints.elasticsearch' "$JSON_FILE")
 INGEST_URL=$(jq -r '.[].endpoints.ingest' "$JSON_FILE")
@@ -178,15 +185,18 @@ ELASTICSEARCH_USER=$(jq -r '.[].credentials.username' "$JSON_FILE")
 ELASTICSEARCH_PASSWORD=$(jq -r '.[].credentials.password' "$JSON_FILE")
 ELASTICSEARCH_AUTH_BASE64=$ELASTICSEARCH_AUTH_BASE64
 EOF
+
+  printf "$FUNCNAME...SUCCESS\n"
 }
 create_env_file
 
 # ---------------------------------------------------------- NGINX
 
+configure_nginx_proxy() {
+  printf "$FUNCNAME...\n"
 
-echo "Configure NGINX proxy"
-# Configure nginx
-cat > "/etc/nginx/conf.d/default.conf" <<EOF
+  # Configure nginx
+  cat > "/etc/nginx/conf.d/default.conf" <<EOF
 server {
   listen 9000 default_server;
   server_name env;
@@ -243,6 +253,8 @@ server {
 }
 EOF
 
-echo "Restart NGINX"
-systemctl restart nginx
+  systemctl restart nginx
 
+  printf "$FUNCNAME...SUCCESS\n"
+}
+configure_nginx_proxy

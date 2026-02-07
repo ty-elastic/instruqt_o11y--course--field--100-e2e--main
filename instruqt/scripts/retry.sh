@@ -15,14 +15,14 @@ retry_command() {
             break
         fi
 
-        echo "Attempt $attempt failed! Retrying in $timeout seconds..."
+        printf "Attempt $attempt failed! Retrying in $timeout seconds...\n"
         sleep $timeout
         attempt=$(( attempt + 1 ))
         timeout=$(( timeout * 2 ))
     done
 
     if [ $exit_code -ne 0 ]; then
-        echo "Command $@ failed after $attempt attempts!"
+        printf "Command $@ failed after $attempt attempts!\n"
     fi
 
     return $exit_code
@@ -44,13 +44,13 @@ retry_command_lin() {
             break
         fi
 
-        echo "Attempt $attempt failed! Retrying in $timeout seconds..."
+        printf "Attempt $attempt failed! Retrying in $timeout seconds...\n"
         sleep $timeout
         attempt=$(( attempt + 1 ))
     done
 
     if [ $exit_code -ne 0 ]; then
-        echo "Command $@ failed after $attempt attempts!"
+        printf "Command $@ failed after $attempt attempts!\n"
     fi
 
     return $exit_code

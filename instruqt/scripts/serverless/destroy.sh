@@ -1,11 +1,8 @@
 #!/bin/bash
-echo "Cleaning up the project"
-
-echo "Project type: $PROJECT_TYPE"
-echo "Regions: $REGIONS"
 
 export DEPLOYMENT_ID=`agent variable get ES_DEPLOYMENT_ID`
-echo "Deployment ID: $DEPLOYMENT_ID"
+
+printf "Cleaning up project $PROJECT_TYPE $DEPLOYMENT_ID in $REGIONS...\n"
 
 python3 ~/bin/es3-api.py \
    --operation delete \
@@ -14,4 +11,4 @@ python3 ~/bin/es3-api.py \
    --project-id $DEPLOYMENT_ID \
    --api-key $ESS_CLOUD_API_KEY
 
-echo "Done"
+printf "Cleaning up project $PROJECT_TYPE $DEPLOYMENT_ID in $REGIONS...SUCCESS\n"
