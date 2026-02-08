@@ -107,11 +107,12 @@ if [ -f ".env" ]; then
     set +o allexport # Stop automatic exporting
 fi
 
+printf "deploying services...\n"
+
 for current_region in "${regions[@]}"; do
-    echo "setup for region=$current_region"
 
     namespace=$namespace_base-$current_region
-    echo $namespace
+    printf "setup for namespace=$namespace\n"
 
     repo=us-central1-docker.pkg.dev/elastic-sa/tbekiares
     if [ "$local" = "true" ]; then
@@ -169,17 +170,17 @@ for current_region in "${regions[@]}"; do
 
                 if [[ "$service" == "all" || "$service" == "$current_service" ]]; then
                     if [ "$deploy_service" = "delete" ]; then
-                        echo "deleting $current_service from region $REGION"
+                        printf "deleting $current_service from region $REGION\n"
                         envsubst < k8s/yaml/$current_service.yaml | kubectl delete -f -
                     else
-                        echo "deploying $current_service to region $REGION"
+                        printf "deploying $current_service to region $REGION\n"
                         envsubst < k8s/yaml/$current_service.yaml | kubectl apply -f -
                         if [ "$deploy_service" = "force" ]; then
                             kubectl -n $namespace rollout restart deployment/$current_service
                         fi
 
                         if [ "$annotations" = "true" ]; then
-                            echo "adding deployment annotation"
+                            printf "adding deployment annotation for $current_service\n"
                             if [ "$machine" == "Mac" ]; then
                                 ts=$(date -z utc +%FT%TZ)
                             elif [ "$machine" == "Linux" ]; then
@@ -249,4 +250,4 @@ for current_region in "${regions[@]}"; do
     
 done
 
-
+printf "deploying services...SUCCESS\n"
