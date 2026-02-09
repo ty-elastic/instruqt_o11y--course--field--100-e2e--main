@@ -289,7 +289,7 @@ def load_synthetics(kibana_server, kibana_auth):
                     print(resp.json())     
  
 
-def load_rules(kibana_server, kibana_auth, es_host, connect_alerts=True):
+def load_rules(kibana_server, kibana_auth, es_host, connect_alerts=False):
 
     body = {
         "limit": 50,
@@ -473,7 +473,7 @@ def run_workflow(kibana_server, kibana_auth, workflow_name):
 @click.option('--es_host', default="", help='address of elasticsearch server')
 @click.option('--es_apikey', default="", help='apikey for auth')
 @click.option('--es_authbasic', default="", help='basic for auth')
-@click.option('--connect_alerts', default=True, help='connect alerts to workflow')
+@click.option('--connect_alerts', default=False, help='connect alerts to workflow')
 @click.option('--snow_host', default="TBD", help='snow host')
 @click.option('--snow_authbasic', default="TBD", help='basic for auth')
 @click.option('--ai_connector', default="Elastic-Managed-LLM", help='ai connector id')

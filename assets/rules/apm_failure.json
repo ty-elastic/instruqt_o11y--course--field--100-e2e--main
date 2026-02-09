@@ -24,16 +24,6 @@
     }
   },
   "actions": [
-    {
-      "id": "system-connector-.workflows",
-      "params": {
-        "subActionParams": {
-          "workflowId": "workflow-1fc19336-9467-434f-ae9f-b919c57558cf"
-        },
-        "subAction": "run"
-      },
-      "uuid": "ccaa5d94-6332-42b6-a947-042d502bfe53"
-    }
   ],
   "alert_delay": {
     "active": 1

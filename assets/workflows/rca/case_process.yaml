@@ -3,110 +3,172 @@ enabled: true
 description: Perform RCA on a Case
 tags:
 - rca
+consts:
+  case_stable: 30s
 triggers:
 - type: manual
+- type: scheduled
+  with:
+    every: 1m
 settings:
   timeout: 20m
-inputs:
-- name: case_id
-  type: string
 steps:
 
-- name: get_case
-  type: kibana.request
-  with:
-    method: GET
-    path: /api/cases/{{ inputs.case_id }}
-
-- name: get_ai_coversation_id
-  type: console
-  with:
-    message: "{% for field in steps.get_case.output.customFields %}{%- if field.key == 'ai_conversation_id' -%}{{ field.value }}{% break %}{%- endif -%}{% endfor %}"
-
-- name: rca
+- name: get_workflows
   type: kibana.request
   with:
     method: POST
-    path: /api/agent_builder/converse
+    path: /api/workflows/search
     headers:
-      kbn-xsrf: 'true'
-    body: |
-      {
-        "agent_id": "rca",
-        "input": "perform RCA on case id: {{ inputs.case_id }}"
-        {% if steps.get_ai_coversation_id.output != "not_available" %},"conversation_id": "{{ steps.get_ai_coversation_id.output }}"{% endif %}
-      }
-
-- name: foreach_steps
-  type: foreach
-  foreach: '{{ steps.rca.output.steps }}'
+      x-elastic-internal-origin: kibana
+    body:
+      limit: 100
+      page: 1
+      query: ''
+  timeout: 30s
+- name: get_this_workflow_id
+  type: console
+  with:
+    message: '{% for workflow in steps.get_workflows.output.results %}{%- if workflow.name == "case_process" -%}{{ workflow.id }}{% break %}{%- endif -%}{% endfor %}'
+- name: workflow_status
+  type: kibana.request
+  with:
+    method: GET
+    path: /api/workflowExecutions?workflowId={{ steps.get_this_workflow_id.output }}
+    headers:
+      x-elastic-internal-origin: kibana
+- name: is_workflow_running
+  type: if
+  condition: 'steps.workflow_status.output.results[0].status : running'
   steps:
-  - name: if_reasoning
-    type: if
-    condition: 'foreach.item.type: "reasoning"'
-    steps:
-    - name: add_reasoning_to_existing_case
+  - name: is_workflow_running_debug
+    type: console
+    with:
+      message: workflow running
+  else:
+    - name: get_cases
       type: kibana.request
       with:
-        method: POST
-        path: /api/cases/{{ inputs.case_id }}/comments
-        body:
-          type: user
-          owner: observability
-          comment: 🤔 {{ foreach.item.reasoning }}
+        headers:
+          x-elastic-internal-origin: kibana
+        method: GET
+        path: '/api/cases/_find?status=open'
 
-- name: get_case_refresh
-  type: kibana.request
-  with:
-    method: GET
-    path: /api/cases/{{ inputs.case_id }}
+    - name: foreach_case
+      type: foreach
+      foreach: '{{ steps.get_cases.output.cases }}'
+      steps:
+        - name: is_case_unstable
+          type: if
+          condition: foreach.item.updated_at > now-{{ consts.case_stable }}
+          steps:
+            - name: is_case_stable_debug
+              type: console
+              with:
+                message: case {{ foreach.item.id }} not yet stable
+          else:
+            - name: get_alerts
+              type: kibana.request
+              with:
+                method: GET
+                path: /api/cases/{{ foreach.item.id }}/alerts
 
-- name: get_system_environment
-  type: console
-  with:
-    message: "{% for field in steps.get_case_refresh.output.customFields %}{%- if field.key == 'system_environment' -%}{{ field.value }}{% break %}{%- endif -%}{% endfor %}"
+            - name: get_processed_alerts
+              type: console
+              with:
+                message: "{% for field in foreach.item.customFields %}{%- if field.key == 'processed_alerts' -%}{{ field.value }}{% break %}{%- endif -%}{% endfor %}"
 
-- name: update_fields
-  type: kibana.request
-  with:
-    method: PATCH
-    path: /api/cases
-    body:
-      cases:
-      - id: '{{ inputs.case_id }}'
-        version: '{{ steps.get_case_refresh.output.version }}'
-        customFields:
-        - key: system_environment
-          type: text
-          value: '{{ steps.get_system_environment.output}}'
-        - key: ai_conversation_id
-          type: text
-          value: '{{ steps.rca.output.conversation_id }}'
-  on-failure:
-    continue: true
+            - name: if_needs_update
+              type: if
+              condition: "not steps.get_processed_alerts.output : {{ steps.get_alerts.output.size | prepend: ''}}"
+              steps:
+                - name: get_ai_coversation_id
+                  type: console
+                  with:
+                    message: "{% for field in foreach.item.customFields %}{%- if field.key == 'ai_conversation_id' -%}{{ field.value }}{% break %}{%- endif -%}{% endfor %}"
 
-- name: add_response_to_existing_case
-  type: kibana.request
-  with:
-    method: POST
-    path: /api/cases/{{ inputs.case_id }}/comments
-    body:
-      type: user
-      owner: observability
-      comment: '{{ steps.rca.output.response.message }}'
+                - name: rca
+                  type: kibana.request
+                  with:
+                    method: POST
+                    path: /api/agent_builder/converse
+                    headers:
+                      kbn-xsrf: 'true'
+                    body: |
+                      {
+                        "agent_id": "rca",
+                        "input": "perform RCA on case id: {{ foreach.item.id }}"
+                        {% if steps.get_ai_coversation_id.output != "not_available" %},"conversation_id": "{{ steps.get_ai_coversation_id.output }}"{% endif %}
+                      }
 
-- name: add_conversation_to_existing_case
-  type: kibana.request
-  with:
-    method: POST
-    path: /api/cases/{{ inputs.case_id }}/comments
-    body:
-      type: user
-      owner: observability
-      comment: 🔍 You can continue your investigation or take remediation action [here](/app/agent_builder/conversations/{{ steps.rca.output.conversation_id }}).
+                - name: foreach_steps
+                  type: foreach
+                  foreach: '{{ steps.rca.output.steps }}'
+                  steps:
+                  - name: if_reasoning
+                    type: if
+                    condition: 'foreach.item.type: "reasoning"'
+                    steps:
+                    - name: add_reasoning_to_existing_case
+                      type: kibana.request
+                      with:
+                        method: POST
+                        path: /api/cases/{{ steps.foreach_case.item.id }}/comments
+                        body:
+                          type: user
+                          owner: observability
+                          comment: 🤔 {{ foreach.item.reasoning }}
 
+                - name: get_case_refresh
+                  type: kibana.request
+                  with:
+                    method: GET
+                    path: /api/cases/{{ foreach.item.id }}
 
+                - name: get_system_environment
+                  type: console
+                  with:
+                    message: "{% for field in steps.get_case_refresh.output.customFields %}{%- if field.key == 'system_environment' -%}{{ field.value }}{% break %}{%- endif -%}{% endfor %}"
 
+                - name: update_fields
+                  type: kibana.request
+                  with:
+                    method: PATCH
+                    path: /api/cases
+                    body:
+                      cases:
+                      - id: '{{ foreach.item.id }}'
+                        version: '{{ steps.get_case_refresh.output.version }}'
+                        customFields:
+                        - key: system_environment
+                          type: text
+                          value: '{{ steps.get_system_environment.output}}'
+                        - key: ai_conversation_id
+                          type: text
+                          value: '{{ steps.rca.output.conversation_id }}'
+                        - key: processed_alerts
+                          type: text
+                          value: "{{ steps.get_alerts.output.size | prepend: ''}}"
+                  on-failure:
+                    continue: true
 
+                - name: add_response_to_existing_case
+                  type: kibana.request
+                  with:
+                    method: POST
+                    path: /api/cases/{{ foreach.item.id }}/comments
+                    body:
+                      type: user
+                      owner: observability
+                      comment: '{{ steps.rca.output.response.message }}'
 
+                - name: add_conversation_to_existing_case
+                  type: kibana.request
+                  with:
+                    method: POST
+                    path: /api/cases/{{ foreach.item.id }}/comments
+                    body:
+                      type: user
+                      owner: observability
+                      comment: 🔍 You can continue your investigation or take remediation action [here](/app/agent_builder/conversations/{{ steps.rca.output.conversation_id }}).
 

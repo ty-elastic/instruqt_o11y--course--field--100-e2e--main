@@ -86,76 +86,15 @@ steps:
         label: ai_conversation_id
         required: false
         type: text
+      - defaultValue: "0"
+        key: processed_alerts
+        label: processed_alerts
+        required: false
+        type: text
       owner: observability
   on-failure:
     continue: true
 
-
-- name: delete_alert_queue
-  type: elasticsearch.indices.delete
-  with:
-    index: workflow_alert_queue
-  on-failure:
-    continue: true
-- name: create_alert_queue
-  type: elasticsearch.indices.create
-  with:
-    index: workflow_alert_queue
-    settings:
-      default_pipeline: add_timestamp_pipeline
-    mappings:
-      properties:
-        event:
-          type: flattened
-        '@timestamp':
-          type: date
-  on-failure:
-    continue: true
-
-- name: delete_case_queue
-  type: elasticsearch.indices.delete
-  with:
-    index: workflow_case_queue
-  on-failure:
-    continue: true
-- name: create_case_queue
-  type: elasticsearch.indices.create
-  with:
-    index: workflow_case_queue
-    settings:
-      default_pipeline: add_timestamp_pipeline
-    mappings:
-      properties:
-        case_id:
-          type: keyword
-        '@timestamp':
-          type: date
-  on-failure:
-    continue: true
-
-
-- name: delete_config
-  type: elasticsearch.indices.delete
-  with:
-    index: workflow_config
-  on-failure:
-    continue: true
-- name: create_config
-  type: elasticsearch.indices.create
-  with:
-    index: workflow_config
-    settings:
-      index:
-        mode: lookup
-    mappings:
-      properties:
-        workflowId:
-          type: keyword
-        id:
-          type: keyword
-        name:
-          type: keyword
-    timeout: 30s
 - name: get_workflows
   type: kibana.request
   with:
@@ -168,20 +107,11 @@ steps:
       page: 1
       query: ''
   timeout: 30s
+
 - name: foreach_workflow
   type: foreach
   foreach: '{{ steps.get_workflows.output.results | json }}'
   steps:
-  - name: save_id
-    type: elasticsearch.request
-    with:
-      method: POST
-      path: /workflow_config/_doc/{{ foreach.item.name }}
-      body:
-        workflowId: '{{ foreach.item.id }}'
-        id: '{{ foreach.item.id }}'
-        name: '{{ foreach.item.name }}'
-    timeout: 30s
 
   - name: is_topology_builder
     type: if
