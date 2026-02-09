@@ -1,6 +1,6 @@
 {
   "name": "APM Failure Rule",
-  "tags": ["automated_observability_triage"],
+  "tags": ["rca"],
   "schedule": {
     "interval": "1m"
   },

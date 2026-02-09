@@ -5,11 +5,12 @@ tags:
 - rca
 consts:
   case_stable: 30s
+  workflow_name: case_process
 triggers:
 - type: manual
 - type: scheduled
   with:
-    every: 1m
+    every: 5m
 settings:
   timeout: 20m
 steps:
@@ -29,7 +30,7 @@ steps:
 - name: get_this_workflow_id
   type: console
   with:
-    message: '{% for workflow in steps.get_workflows.output.results %}{%- if workflow.name == "case_process" -%}{{ workflow.id }}{% break %}{%- endif -%}{% endfor %}'
+    message: '{% for workflow in steps.get_workflows.output.results %}{%- if workflow.name == consts.workflow_name -%}{{ workflow.id }}{% break %}{%- endif -%}{% endfor %}'
 - name: workflow_status
   type: kibana.request
   with:
@@ -52,7 +53,7 @@ steps:
         headers:
           x-elastic-internal-origin: kibana
         method: GET
-        path: '/api/cases/_find?status=open'
+        path: '/api/cases/_find?status=open&tags=rca'
 
     - name: foreach_case
       type: foreach

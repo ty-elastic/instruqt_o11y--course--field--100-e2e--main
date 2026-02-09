@@ -1,14 +1,16 @@
 version: "1"
-name: alert_process Copy
+name: alert_process
 description: Process o11y alerts and correlate to cases
-enabled: true
+enabled: false
 tags:
   - rca
+consts:
+  workflow_name: alert_process
 triggers:
 - type: manual
 - type: scheduled
   with:
-    every: 1m
+    every: 5m
 settings:
   timeout: 20m
 steps:
@@ -28,7 +30,7 @@ steps:
 - name: get_this_workflow_id
   type: console
   with:
-    message: '{% for workflow in steps.get_workflows.output.results %}{%- if workflow.name == "alert_process" -%}{{ workflow.id }}{% break %}{%- endif -%}{% endfor %}'
+    message: '{% for workflow in steps.get_workflows.output.results %}{%- if workflow.name == consts.workflow_name -%}{{ workflow.id }}{% break %}{%- endif -%}{% endfor %}'
 - name: workflow_status
   type: kibana.request
   with:
@@ -63,6 +65,8 @@ steps:
                       gte: "now-24h/h"
                 - term:
                     kibana.alert.status: "active"
+                - term:
+                    tags: "rca"
               must_not:
                 - exists:
                     field: "kibana.alert.case_ids"
