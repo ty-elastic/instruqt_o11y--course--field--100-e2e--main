@@ -185,7 +185,7 @@ def generate_trade_requests():
     next_customer = None
     next_symbol = None
 
-    time.sleep(10)
+    time.sleep(30)
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=CONCURRENT_TRADE_REQUESTS) as executor:
         while True:

@@ -40,7 +40,7 @@ steps:
       x-elastic-internal-origin: kibana
 - name: is_workflow_running
   type: if
-  condition: 'steps.workflow_status.output.results[0].status : running'
+  condition: 'steps.workflow_status.output.results[1].status : running'
   steps:
   - name: is_workflow_running_debug
     type: console
