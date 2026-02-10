@@ -1,20 +1,23 @@
 project="elastic-sa"
-name="tbekiares-demo"
 zone="us-central1-a"
-labels="division=field,org=sa,team=pura,project=tyronebekiares"
 
 regions=1
 
-while getopts "p:n:z:l:r:" opt
+while getopts "p:n:z:r:t:u:" opt
 do
    case "$opt" in
       p ) project="$OPTARG" ;;
       n ) name="$OPTARG" ;;
       z ) zone="$OPTARG" ;;
-      l ) labels="$OPTARG" ;;
       r ) regions="$OPTARG" ;;
+
+      t ) team="$OPTARG" ;;
+      u ) user="$OPTARG" ;;
    esac
 done
+
+labels="division=field,org=sa,team=$team,project=$user"
+name="$user-superdemo"
 
 gcloud beta container clusters delete $name --zone $zone
 

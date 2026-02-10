@@ -57,9 +57,10 @@ tabs:
   title: Services Host
   type: terminal
   hostname: k3s
-- title: GitHub Issues
+- id: csyzrgrkku19
+  title: GitHub Issues
   type: website
-  url: https://github.com/ty-elastic/instruqt_o11y--course--field--100-e2e--main/issues/2
+  url: https://github.com/ty-elastic/instruqt_o11y--course--field--100-e2e--main/issues
   new_window: true
 - id: s1uqc0oc3nlk
   title: Grafana
@@ -254,7 +255,7 @@ In the next step, we will have the opportunity to see the reasoning steps the Ag
 7. Note that we appended each step of the reasoning of the RCA Agent to the case as a comment
 8. Scroll down to the last comments in the case
 9. Note the detailed Root Cause Analysis w/ dependency map, explanation of correlation, and analysis of logs, traces, and metrics
-10. Note that the Agent matched this problem with a known issue 
+10. Note that the Agent matched this problem with a known issue
 11. Where did this issue come from? Open the [button label="GitHub Issues"](tab-7) Instruqt tab and open the corresponding GitHub issue.
 12. Note also that the Agent recommended for us to restart the monkey service to resolve this issue
 

@@ -98,6 +98,12 @@ export POSTGRESQL_OPTIONS="/postgres?sslmode=disable"
 export POSTGRESQL_PORT=5432
 export POSTGRESQL_DIALECT=PostgreSQLDialect
 
+if [ "$remote_endpoint" = "cluster" ]; then
+    SERVICE_IP=$(kubectl -n trading-1 get service remote-ext -o jsonpath='{.spec.clusterIP}')
+    SERVICE_PORT=$(kubectl -n trading-1 get service remote-ext -o jsonpath='{.spec.ports[0].port}')
+    remote_endpoint=http://SERVICE_IP:SERVICE_PORT
+fi
+
 # Save the original IFS to restore it later
 OIFS="$IFS"
 # Set IFS to the comma delimiter
