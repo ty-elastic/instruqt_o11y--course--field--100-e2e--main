@@ -1,6 +1,6 @@
 source assets/scripts/retry.sh
 
-while getopts "n:h:i:j:k:w:o:" opt
+while getopts "n:h:i:j:k:f:o:" opt
 do
    case "$opt" in
       n ) namespace="$OPTARG" ;;
@@ -10,7 +10,7 @@ do
       j ) elasticsearch_es_endpoint="$OPTARG" ;;
       k ) elasticsearch_otlp_endpoint="$OPTARG" ;;
 
-      w) wait_on_otel="$OPTARG" ;;
+      f) force="$OPTARG" ;;
       o) deploy_otel="$OPTARG" ;;
    esac
 done
@@ -43,22 +43,15 @@ deploy_otel() {
 
     cd agents/apm
     helm upgrade --install opentelemetry-kube-stack open-telemetry/opentelemetry-kube-stack \
-    --namespace opentelemetry-operator-system \
-    --values "$deploy_otel.yaml" \
-    --version '0.12.4'
+        --namespace opentelemetry-operator-system \
+        --values "$deploy_otel.yaml" \
+        --version '0.12.4'
     cd ../..
 
-    kubectl -n opentelemetry-operator-system rollout restart deployment
+    if [ "$force" = "true" ]; then
+        kubectl -n opentelemetry-operator-system rollout restart deployment
+    fi
 }
-if [ "$wait_on_otel" = "false" ]; then
-    deploy_otel
-fi
 
-wait_otel() {
-    retry_command_lin check_otel
-    echo -e "restarting deployment\n"
-    kubectl -n $namespace rollout restart deployment
-}
-if [ "$wait_on_otel" = "true" ]; then
-    wait_otel
-fi
+deploy_otel
+retry_command_lin check_otel

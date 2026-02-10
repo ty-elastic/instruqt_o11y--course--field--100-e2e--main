@@ -335,6 +335,15 @@ def test_error():
     app.logger.info(f"test reset")
     return "OK"
 
+simulation_started = False
+@app.post('/simulation/start')
+def simulation_start():
+    global simulation_started
+    if simulation_started is False:
+        Thread(target=generate_trade_requests, daemon=False).start()
+        simulation_started = True
+    return "OK"
+
 @app.get('/state')
 def get_state():
     state = {
@@ -666,6 +675,5 @@ def train_label(classification):
     return "OK"
 
 
-# wait 10s before starting
-time.sleep(5)
-Thread(target=generate_trade_requests, daemon=False).start()
+
+

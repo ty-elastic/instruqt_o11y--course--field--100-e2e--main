@@ -72,46 +72,88 @@ timelimit: 43200
 enhanced_loading: null
 ---
 
+Technology Highlights:
+* Agentic RCA
+  * [Alert Correlation and Root Cause Analysis](section-agentic-rca)
+  * HIL Remediation
+* Workflows
+* Synthetics
+* OOTB OTel Dashboards
+  * k8s
+  * Hosts
+  * Postgresql
+* OTel Logging
+  * OTTL Parsing
+  * Receiver Creator Parsing
+* Profiling
+  * OTel Profiling
+* Streams
+  * Wired
+    * Partitioning
+    * Parsing
+    * Significant Events
+* Metrics
+  * OTel Metrics
+  * Metrics w/ ES|QL
+  * Prometheus Metrics
+  * PROMQL
+* Tracing
+  * Custom Attributes
+  * Baggage
+  * OTel-based RUM
+  * SQL Commentor
+  * eBPF Zero Instrumentation Go
+
 Agentic RCA
 ===
 
-# Goals
-* Show fully agentic alert correlation and multi-signal RCA w/ context.
+# Alert Correlation and Root Cause Analysis
 
-# Technical Setup
-Before the demo, complete `Steady-State` and `Generate Alerts`.
+## Goals
+* Show fully agentic alert correlation and multi-signal RCA w/ context
 
-## Steady-State
+## Technical Setup
+
+Perform these steps before you start the demo.
+
+### Steady-State
 
 1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
 2. Navigate to `Alerts`
-3. Refresh until there are no active alerts (leftover from startup)
-4. Navigate to `Workflows`
-5. Enable workflow `alert_queue`
+3. Wait until there are no active alerts (service startup will trigger some failure alerts)
 
-## Generate Alerts
+### Generate Alerts
 
 1. Open the [button label="Trader"](tab-2) Instruqt tab
 2. Navigate to `ERROR`
 3. Open `DB`, select `Generate errors`, select region `EU`, and click `SUBMIT`
 
-# Audience Setup
+## Demo
+
+### Introduction
 
 * We have a set of microservices which implement a financial trading application
 * Our database imlements SQL data contraints which validate certain parameters, including that the number of shares being traded is a positive value
-* We are going to intentionally introduce errors into the system whereby all of the trades coming from the EU region are trying to trade a negative number of shares
+
+1. Open the [button label="K8s YAML"](tab-4) Instruqt tab
+2. Navigate to `postgresql.yaml`
+3. Note that `CREATE TABLE` (line 78) assigns constraints to specific fields
+
+* We are intentionally introducing errors into the system whereby all of the trades coming from the EU region are trying to trade a negative number of shares
+
+### Manual Debug
 
 Let's first debug this problem manually:
 
 1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
-2. Navigate to `Observability` > `Applications` > `Service map`
-3. Note the dependency chain leading back from `postgresql`. Database validation errors will propagate backwards through `recorder-java`, `router`, and `trader`
+2. Navigate to `Applications` > `Service map`
+3. Note the dependency chain leading back from `postgresql`. Database validation errors will propagate backwards through `recorder-java`, `router`, and `trader`.
 4. Click on the `trader` service
 5. Click on `Service Details`
 6. Scroll down to `Transactions` and select `POST /trade/request`
-7. Search for
+7. Enter the following into the `Search transactions` bar at the top of the page:
 ```
-status.code :"Error"
+status.code : "Error"
 ```
 8. Scroll down to the waterfall graph and note the rippling error from database `INSERT` back up through the `Trader` application
 9. Click `View related error` on the failed `INSERT trades.trades` span

@@ -4,6 +4,10 @@ check_assets() {
     kubectl wait --for=condition=complete job/assets-$1 --timeout=120s
 }
 
+check_services() {
+    kubectl -n $1 rollout status deployment --timeout=5m
+}
+
 notifier_endpoint=""
 
 arch=linux/amd64
@@ -17,6 +21,7 @@ assets=false
 profiling=false
 grafana=false
 features=false
+deploy_ebpf_services=false
 
 build_service=false
 build_lib=false
@@ -38,7 +43,7 @@ case "${unameOut}" in
     *)          machine="UNKNOWN:${unameOut}"
 esac
 
-while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:" opt
+while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:n:" opt
 do
    case "$opt" in
       a ) arch="$OPTARG" ;;
@@ -53,6 +58,7 @@ do
       x ) build_lib="$OPTARG" ;;
       o ) deploy_otel="$OPTARG" ;;
       d ) deploy_service="$OPTARG" ;;
+      n ) deploy_ebpf_services="$OPTARG" ;;
 
       r ) region="$OPTARG" ;;
       v ) service_version="$OPTARG" ;;
@@ -146,7 +152,7 @@ for current_region in "${regions[@]}"; do
             deploy_otel="stack"
         fi
 
-        assets/scripts/otel.sh  -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint -w false -o $deploy_otel
+        assets/scripts/otel.sh  -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint -o $deploy_otel
     fi
 
     export COURSE=$course
@@ -169,10 +175,19 @@ for current_region in "${regions[@]}"; do
                 current_service="${current_service%.*}"
 
                 if [[ "$service" == "all" || "$service" == "$current_service" ]]; then
+
+                    if [[ "$service" == "recorder-go-zero" && $deploy_ebpf_services == "false" ]]; then
+                        printf "skipping recorder-go-zero deployment...\n"
+                        continue
+                    fi
+
+
                     if [ "$deploy_service" = "delete" ]; then
                         printf "deleting $current_service from region $REGION\n"
                         envsubst < k8s/yaml/$current_service.yaml | kubectl delete -f -
                     else
+
+
                         printf "deploying $current_service to region $REGION\n"
                         envsubst < k8s/yaml/$current_service.yaml | kubectl apply -f -
                         if [ "$deploy_service" = "force" ]; then
@@ -202,15 +217,24 @@ for current_region in "${regions[@]}"; do
                     fi
                 fi
             done
+
+            if [[ "$service" == "all" || "$service" == "monkey" ]]; then
+                check_services $namespace
+
+                printf "starting simulation...\n"
+                SERVICE_IP=$(kubectl -n trading-1 get service proxy-ext -o jsonpath='{.spec.clusterIP}')
+                SERVICE_PORT=$(kubectl -n trading-1 get service proxy-ext -o jsonpath='{.spec.ports[0].port}')
+
+                output=$(curl -s -X POST "http://$SERVICE_IP:$SERVICE_PORT/monkey/simulation/start" \
+                    -w "\n%{http_code}")
+                http_code=$(echo "$output" | tail -n1)
+                printf "starting simulation...$http_code\n"
+            fi
         fi
     fi
 
     if [ "$features" = "true" ]; then
         assets/scripts/features_es.sh  -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
-    fi
-
-    if [ "$deploy_otel" != "false" ]; then
-        assets/scripts/otel.sh  -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint -w true -o $deploy_otel
     fi
 
     if [ "$profiling" = "true" ]; then
