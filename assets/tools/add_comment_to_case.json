@@ -1,0 +1,13 @@
+{
+  "id": "add_comment_to_case",
+  "type": "workflow",
+  "description": "update a case with a comment",
+  "tags": [
+    "rca"
+  ],
+  "configuration": {
+    "workflow_id": "workflow-2de51553-c7c5-4265-a9a5-890b41ad76d6",
+    "wait_for_completion": true
+  },
+  "readonly": false
+}

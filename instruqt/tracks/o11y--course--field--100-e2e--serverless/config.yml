@@ -1,7 +1,7 @@
 version: "3"
 virtualmachines:
 - name: es3-api
-  image: elastic-pmm/es3-api-v2
+  image: elastic-pmm/es3-api-v3
   shell: /bin/bash
   environment:
     PRODUCT_TIER: complete

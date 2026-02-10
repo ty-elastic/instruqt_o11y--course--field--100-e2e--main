@@ -1,0 +1,25 @@
+name: add_comment_to_case
+description: add comments to case
+triggers:
+  - type: manual
+inputs:
+  - name: case_id
+    type: string
+    description: the ID of the case to attach the comment
+    required: true
+  - name: comment
+    type: string
+    description: the comment to add to the case
+    required: true
+steps:
+  - name: add_comment_to_existing_case
+    type: kibana.request
+    with:
+      method: POST
+      path: /api/cases/{{ inputs.case_id }}/comments
+      body:
+        type: user
+        owner: observability
+        comment: "{{inputs.comment}}"
+    on-failure:
+      continue: true

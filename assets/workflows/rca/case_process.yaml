@@ -8,9 +8,6 @@ consts:
   workflow_name: case_process
 triggers:
 - type: manual
-- type: scheduled
-  with:
-    every: 5m
 settings:
   timeout: 20m
 steps:
