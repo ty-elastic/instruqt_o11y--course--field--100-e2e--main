@@ -78,7 +78,8 @@ timelimit: 43200
 enhanced_loading: null
 ---
 
-Technology Highlights:
+All of the following technologies are enabled in this environment. As time allows, I will be adding scripts for demonstration. In the interim, please feel free to explore on your own.
+
 * Agentic RCA
   * [Alert Correlation, Agentic Root Cause Analysis, and HIL Remediation](section-agentic-rca)
 * Workflows
