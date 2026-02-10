@@ -74,7 +74,7 @@ enhanced_loading: null
 
 Technology Highlights:
 * Agentic RCA
-  * [Alert Correlation and Root Cause Analysis](section-agentic-rca)
+  * [Alert Correlation and Root Cause Analysis](section-agenticrca)
   * HIL Remediation
 * Workflows
 * Synthetics

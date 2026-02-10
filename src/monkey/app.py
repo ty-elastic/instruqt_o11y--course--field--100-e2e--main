@@ -184,6 +184,8 @@ def generate_trade_requests():
     next_region = None
     next_customer = None
     next_symbol = None
+
+    time.sleep(10)
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=CONCURRENT_TRADE_REQUESTS) as executor:
         while True:
@@ -340,8 +342,8 @@ simulation_started = False
 def simulation_start():
     global simulation_started
     if simulation_started is False:
-        Thread(target=generate_trade_requests, daemon=False).start()
         simulation_started = True
+        Thread(target=generate_trade_requests, daemon=False).start()
     return "OK"
 
 @app.get('/state')
