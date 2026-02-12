@@ -4,7 +4,7 @@ description: Perform RCA on a Case
 tags:
 - rca
 consts:
-  case_stable: 0s
+  case_stable: 30s
   workflow_name: case_process
 triggers:
 - type: manual
@@ -63,7 +63,7 @@ steps:
     steps:
     - name: is_case_ready
       type: if
-      condition: foreach.item.updated_at >= now-{{ consts.case_stable }}
+      condition: "inputs.alerts_ready : true OR foreach.item.updated_at < now-{{ consts.case_stable }}"
       steps:
       - name: get_alerts
         type: kibana.request

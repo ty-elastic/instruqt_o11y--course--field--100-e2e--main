@@ -156,7 +156,7 @@ steps:
 
   - name: if_new_alerts
     type: if
-    condition: steps.get_active_alerts.output.hits.total.value > 0
+    condition: "steps.get_active_alerts.output.hits.total.value > 0"
     steps:
     - name: get_case_workflow_id
       type: console
@@ -170,5 +170,6 @@ steps:
         body:
           inputs:
             event: ''
+            alerts_ready: true
         headers:
           x-elastic-internal-origin: kibana
