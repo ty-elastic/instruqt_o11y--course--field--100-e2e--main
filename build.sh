@@ -8,6 +8,21 @@ check_services() {
     kubectl -n $1 rollout status deployment --timeout=5m
 }
 
+start_simulation() {
+   printf "$FUNCNAME...\n"
+    output=$(curl -s -X POST "http://$1:$2/monkey/simulation/start" \
+        -w "\n%{http_code}")
+   # Extract HTTP status code
+   http_code=$(echo "$output" | tail -n1)
+   http_response=$(echo "$output" | sed '$d')
+   if [ "$http_code" != "200" ]; then
+      printf "$FUNCNAME...ERROR $http_code: $http_response\n"
+      return 1
+   fi
+   printf "$FUNCNAME...SUCCESS\n"
+   return 0
+}
+
 notifier_endpoint=""
 
 arch=linux/amd64
@@ -98,12 +113,6 @@ export POSTGRESQL_OPTIONS="/postgres?sslmode=disable"
 export POSTGRESQL_PORT=5432
 export POSTGRESQL_DIALECT=PostgreSQLDialect
 
-if [ "$remote_endpoint" = "cluster" ]; then
-    SERVICE_IP=$(kubectl -n trading-1 get service remote-ext -o jsonpath='{.spec.clusterIP}')
-    SERVICE_PORT=$(kubectl -n trading-1 get service remote-ext -o jsonpath='{.spec.ports[0].port}')
-    remote_endpoint=http://SERVICE_IP:SERVICE_PORT
-fi
-
 # Save the original IFS to restore it later
 OIFS="$IFS"
 # Set IFS to the comma delimiter
@@ -161,6 +170,10 @@ for current_region in "${regions[@]}"; do
         assets/scripts/otel.sh  -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint -o $deploy_otel
     fi
 
+    if [ "$features" = "true" ]; then
+        assets/scripts/features_es.sh  -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+    fi
+
     export COURSE=$course
     export REPO=$repo
     export NAMESPACE=$namespace
@@ -182,7 +195,9 @@ for current_region in "${regions[@]}"; do
 
                 if [[ "$service" == "all" || "$service" == "$current_service" ]]; then
 
-                    if [[ "$service" == "recorder-go-zero" && $deploy_ebpf_services == "false" ]]; then
+                    if [[ "$current_service" == "recorder-go-zero" && $deploy_ebpf_services == "false" ]]; then
+                        printf "deleting $current_service from region $REGION\n"
+                        envsubst < k8s/yaml/$current_service.yaml | kubectl delete -f -
                         printf "skipping recorder-go-zero deployment...\n"
                         continue
                     fi
@@ -227,20 +242,13 @@ for current_region in "${regions[@]}"; do
             if [[ "$service" == "all" || "$service" == "monkey" ]]; then
                 check_services $namespace
 
-                printf "starting simulation...\n"
-                SERVICE_IP=$(kubectl -n trading-1 get service proxy-ext -o jsonpath='{.spec.clusterIP}')
+                SERVICE_IP=$(kubectl -n trading-1 get service proxy-ext -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
                 SERVICE_PORT=$(kubectl -n trading-1 get service proxy-ext -o jsonpath='{.spec.ports[0].port}')
+                printf "proxy-ext SERVICE_IP=$SERVICE_IP, SERVICE_PORT=$SERVICE_PORT)\n"
 
-                output=$(curl -s -X POST "http://$SERVICE_IP:$SERVICE_PORT/monkey/simulation/start" \
-                    -w "\n%{http_code}")
-                http_code=$(echo "$output" | tail -n1)
-                printf "starting simulation...$http_code\n"
+                retry_command_lin start_simulation $SERVICE_IP $SERVICE_PORT
             fi
         fi
-    fi
-
-    if [ "$features" = "true" ]; then
-        assets/scripts/features_es.sh  -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
     fi
 
     if [ "$profiling" = "true" ]; then
@@ -250,6 +258,19 @@ for current_region in "${regions[@]}"; do
 
     if [ "$synthetics" = "true" ]; then
         assets/scripts/synthetics.sh -n $namespace -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+    fi
+
+    if [ "$remote_endpoint" != "na" ]; then
+        cd utils/remote
+        envsubst < remote.yaml | kubectl apply -f -
+        cd ../..
+
+        if [ "$remote_endpoint" = "cluster" ]; then
+            check_services $namespace
+            SERVICE_IP=$(kubectl -n trading-1 get service remote-ext -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            SERVICE_PORT=$(kubectl -n trading-1 get service remote-ext -o jsonpath='{.spec.ports[0].port}')
+            remote_endpoint=http://SERVICE_IP:SERVICE_PORT
+        fi
     fi
 
     if [ "$assets" = "true" ]; then
@@ -264,12 +285,6 @@ for current_region in "${regions[@]}"; do
         cd ..
 
         retry_command_lin check_assets $JOB_ID
-    fi
-
-    if [ "$remote_endpoint" != "na" ]; then
-        cd utils/remote
-        envsubst < remote.yaml | kubectl apply -f -
-        cd ../..
     fi
 
     if [ "$grafana" = "true" ]; then

@@ -622,7 +622,7 @@ collectors:
                 - merge_maps(resource.attributes, resource.attributes["tmp"], "upsert")
                 - delete_key(resource.attributes, "tmp")
       exporters:
-        debug:
+        debug: {}
         otlp/ingest_logs:
           endpoint: ${env:ELASTIC_OTLP_ENDPOINT}
           headers:

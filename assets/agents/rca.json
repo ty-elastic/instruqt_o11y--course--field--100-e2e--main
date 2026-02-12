@@ -14,20 +14,27 @@
             {
                 "tool_ids": [
                     "platform.core.get_workflow_execution_status",
+                    "platform.core.cases",
 
                     "observability.run_log_rate_analysis",
+                    "observability.get_trace_metrics",
+                    "observability.get_trace_change_points",
+                    "observability.get_hosts",
+
+                    "observability.get_services",
 
                     "search_logs_error",
-                    "search_infra_metrics",
                     "search_k8s_pod_metrics",
-                    "search_traces_error",
-                    "platform.core.cases",
-                    "get_topologies",
-                    "remediation_service_action",
-                    "search_knowledgebase",
+
                     "get_alert",
                     "get_case_alerts",
-                    "add_comment_to_case"
+                    "add_comment_to_case",
+
+                    "get_topologies",
+
+                    "remediation_service_action",
+
+                    "search_knowledgebase"
                 ]
             }
         ]

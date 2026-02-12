@@ -78,7 +78,7 @@ timelimit: 43200
 enhanced_loading: null
 ---
 
-All of the following technologies are enabled in this environment. As time allows, I will be adding scripts for demonstration. In the interim, please feel free to explore on your own.
+All of the following technologies are enabled in this environment. As time allows, I will be adding additional scripts for demonstration of specific features (linked to this ToC). In the interim, please feel free to explore on your own.
 
 * Agentic RCA
   * [Alert Correlation, Agentic Root Cause Analysis, and HIL Remediation](section-agentic-rca)
@@ -137,6 +137,19 @@ Perform these steps before you start the demo.
 5. Navigate to `Alerts`
 6. Wait for new alerts to appear
 
+### Trigger Workflows
+
+Be sure to wait until the new alerts (`APM Failure Rule`) fire before executing the `alert_process` workflow.
+
+While you could trigger the `alert_process` workflow during the demo, I would recommend triggering it ahead of the demo rather than waiting for it to complete (which might take 5 minutes or so). During the demo, you can walk through the executed steps if the customer is interested in observing the workflows step-by-step.
+
+1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+2. Navigate to `Workflows`
+3. Open the `alert_process` workflow
+4. Manually execute it
+
+Once the `alert_process` completes alert correlation, it will automatically start `case_process` to perform the RCA.
+
 ## Demo
 
 ### Introduction
@@ -145,14 +158,14 @@ We have a set of microservices which implement a financial trading application:
 1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
 2. Navigate to `Applications` > `Service map`
 
-Our database imlements SQL data contraints which validate certain parameters, including that the number of shares being traded is a positive value:
+Our database implements SQL data constraints which validate certain parameters, including that the number of shares being traded is a positive value:
 1. Open the [button label="K8s YAML"](tab-4) Instruqt tab
 2. Navigate to `postgresql.yaml`
 3. Note that `CREATE TABLE` (line 78) assigns constraints to specific fields
 
 We are intentionally introducing errors into the system whereby all of the trades coming from the `EU` region will be trying to trade a negative number of shares and violate the database constraints.
 
-### Manually Debug
+### Manual Debugging
 
 Let's first debug this problem with minimal AI assistant as an SRE might do today:
 
@@ -177,22 +190,17 @@ Let's look at our dependency map to appreciate how a database error could trigge
 2. Navigate to `Applications` > `Service map`
 3. Note the dependency chain leading back from `postgresql`. Database validation errors will propagate backwards through `recorder-java`, `router`, and `trader`.
 
-### Automated Alert Correlation
+### Agentic Alert Correlation
 
-Let's see how we can leverage OneWorkflow, Agent Builder, and Cases to correlate related alerts together.
+#### (Optional) Alert Correlation Workflow Walkthrough
+
+If the customer is interested in understanding OneWorkflow, you can optionally walk them through the execution steps. I would generally note here that we are working to bring alert correlation into the platform (e.g., we wouldn't expect a customer to write this workflow themselves).
 
 1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
 2. Navigate to `Workflows`
 3. Open the `alert_process` workflow
-4. Manually execute it
-
-Normally, Elasticsearch would trigger this workflow automatically from an alert rule, but here we are intentionally executing it manually so we can observe its progress.
-
-#### (Optional) Workflow Walkthrough
-
-If the customer is interested in understanding OneWorkflow, you can optionally walk them through the execution steps. I would generally note here that we are working to bring alert correlation into the platform.
-
-5. The workflow starts executing
+4. Click `Executions`
+5. Select the latest execution
 6. Open `is_workflow_running` > `false` > `foreach_alert` > `0` > `correlate`
 7. Click on `Input` and note that we are passing an alert to the `alert_correlation` Agent (`body.input`)
 8. Click on `Output` and note for the first alert that it couldn't find an existing case to correlate to (`response.message`)
@@ -211,7 +219,7 @@ The above creates the case and adds the first alert to it. Now let's look at how
 
 In the next step, we will have the opportunity to see the reasoning steps the Agent took to correlate these alerts to the same case.
 
-#### View correlation results
+#### View alert correlation results
 
 1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
 2. Navigate to `Cases`
@@ -225,18 +233,15 @@ In the next step, we will have the opportunity to see the reasoning steps the Ag
 
 Let's see how we can leverage OneWorkflow, Agent Builder, and Cases to perform agentic Root Cause Analysis.
 
+#### (Optional) Root Cause Analysis Workflow Walkthrough
+
+If the customer is interested in understanding OneWorkflow, you can optionally walk them through the execution steps. I would generally note here that we are working to bring agentic RCA into the platform (e.g., we wouldn't expect a customer to write this workflow themselves).
+
 1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
 2. Navigate to `Workflows`
 3. Open the `case_process` workflow
-4. Manually execute it
-
-Normally, this workflow would be triggered automatically, but here we are intentionally manually executing it so we can observe its progress.
-
-#### (Optional) Workflow Walkthrough
-
-If the customer is interested in understanding OneWorkflow, you can optionally walk them through the execution steps. I would generally note here that we are working to bring agentic RCA into the platform.
-
-5. The workflow starts executing
+4. Click `Executions`
+5. Select the latest execution
 6. Open `is_workflow_running` > `false` > `foreach_case` > `0` > `is_case_unstable` > `false` > `if_needs_update` > `true` > `rca`
 7. Click on `Input` and note that we are passing the case to the `rca` Agent (`body`)
 8. Click on `Output` and note that we are getting back the root cause analysis (`response.message`)
