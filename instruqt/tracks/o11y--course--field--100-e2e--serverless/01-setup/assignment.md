@@ -83,7 +83,7 @@ timelimit: 43200
 enhanced_loading: null
 ---
 
-All of the following technologies are enabled in this environment. As time allows, I will be adding additional scripts for demonstration of specific features (linked to this ToC). In the interim, please feel free to explore on your own.
+All of the following technologies are enabled in this environment. As time allows, I will be adding additional scripts for demonstration of specific features (linked to this ToC). In the interim, please feel free to explore on your own. All of the features iterated below are enabled in this demo.
 
 * Agentic RCA
   * [Alert Correlation, Agentic Root Cause Analysis, and HIL Remediation](section-agentic-rca)
