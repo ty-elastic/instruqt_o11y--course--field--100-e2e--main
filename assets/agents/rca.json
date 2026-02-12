@@ -29,6 +29,7 @@
                     "observability.get_log_groups",
                     "observability.get_correlated_logs",
                     "observability.get_log_change_points",
+                    "search_logs_error",
 
                     "observability.get_services",
                     "observability.get_downstream_dependencies",
