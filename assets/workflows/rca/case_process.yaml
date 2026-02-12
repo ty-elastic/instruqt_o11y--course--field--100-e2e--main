@@ -4,14 +4,19 @@ description: Perform RCA on a Case
 tags:
 - rca
 consts:
-  case_stable: 30s
+  case_stable: 0s
   workflow_name: case_process
 triggers:
 - type: manual
 settings:
   timeout: 20m
-steps:
+inputs:
+- name: alerts_ready
+  default: false
+  required: false
+  type: boolean
 
+steps:
 - name: get_workflows
   type: kibana.request
   with:
@@ -58,13 +63,8 @@ steps:
     steps:
     - name: is_case_ready
       type: if
-      condition: foreach.item.updated_at < now-{{ consts.case_stable }}
+      condition: foreach.item.updated_at >= now-{{ consts.case_stable }}
       steps:
-      - name: is_case_ready_debug
-        type: console
-        with:
-          message: case {{ foreach.item.id }} not yet ready for processing
-      else:
       - name: get_alerts
         type: kibana.request
         with:

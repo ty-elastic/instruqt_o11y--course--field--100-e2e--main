@@ -62,6 +62,11 @@ tabs:
   type: website
   url: https://github.com/ty-elastic/instruqt_o11y--course--field--100-e2e--main/issues
   new_window: true
+- id: csyzrgrkku10
+  title: Slides
+  type: website
+  url: https://docs.google.com/presentation/d/11lkZIvLNwWR8Tm6edCsPTIImypjKiylzwhOAa8527EM/edit?usp=drive_link
+  new_window: true
 - id: s1uqc0oc3nlk
   title: Grafana
   type: service
@@ -87,12 +92,11 @@ All of the following technologies are enabled in this environment. As time allow
 * OOTB OTel Dashboards
   * k8s
   * Hosts
-  * Postgresql
+  * [Postgresql](section-ootb-otel-dashboards-postgresql)
 * OTel Logging
   * OTTL Parsing
   * Receiver Creator Parsing
-* Profiling
-  * OTel Profiling
+* [OTel Profiling](section-otel-profiling)
 * Streams
   * Wired
     * Partitioning
@@ -110,6 +114,8 @@ All of the following technologies are enabled in this environment. As time allow
   * SQL Commentor
   * eBPF Zero Instrumentation Go
 
+Supporting slides (where available) can be found here: https://docs.google.com/presentation/d/11lkZIvLNwWR8Tm6edCsPTIImypjKiylzwhOAa8527EM/edit?usp=drive_link .
+
 Agentic RCA
 ===
 
@@ -124,7 +130,7 @@ Perform these steps before you start the demo.
 
 ### Steady-State
 
-1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Alerts`
 3. Wait until there are no active alerts (service startup will trigger some failure alerts)
 
@@ -133,7 +139,7 @@ Perform these steps before you start the demo.
 1. Open the [button label="Trader"](tab-2) Instruqt tab
 2. Navigate to `ERROR`
 3. Open `DB`, select `Generate errors`, select region `EU`, and click `SUBMIT`
-4. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+4. Open the [button label="Elastic"](tab-0) Instruqt tab
 5. Navigate to `Alerts`
 6. Wait for new alerts to appear
 
@@ -143,7 +149,7 @@ Be sure to wait until the new alerts (`APM Failure Rule`) fire before executing 
 
 While you could trigger the `alert_process` workflow during the demo, I would recommend triggering it ahead of the demo rather than waiting for it to complete (which might take 5 minutes or so). During the demo, you can walk through the executed steps if the customer is interested in observing the workflows step-by-step.
 
-1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Workflows`
 3. Open the `alert_process` workflow
 4. Manually execute it
@@ -155,7 +161,7 @@ Once the `alert_process` completes alert correlation, it will automatically star
 ### Introduction
 
 We have a set of microservices which implement a financial trading application:
-1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Applications` > `Service map`
 
 Our database implements SQL data constraints which validate certain parameters, including that the number of shares being traded is a positive value:
@@ -169,7 +175,7 @@ We are intentionally introducing errors into the system whereby all of the trade
 
 Let's first debug this problem with minimal AI assistant as an SRE might do today:
 
-1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Alerts` (note the 3 possibly related alerts)
 3. Choose one of the new alerts and select `View in app`
 4. Scroll down to `Transactions` and select the `POST ...` transaction (it will be named differently depending on which service you selected)
@@ -186,7 +192,7 @@ While this was a helpful analysis, we still have 2 additional alerts to triage. 
 
 Let's look at our dependency map to appreciate how a database error could trigger multiple alerts:
 
-1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Applications` > `Service map`
 3. Note the dependency chain leading back from `postgresql`. Database validation errors will propagate backwards through `recorder-java`, `router`, and `trader`.
 
@@ -196,15 +202,15 @@ Imagine a larger system where a simple problem manifests in hundreds of alerts. 
 
 #### (Optional) How does this work?
 
-We process each alert in a workflow (`alert_process`). 
+We process each alert in a workflow (`alert_process`).
 
-1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Workflows`
 3. Open the `alert_process` workflow
 
-For each alert, we call the `alert_correlation` agent whose prompt and tools help it decide if an alert is related to an existing case or not. 
+For each alert, we call the `alert_correlation` agent whose prompt and tools help it decide if an alert is related to an existing case or not.
 
-1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Agents`
 3. Click `More` in the upper-right and select `View all agents`
 4. Open the `Alert Correlation` agent
@@ -221,7 +227,7 @@ Note that we leverage system topology (accessed via the `get_topologies` tool, d
 
 If the customer is interested in understanding OneWorkflow, you can optionally walk them through the execution steps. I would generally note here that we are working to bring alert correlation into the platform (e.g., we wouldn't expect a customer to write this workflow themselves).
 
-1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Workflows`
 3. Open the `alert_process` workflow
 4. Click `Executions`
@@ -246,7 +252,7 @@ In the next step, we will have the opportunity to see the reasoning steps the Ag
 
 #### View alert correlation results
 
-1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Cases`
 3. Open the newly created case
 4. Click `Attachments` and note that all 3 related alerts were correlated to the same case
@@ -261,15 +267,15 @@ Now that we've grouped related alerts to Cases, we can perform Root Cause Analys
 
 #### (Optional) How does this work?
 
-We process each case in a workflow (`case_process`). 
+We process each case in a workflow (`case_process`).
 
-1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Workflows`
 3. Open the `case_process` workflow
 
 For each case, we call the `rca` agent whose prompt and tools help it perform root cause analysis of an issue.
 
-1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Agents`
 3. Click `More` in the upper-right and select `View all agents`
 4. Open the `rca` agent
@@ -286,7 +292,7 @@ Note that we leverage knowledge (accessed via the `search_knowledgebase` tool) t
 
 If the customer is interested in understanding OneWorkflow, you can optionally walk them through the execution steps. I would generally note here that we are working to bring agentic RCA into the platform (e.g., we wouldn't expect a customer to write this workflow themselves).
 
-1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Workflows`
 3. Open the `case_process` workflow
 4. Click `Executions`
@@ -301,7 +307,7 @@ In the next step, we will have the opportunity to see the reasoning steps the Ag
 
 #### View RCA results
 
-1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Observability` > `Cases`
 3. Open the case
 4. Click `Attachments` and note that all 3 related alerts were correlated to the same case
@@ -336,7 +342,7 @@ can you update the case with the results of our log rate analysis?
 ```
 
 After the agent is done, let's verify that the case was updated:
-1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Observability` > `Cases`
 3. Open the case
 4. Scroll down to the last comments in the case and note that it now includes our log rate analysis
@@ -345,7 +351,7 @@ After the agent is done, let's verify that the case was updated:
 
 We intentionally make remediation a Human-In-the-Loop (HIL) activity, though of course we could have told our agent to automatically take this step if we wanted. You'll recall that the RCA analysis suggested we could remediate the issue by restarting the `monkey` service. Let's do it!
 
-1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Observability` > `Cases`
 3. Open the case
 4. Scroll down toward the bottom of the case and look for the link to continue investigation or take remedial action
@@ -369,7 +375,7 @@ kubectl -n trading-1 get pods
 Remediation can be achieved by teaching the RCA Agent how to call a Workflow that in turn can call a remote command.
 
 Let's have a look at the RCA Agent:
-1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Agents` (it may be hidden under the `...` menu)
 3. Click on `More` in the upper-right and select `View all tools`
 4. Enter the following into the search bar
@@ -379,7 +385,7 @@ remediation
 5. Click on the `remediation_service_action` tool and note that it calls the `remediation_service_action` workflow
 
 Let's have a look at the `remediation_service_action` workflow:
-1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Workflows`
 3. Enter the following into the search bar
 ```
@@ -392,3 +398,35 @@ remediation
 8. Click on `call_remote` and select `Input`
 9. Note the http call to restart the `monkey` service
 
+OTel Profiling
+===
+
+# Dashboard
+
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
+2. Navigate to `Infrastructure` > `Hosts`
+3. Select host `k3s`
+4. Select `Dashboards` tab
+
+# How does this work?
+
+1. Open the [button label="OTel Operator YAML"](tab-5) Instruqt tab
+2. Navigate to `profiling/profiler.yaml`
+
+Note the OTel Collector configuration with the `profiling` receiver and `profilingmetrics` connector.
+
+OOTB OTel Dashboards: Postgresql
+===
+
+# Dashboard
+
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
+2. Navigate to `Dashboards`
+3. Open dashboard `[Metrics PostgreSQL OTel] Database Overview`
+
+# How does this work?
+
+1. Open the [button label="K8s YAML"](tab-4) Instruqt tab
+2. Navigate to `postgresql.yaml`
+
+Note the OTel Collector configuration with the `postgresql` receiver.

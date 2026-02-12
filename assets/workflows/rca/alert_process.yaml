@@ -12,7 +12,6 @@ triggers:
 settings:
   timeout: 20m
 steps:
-
 - name: get_workflows
   type: kibana.request
   with:
@@ -173,4 +172,3 @@ steps:
             event: ''
         headers:
           x-elastic-internal-origin: kibana
-          
