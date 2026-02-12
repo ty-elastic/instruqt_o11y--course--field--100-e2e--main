@@ -1,5 +1,7 @@
 name: add_comment_to_case
 description: add comments to case
+tags:
+- rca
 triggers:
   - type: manual
 inputs:
