@@ -25,48 +25,6 @@ class MyYAML(YAML):
             return stream.getvalue()
 
 
-def load_prompt(kibana_server, kibana_auth):
-
-    body = {
-        "limit": 50,
-        "page": 1,
-        "query": ""
-    }
-    
-    resp = requests.post(f"{kibana_server}/api/workflows/search",
-                        json=body,
-                        headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
-    #print(resp.json())
-
-    workflow_id = None
-    
-    for workflow in resp.json()['results']:
-        try:
-            print(workflow['name'])
-            if workflow['name'] == 'remediation_restart_service':
-                workflow_id = workflow['id']
-                break
-        except:
-            print("exception")
-            
-    with open("prompt/instructions.xml", 'r') as instructions:
-        instructions_txt = instructions.read()  # Read the entire content of the file
-
-        
-        instructions_txt = instructions_txt.replace("{WORKFLOW_ID}", workflow_id)
-
-        with open("prompt/prompt.json", 'r') as prompt:
-            #content = file.read()
-            prompt = json.load(prompt)
-            prompt['text'] = instructions_txt
-
-            #print(prompt)
-
-            resp = requests.put(f"{kibana_server}/internal/observability_ai_assistant/kb/user_instructions",
-                                json=prompt,
-                                headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
-            print(resp.json())
-
 def load_knowledge(kibana_server, kibana_auth):
     directory_path = "knowledge"
     target_extension = ".json"
@@ -224,6 +182,10 @@ def load_workflows(kibana_server, kibana_auth, es_host, remote_host = None):
         for file in files:
             if file.endswith(target_extension):
                 full_path = os.path.join(root, file)
+
+                if '_archive' in full_path:
+                    continue
+
                 with open(full_path, 'r') as fileo:
                     #content = file.read()  # Read the entire content of the file
                     #parsed = yaml.load(content)
@@ -359,6 +321,10 @@ def load_agent_tools(kibana_server, kibana_auth):
         for file in files:
             if file.endswith(target_extension):
                 full_path = os.path.join(root, file)
+
+                if '_archive' in full_path:
+                    continue
+
                 with open(full_path, 'r') as fileo:
                     #content = file.read()
                     tool = json.load(fileo)

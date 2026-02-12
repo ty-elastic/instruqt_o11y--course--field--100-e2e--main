@@ -1,0 +1,13 @@
+{
+    "id": "get_alert_details",
+    "type": "workflow",
+    "description": "Get details for a given alert",
+    "tags": [
+        "rca"
+    ],
+    "configuration": {
+        "workflow_id": "workflow-8269741c-26c3-4e34-a329-ea270f73ff83",
+        "wait_for_completion": true
+    },
+    "readonly": false
+}

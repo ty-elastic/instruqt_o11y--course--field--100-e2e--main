@@ -192,6 +192,31 @@ Let's look at our dependency map to appreciate how a database error could trigge
 
 ### Agentic Alert Correlation
 
+Imagine a larger system where a simple problem manifests in hundreds of alerts. To avoid triaging each alert individually, we first need to intelligently group related alerts to Cases. We will leverage Workflows, Agent Builder, and Cases.
+
+#### (Optional) How does this work?
+
+We process each alert in a workflow (`alert_process`). 
+
+1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+2. Navigate to `Workflows`
+3. Open the `alert_process` workflow
+
+For each alert, we call the `alert_correlation` agent whose prompt and tools help it decide if an alert is related to an existing case or not. 
+
+1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+2. Navigate to `Agents`
+3. Click `More` in the upper-right and select `View all agents`
+4. Open the `Alert Correlation` agent
+
+Note the custom instructions (prompt) which tell it how to correlate alerts.
+
+5. Click the `Tools` tab (to the right of `Settings`)
+
+Note that we give this agent access to only specific tools to help it focus on its task and execute in a definitive fashion.
+
+Note that we leverage system topology (accessed via the `get_topologies` tool, derived from the `topology_builder` agent) to help understand dependencies when correlating alerts to Cases.
+
 #### (Optional) Alert Correlation Workflow Walkthrough
 
 If the customer is interested in understanding OneWorkflow, you can optionally walk them through the execution steps. I would generally note here that we are working to bring alert correlation into the platform (e.g., we wouldn't expect a customer to write this workflow themselves).
@@ -227,11 +252,35 @@ In the next step, we will have the opportunity to see the reasoning steps the Ag
 4. Click `Attachments` and note that all 3 related alerts were correlated to the same case
 5. Click `Activity` and note that when each alert was added, a comment was automated appended indicating a summary of the alert and why it was correlated to this case
 6. Click on the `Conversation` link in the comment for an added alert
-7. In the AgentBuilder conversation, click on `Completed reasoning` to see all of the steps the agent took to correlate this alert to this case (you can further investigate tool calls if you'd like)
+7. In the AgentBuilder conversation, click on `Completed reasoning` to see all of the steps the agent took to correlate this alert to this case
+8. Open up a tool call request/response to better understand the data the agent used to correlate the alert
 
-### Automated Root Cause Analysis
+### Agentic Root Cause Analysis
 
-Let's see how we can leverage OneWorkflow, Agent Builder, and Cases to perform agentic Root Cause Analysis.
+Now that we've grouped related alerts to Cases, we can perform Root Cause Analysis on the case. We will leverage Workflows, Agent Builder, and Cases.
+
+#### (Optional) How does this work?
+
+We process each case in a workflow (`case_process`). 
+
+1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+2. Navigate to `Workflows`
+3. Open the `case_process` workflow
+
+For each case, we call the `rca` agent whose prompt and tools help it perform root cause analysis of an issue.
+
+1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+2. Navigate to `Agents`
+3. Click `More` in the upper-right and select `View all agents`
+4. Open the `rca` agent
+
+Note the custom instructions (prompt) which tell it how to perform root cause analysis.
+
+5. Click the `Tools` tab (to the right of `Settings`)
+
+Note that we give this agent access to only specific tools to help it focus on its task and execute in a definitive fashion.
+
+Note that we leverage knowledge (accessed via the `search_knowledgebase` tool) to understand if this issue is known. Note that we leverage lots of OOTB platform and observability tools to gather evidence.
 
 #### (Optional) Root Cause Analysis Workflow Walkthrough
 
@@ -269,12 +318,19 @@ In the next step, we will have the opportunity to see the reasoning steps the Ag
 
 Once the initial triage is done, SREs may want to deep-dive into the available telemetry to validate the findings of the Agent.
 
+#### Validate the Investigation
+
 1. Starting from the last step, at the bottom of the case, you will find a link to continue investigation or take remedial action
-2. Enter the following into the `Ask anything` box at the bottom of the Agent
+2. In the AgentBuilder conversation, click on `Completed reasoning` (at the top) to see all of the steps the agent took to correlate this alert to this case
+3. Open up a tool call request/response to better understand the data the agent used to perform root cause analysis
+
+#### Dig for further evidence
+
+1. Enter the following into the `Ask anything` box at the bottom of the Agent
 ```
 was there a spike in log rate when this issue started occurring?
 ```
-3. Enter the following into the `Ask anything` box at the bottom of the Agent
+2. Enter the following into the `Ask anything` box at the bottom of the Agent
 ```
 can you update the case with the results of our log rate analysis?
 ```

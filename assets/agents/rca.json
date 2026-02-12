@@ -16,21 +16,27 @@
                     "platform.core.get_workflow_execution_status",
                     "platform.core.cases",
 
-                    "observability.run_log_rate_analysis",
+                    "observability.get_anomaly_detection_jobs",
+
                     "observability.get_trace_metrics",
                     "observability.get_trace_change_points",
+
                     "observability.get_hosts",
-
-                    "observability.get_services",
-
-                    "search_logs_error",
+                    "observability.get_metric_change_points",
                     "search_k8s_pod_metrics",
 
-                    "get_alert",
+                    "observability.run_log_rate_analysis",
+                    "observability.get_log_groups",
+                    "observability.get_correlated_logs",
+                    "observability.get_log_change_points",
+
+                    "observability.get_services",
+                    "observability.get_downstream_dependencies",
+                    "get_topologies",
+ 
+                    "get_alert_details",
                     "get_case_alerts",
                     "add_comment_to_case",
-
-                    "get_topologies",
 
                     "remediation_service_action",
 

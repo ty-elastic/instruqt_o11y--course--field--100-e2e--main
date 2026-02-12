@@ -1,5 +1,5 @@
 version: '1'
-name: get_alert
+name: get_alert_details
 description: Get Alert by index and ID
 enabled: true
 tags:

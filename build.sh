@@ -155,10 +155,6 @@ for current_region in "${regions[@]}"; do
         cd ./lib
         ./build.sh -r $repo -c $course -a $arch
         cd ..
-
-        cd ./assets
-        ./build.sh -r $repo -c $course -a $arch
-        cd .. 
     fi
 
     if [ "$deploy_otel" != "false" ]; then
@@ -275,6 +271,11 @@ for current_region in "${regions[@]}"; do
 
     if [ "$assets" = "true" ]; then
         cd assets
+
+        if [ "$build_service" = "true" ]; then
+            ./build.sh -r $repo -c $course -a $arch
+        fi
+
         export JOB_ID=$(( $RANDOM ))
         #echo $JOB_ID
         export elasticsearch_kibana_endpoint=$elasticsearch_kibana_endpoint

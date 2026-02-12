@@ -45,127 +45,132 @@ steps:
     with:
       message: workflow running
   else:
-    - name: get_active_alerts
+  - name: get_active_alerts
+    type: kibana.request
+    with:
+      method: POST
+      path: /internal/rac/alerts/find
+      headers:
+        x-elastic-internal-origin: Kibana
+      body:
+        consumers: [apm, infrastructure, logs, uptime, slo, observability, alerts]
+        query:
+          bool:
+            must:
+            - range:
+                '@timestamp':
+                  gte: now-24h/h
+            - term:
+                kibana.alert.status: active
+            - term:
+                tags: rca
+            must_not:
+            - exists:
+                field: kibana.alert.case_ids
+
+  - name: foreach_alert
+    type: foreach
+    foreach: '{{ steps.get_active_alerts.output.hits.hits }}'
+    steps:
+    - name: correlate
       type: kibana.request
       with:
         method: POST
-        path: /internal/rac/alerts/find
+        path: /api/agent_builder/converse
         headers:
-          x-elastic-internal-origin: Kibana
+          kbn-xsrf: 'true'
         body:
-          consumers: [apm, infrastructure, logs, uptime, slo, observability, alerts]
-          query:
-            bool:
-              must:
-              - range:
-                  '@timestamp':
-                    gte: now-24h/h
-              - term:
-                  kibana.alert.status: active
-              - term:
-                  tags: rca
-              must_not:
-              - exists:
-                  field: kibana.alert.case_ids
-
-    - name: foreach_alert
-      type: foreach
-      foreach: '{{ steps.get_active_alerts.output.hits.hits }}'
-      steps:
-      - name: correlate
-        type: kibana.request
-        with:
-          method: POST
-          path: /api/agent_builder/converse
-          headers:
-            kbn-xsrf: 'true'
-          body:
-            agent_id: alert_correlation
-            input: |
-              Try to correlate this alert: 
-              ```json
-              {{ foreach.item._source | json }}
-              ```
-              Respond only in valid JSON format with no newlines, no extra spaces, and with no prefixes or postfixes (DO NOT USE ```json prefix and ``` postfix) in your response!'
-      - name: correlate_parse
-        type: console
-        with:
-          message: ${{ steps.correlate.output.response.message | json_parse }}
-      - name: new_or_update_case
-        type: if
-        condition: 'steps.correlate_parse.output.case_id : NONE'
-        steps:
-        - name: get_case_settings
-          type: kibana.request
-          with:
-            method: GET
-            path: /api/cases/configure
-        - name: create_new_case
-          type: kibana.createCaseDefaultSpace
-          with:
-            connector:
-              id: '{{ steps.get_case_settings.output.data[0].connector.id }}'
-              name: '{{ steps.get_case_settings.output.data[0].connector.name }}'
-              type: .none
-              fields:
-            customFields:
-            - key: system_environment
-              type: text
-              value: '{{ steps.correlate_parse.output.system_environment}}'
-            description: '{{ steps.correlate_parse.output.trigger }}'
-            owner: observability
-            settings:
-              syncAlerts: true
-            severity: '{{ steps.correlate_parse.output.severity }}'
-            tags:
-            - rca
-            title: '{{ steps.correlate_parse.output.title }}'
-      - name: case_id
-        type: console
-        with:
-          message: "{% if steps.correlate_parse.output.case_id == 'NONE' %}{{ steps.create_new_case.output.id }}{% else %}{{ steps.correlate_parse.output.case_id }}{%endif%}"
-      - name: add_alert_to_case
-        type: kibana.request
-        with:
-          method: POST
-          path: /api/cases/{{ steps.case_id.output }}/comments
-          body:
-            type: alert
-            alertId: '{{ foreach.item._id }}'
-            index: '{{ foreach.item._index }}'
-            owner: observability
-            rule:
-              id: '{{ foreach.item._source["kibana.alert.rule.uuid"] }}'
-              name: '{{ foreach.item._source["kibana.alert.rule.name"] }}'
-      - name: add_comment_to_case
-        type: kibana.request
-        with:
-          method: POST
-          path: /api/cases/{{ steps.case_id.output }}/comments
-          body:
-            type: user
-            owner: observability
-            comment: |
-              # Related Alert
-              * Summary: {{ foreach.item._source["kibana.alert.reason"] }}
-              * [Conversation](/app/agent_builder/conversations/{{ steps.correlate.output.conversation_id }})
-              * Relationship to Case: {{ steps.correlate_parse.output.relation }}
-
-    - name: if_new_alerts
+          agent_id: alert_correlation
+          input: |
+            Try to correlate this alert: 
+            ```json
+            {{ foreach.item._source | json }}
+            ```
+            Respond only in valid JSON format with no newlines, no extra spaces, and with no prefixes or postfixes (DO NOT USE ```json prefix and ``` postfix) in your response!'
+    - name: correlate_parse
+      type: console
+      with:
+        message: ${{ steps.correlate.output.response.message | json_parse }}
+    - name: new_or_update_case
       type: if
-      condition: get_active_alerts.output.hits.total.value > 0
+      condition: 'steps.correlate_parse.output.case_id : NONE'
       steps:
-        - name: get_case_workflow_id
-          type: console
-          with:
-            message: '{% for workflow in steps.get_workflows.output.results %}{%- if workflow.name == consts.case_workflow_name -%}{{ workflow.id }}{% break %}{%- endif -%}{% endfor %}'
-        - name: start_case_process_workflow
-          type: kibana.request
-          with:
-            method: POST
-            path: /api/workflows/{{ steps.get_case_workflow_id.output.id }}/run
-            body:
-              inputs:
-                event: ''
-            headers:
-              x-elastic-internal-origin: kibana
+      - name: get_case_settings
+        type: kibana.request
+        with:
+          method: GET
+          path: /api/cases/configure
+      - name: create_new_case
+        type: kibana.createCaseDefaultSpace
+        with:
+          connector:
+            id: '{{ steps.get_case_settings.output.data[0].connector.id }}'
+            name: '{{ steps.get_case_settings.output.data[0].connector.name }}'
+            type: .none
+            fields:
+          customFields:
+          - key: system_environment
+            type: text
+            value: '{{ steps.correlate_parse.output.system_environment}}'
+          description: '{{ steps.correlate_parse.output.trigger }}'
+          owner: observability
+          settings:
+            syncAlerts: true
+          severity: '{{ steps.correlate_parse.output.severity }}'
+          tags:
+          - rca
+          title: '{{ steps.correlate_parse.output.title }}'
+    - name: case_id
+      type: console
+      with:
+        message: "{% if steps.correlate_parse.output.case_id == 'NONE' %}{{ steps.create_new_case.output.id }}{% else %}{{ steps.correlate_parse.output.case_id }}{%endif%}"
+    - name: add_alert_to_case
+      type: kibana.request
+      with:
+        method: POST
+        path: /api/cases/{{ steps.case_id.output }}/comments
+        body:
+          type: alert
+          alertId: '{{ foreach.item._id }}'
+          index: '{{ foreach.item._index }}'
+          owner: observability
+          rule:
+            id: '{{ foreach.item._source["kibana.alert.rule.uuid"] }}'
+            name: '{{ foreach.item._source["kibana.alert.rule.name"] }}'
+      on-failure:
+        retry:
+          max-attempts: 3
+          delay: 1s
+    - name: add_comment_to_case
+      type: kibana.request
+      with:
+        method: POST
+        path: /api/cases/{{ steps.case_id.output }}/comments
+        body:
+          type: user
+          owner: observability
+          comment: |
+            # Related Alert
+            * Summary: {{ foreach.item._source["kibana.alert.reason"] }}
+            * [Conversation](/app/agent_builder/conversations/{{ steps.correlate.output.conversation_id }})
+            * Relationship to Case: {{ steps.correlate_parse.output.relation }}
+
+  - name: if_new_alerts
+    type: if
+    condition: steps.get_active_alerts.output.hits.total.value > 0
+    steps:
+    - name: get_case_workflow_id
+      type: console
+      with:
+        message: '{% for workflow in steps.get_workflows.output.results %}{%- if workflow.name == consts.case_workflow_name -%}{{ workflow.id }}{% break %}{%- endif -%}{% endfor %}'
+    - name: start_case_process_workflow
+      type: kibana.request
+      with:
+        method: POST
+        path: /api/workflows/{{ steps.get_case_workflow_id.output }}/run
+        body:
+          inputs:
+            event: ''
+        headers:
+          x-elastic-internal-origin: kibana
+          
