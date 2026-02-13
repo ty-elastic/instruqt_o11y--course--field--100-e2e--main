@@ -31,11 +31,6 @@ spec:
               field: attributes["elasticsearch.index"]
               value: logs
     spec:
-      tolerations:
-      - key: "REGION"
-        operator: "Equal"
-        value: "$REGION"
-        effect: "PreferNoSchedule"
       containers:
         - image: $REPO/proxy:$COURSE
           imagePullPolicy: Always

@@ -19,11 +19,6 @@ metadata:
 spec:
   template:
     spec:
-      tolerations:
-      - key: "REGION"
-        operator: "Equal"
-        value: "$REGION"
-        effect: "PreferNoSchedule"
       containers:
         - image: $REPO/frontend:$COURSE
           imagePullPolicy: Always

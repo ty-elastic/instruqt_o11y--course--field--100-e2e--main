@@ -150,8 +150,7 @@ const apm = initOpenTelemetry({
   endpoint: '/telemetry',
   resourceAttributes: {
     'service.name': '${SERVICE_NAME}',
-    'service.version': '${SERVICE_VERSION}',
-    'deployment.environment.name': '${NAMESPACE}'
+    'service.version': '${SERVICE_VERSION}'
   }
 });
 export default apm;

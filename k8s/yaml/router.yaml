@@ -66,11 +66,6 @@ spec:
         service: router
         app.kubernetes.io/version: "$SERVICE_VERSION"
     spec:
-      tolerations:
-      - key: "REGION"
-        operator: "Equal"
-        value: "$REGION"
-        effect: "PreferNoSchedule"
       containers:
         - name: router
           env:

@@ -191,11 +191,6 @@ spec:
             on_error: send_quiet
             field: attributes.trace_flags
     spec:
-      tolerations:
-      - key: "REGION"
-        operator: "Equal"
-        value: "$REGION"
-        effect: "PreferNoSchedule"
       containers:
         - name: collector
           image: otel/opentelemetry-collector-contrib:0.144.0

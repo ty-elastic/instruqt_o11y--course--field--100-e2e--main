@@ -25,11 +25,6 @@ spec:
         service: monkey
         app.kubernetes.io/version: "$SERVICE_VERSION"
     spec:
-      tolerations:
-      - key: "REGION"
-        operator: "Equal"
-        value: "$REGION"
-        effect: "PreferNoSchedule"
       containers:
         - name: monkey
           image: $REPO/monkey:$COURSE

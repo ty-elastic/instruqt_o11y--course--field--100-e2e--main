@@ -18,11 +18,6 @@ spec:
         app: trading
         service: cpuhog
     spec:
-      tolerations:
-      - key: "REGION"
-        operator: "Equal"
-        value: "$REGION"
-        effect: "PreferNoSchedule"
       containers:
         - name: cpuhog
           image: $REPO/cpuhog:$COURSE

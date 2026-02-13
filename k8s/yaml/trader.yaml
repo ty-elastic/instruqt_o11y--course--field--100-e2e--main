@@ -24,11 +24,6 @@ spec:
         service: trader
         app.kubernetes.io/version: "$SERVICE_VERSION"
     spec:
-      tolerations:
-      - key: "REGION"
-        operator: "Equal"
-        value: "$REGION"
-        effect: "PreferNoSchedule"
       containers:
         - name: trader
           image: $REPO/trader:$COURSE

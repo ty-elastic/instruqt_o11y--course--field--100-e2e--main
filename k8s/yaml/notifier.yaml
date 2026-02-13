@@ -24,11 +24,6 @@ spec:
         service: notifier
         app.kubernetes.io/version: "$SERVICE_VERSION"
     spec:
-      tolerations:
-      - key: "REGION"
-        operator: "Equal"
-        value: "$REGION"
-        effect: "PreferNoSchedule"
       containers:
         - name: notifier
           image: $REPO/notifier:$COURSE

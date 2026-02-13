@@ -227,6 +227,12 @@ collectors:
             - key: deployment.environment.name
               from_attribute: k8s.namespace.name
               action: upsert
+            - key: data_stream.namespace
+              from_attribute: k8s.namespace.name
+              action: upsert
+            - key: resource.attributes.cloud.region
+              from_attribute: k8s.namespace.name
+              action: upsert
         transform/parse_json_body:
             error_mode: ignore
             log_statements:

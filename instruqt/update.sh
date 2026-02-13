@@ -21,10 +21,18 @@ upload_bundle() {
   cd ..
   git archive --format=tgz HEAD -o instruqt/bundle/$course.tgz
 
+  ARTIFACT_VERSION=1.0
+
+  gcloud artifacts versions delete $ARTIFACT_VERSION \
+      --quiet \
+      --package=$course \
+      --location=us-central1 \
+      --repository=tbekiares-instruqt
+
   gcloud artifacts generic upload \
       --source=instruqt/bundle/$course.tgz \
       --package=$course \
-      --version=1.0 \
+      --version=$ARTIFACT_VERSION \
       --location=us-central1 \
       --repository=tbekiares-instruqt
 
@@ -101,8 +109,3 @@ for dir in ./tracks/*/; do
     fi
   fi
 done
-
-
-
-
-

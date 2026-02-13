@@ -34,7 +34,7 @@ def init_k8s(incluster=True):
     apps_api = client.AppsV1Api()
     api = client.ApiClient()
     
-    deployments = get_deployments(os.environ['NAMESPACE'])
+    #deployments = get_deployments(os.environ['NAMESPACE'])
 
 def get_deployments(namespace):
     ret = apps_api.list_namespaced_deployment(namespace)
@@ -64,8 +64,11 @@ def add_deployment(namespace, body):
 def restart_deployment(namespace, name):
 
     print(namespace)
+    print("11JERE!!")
     # Get the current Deployment object
     deployment = apps_api.read_namespaced_deployment(name=name, namespace=namespace)
+    print(deployment)
+    print("JERE!!")
 
     # Ensure the Pod template metadata and annotations exist
     if not deployment.spec.template.metadata:
@@ -95,26 +98,29 @@ def add_deployment(namespace, name):
         namespace=namespace
     )
 
-@app.post('/service/<service>/<state>')
-def change_service_status(service, state):
+@app.post('/service/<namespace>/<service>/<state>')
+def change_service_status(namespace, service, state):
     print("HERE", flush=True)
 
     try:
         if state == 'up':
-            ret = add_deployment(os.environ['NAMESPACE'], service)
+            ret = add_deployment(namespace, service)
             return {'status': 'success'}, 200
         elif state == 'down':
-            ret = delete_deployment(os.environ['NAMESPACE'], service)
+            ret = delete_deployment(namespace, service)
             return {'status': 'success'}, 200
         elif state == 'restart':
             print(service)
-            ret = restart_deployment(os.environ['NAMESPACE'], service)
+            ret = restart_deployment(namespace, service)
             return {'status': 'success'}, 200
     except Exception as e:
         return {'status': 'fail', "reason": e.reason}, e.status
 
-if __name__ == "__main__":
-    init_k8s(incluster=False)
-else:
-    print("incluster")
-    init_k8s(incluster=True)
+# if __name__ == "__main__":
+#     init_k8s(incluster=False)
+# else:
+#     print("incluster")
+#     init_k8s(incluster=True)
+
+print("incluster=True")
+init_k8s(incluster=True)

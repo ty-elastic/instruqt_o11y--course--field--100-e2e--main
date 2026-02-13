@@ -231,7 +231,7 @@ def load_workflows(kibana_server, kibana_auth, es_host, remote_host = None):
 
 #
 
-def load_synthetics(kibana_server, kibana_auth):
+def load_synthetics(kibana_server, kibana_auth, namespaces):
 
     directory_path = "synthetics"
     target_extension = ".json"
@@ -240,15 +240,19 @@ def load_synthetics(kibana_server, kibana_auth):
         for file in files:
             if file.endswith(target_extension):
                 full_path = os.path.join(root, file)
-                with open(full_path, 'r') as fileo:
-                    #content = file.read()
-                    synthetic = json.load(fileo)
+                for namespace in namespaces:
+                    with open(full_path, 'r') as fileo:
+                        #content = file.read()
 
-                    #print(synthetic)
-                    resp = requests.post(f"{kibana_server}/api/synthetics/monitors",
-                                        json=synthetic,
-                                        headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
-                    print(resp.json())     
+                        synthetic = json.load(fileo)
+                        print(f'namespace={namespace}')
+                        synthetic['inline_script'] = synthetic['inline_script'].replace('$NAMESPACE', namespace)
+
+                        print(synthetic)
+                        resp = requests.post(f"{kibana_server}/api/synthetics/monitors",
+                                            json=synthetic,
+                                            headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+                        print(resp.json())     
  
 
 def load_rules(kibana_server, kibana_auth, es_host, connect_alerts=False):
@@ -440,13 +444,13 @@ def run_workflow(kibana_server, kibana_auth, workflow_name):
 @click.option('--es_apikey', default="", help='apikey for auth')
 @click.option('--es_authbasic', default="", help='basic for auth')
 @click.option('--connect_alerts', default=False, help='connect alerts to workflow')
-@click.option('--snow_host', default="TBD", help='snow host')
-@click.option('--snow_authbasic', default="TBD", help='basic for auth')
-@click.option('--ai_connector', default="Elastic-Managed-LLM", help='ai connector id')
 @click.option('--remote_host', default=None, help='remote host url')
-@click.option('--ai_proxy', default="https://tbekiares-demo-aiassistantv2-1059491012611.us-central1.run.app", help='ai proxy host')
+@click.option('--namespaces', default="trading-na,trading-emea", help='namespaces')
 @click.argument('action')
-def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, ai_connector, ai_proxy, action, snow_host, snow_authbasic, remote_host):
+def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, remote_host, namespaces):
+
+    namespaces_split = namespaces.split(',')
+    print(namespaces_split)
     
     config = dotenv_values()
     for key, value in config.items():
@@ -459,15 +463,6 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, ai_conne
     if es_apikey == "" and es_authbasic == "":
         es_apikey = config['elasticsearch_api_key']
 
-    if snow_host == "TBD" and 'snow_host' in config:
-        snow_host = config['snow_host']
-    if snow_authbasic == "TBD" and 'snow_authbasic' in config:
-        snow_authbasic = config['snow_authbasic']
-    if snow_authbasic != "TBD":
-        snow_auth = f"Basic {snow_authbasic}"
-    else:
-        snow_auth = "TBD"
-
     if es_authbasic != "":
         auth = f"Basic {es_authbasic}"
     else:
@@ -475,7 +470,7 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, ai_conne
     
     if action == 'load_workflows':
         print("LOADING WORKFLOWS")
-        load_workflows(kibana_host, auth, es_host, ai_connector, ai_proxy, snow_host, snow_auth)
+        load_workflows(kibana_host, auth, es_host)
         #run_workflow(kibana_host, auth, 'setup')
         #run_workflow(kibana_host, auth, 'topology')
     elif action == 'load_alerts':
@@ -486,11 +481,8 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, ai_conne
         #load_knowledge(kibana_host, auth)
         load_new_knowledge(es_host, auth)
         print('done')
-    elif action == 'load_prompt':
-        load_prompt(kibana_host, auth)
-        print('done')
     elif action == 'load_synthetics':
-        load_synthetics(kibana_host, auth)
+        load_synthetics(kibana_host, auth, namespaces_split)
         print('done')
     elif action == 'backup_tools':
         backup_agent_tools(kibana_host, auth)
@@ -512,7 +504,7 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, ai_conne
         load_rules(kibana_host, auth, es_host, connect_alerts)
 
         run_workflow(kibana_host, auth, 'setup')
-        load_synthetics(kibana_host, auth)
+        load_synthetics(kibana_host, auth, namespaces_split)
         print('done')
 
     elif action == 'backup':

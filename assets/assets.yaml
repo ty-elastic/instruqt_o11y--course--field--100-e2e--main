@@ -20,7 +20,9 @@ spec:
             - "--es_apikey"
             - "$elasticsearch_api_key"    
             - "--remote_host"
-            - "$remote_endpoint" 
+            - "$remote_endpoint"
+            - "--namespaces"
+            - "$namespaces"
             - "load"
       restartPolicy: Never
 ---

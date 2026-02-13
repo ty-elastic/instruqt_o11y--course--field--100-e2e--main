@@ -25,11 +25,6 @@ spec:
         service: recorder-go-zero
         app.kubernetes.io/version: "$SERVICE_VERSION"
     spec:
-      tolerations:
-      - key: "REGION"
-        operator: "Equal"
-        value: "$REGION"
-        effect: "PreferNoSchedule"
       containers:
         - env:
             - name: POSTGRESQL_HOST

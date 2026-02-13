@@ -4,9 +4,7 @@ RUN apt-get update -y && \
     apt-get install -y --no-install-recommends gettext-base && \
     rm -rf /var/lib/apt/lists/*
 
-ENV ELASTICSEARCH_RUM_FE_ENDPOINT=""
-ARG NAMESPACE
-ARG SERVICE_VERSION
+ARG SERVICE_VERSION="1.0"
 ARG SERVICE_NAME="trader-app-web"
 
 RUN mkdir -p /app

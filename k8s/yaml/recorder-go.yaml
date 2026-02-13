@@ -24,11 +24,6 @@ spec:
         service: recorder-go
         app.kubernetes.io/version: "$SERVICE_VERSION"
     spec:
-      tolerations:
-      - key: "REGION"
-        operator: "Equal"
-        value: "$REGION"
-        effect: "PreferNoSchedule"
       containers:
         - env:
             - name: MSSQL_HOST

@@ -9,8 +9,6 @@ virtualmachines:
     REGIONS: aws-us-east-1
   memory: 4096
   cpus: 1
-  allow_external_ingress:
-  - high-ports 
 - name: k3s
   image: elastic/worker-k3s
   shell: /bin/bash

@@ -133,7 +133,7 @@ def trade(*, region, trade_id, customer_id, symbol, day_of_week, shares, share_p
     trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.share_price", share_price)
     if action == 'buy' or action == 'sell':
         trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.value", shares * share_price)
-        trading_revenue.add(math.ceil(share_price * shares * .001), attributes={"cloud.region": region} )
+        trading_revenue.add(math.ceil(share_price * shares * .001))
     else:
         trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.value", 0)
 

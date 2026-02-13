@@ -30,7 +30,7 @@ csp/gcp/cluster.sh -t {your_supervisors_last_name} -u {your firstlast name toget
 
 ## Everything
 ```bash
-./build.sh -c o11y--course--field--100-e2e -b true -d true -s all -o serverless -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $MOTEL_INGEST_URL -f true -p true -m true -w true -g true -e cluster
+./build.sh -c o11y--course--field--100-e2e -b false -d true -s all -o serverless -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $MOTEL_INGEST_URL -f true -p true -m true -w true -g true -e cluster
 ```
 
 ## Redeploy Services

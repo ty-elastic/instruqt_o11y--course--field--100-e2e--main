@@ -6,7 +6,9 @@ current_service=remote
 while getopts "c:" opt
 do
    case "$opt" in
+      a ) arch="$OPTARG" ;;
       c ) course="$OPTARG" ;;
+      r ) repo="$OPTARG" ;;
    esac
 done
 
