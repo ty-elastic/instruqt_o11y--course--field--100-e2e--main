@@ -16,6 +16,22 @@ cd tools/pandoc
 docker build --platform linux/amd64 -t pandoc-inter .
 cd ../..
 
+upload_bundle() {
+  mkdir -p bundle
+  cd ..
+  git archive --format=tgz HEAD -o instruqt/bundle/$course.tgz
+
+  gcloud artifacts generic upload \
+      --source=instruqt/bundle/$course.tgz \
+      --package=$course \
+      --version=1.0 \
+      --location=us-central1 \
+      --repository=tbekiares-instruqt
+
+  cd instruqt
+}
+upload_bundle
+
 for dir in ./tracks/*/; do
   echo $dir
   if [[ -d "$dir" ]]; then

@@ -13,11 +13,15 @@ done
 # ----------------------------------------- CLONE CODE
 
 export COURSE=o11y--course--field--100-e2e
-export GITHUB_REPO=https://github.com/ty-elastic/instruqt_$COURSE--main
+export ARTIFACTS=elastic-sa/locations/us-central1/repositories/tbekiares-instruqt
 
 mkdir -p /workspace/workshop
-git clone $GITHUB_REPO /workspace/workshop
 cd /workspace/workshop
+
+curl -X GET \
+     -o $COURSE.tgz \
+     "https://artifactregistry.googleapis.com/download/v1/projects/$ARTIFACTS/files/$COURSE%3A1.0%3A$COURSE.tgz:download?alt=media"
+tar -xvzf $COURSE.tgz
 
 # ----------------------------------------- SETUP SERVERLESS
 

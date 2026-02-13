@@ -87,14 +87,14 @@ All of the following technologies are enabled in this environment. As time allow
 
 * Agentic RCA
   * [Alert Correlation, Agentic Root Cause Analysis, and HIL Remediation](section-agentic-rca)
-* Workflows
+* [Workflows](section-workflows)
 * Synthetics
 * OOTB OTel Dashboards
   * k8s
   * Hosts
   * [Postgresql](section-ootb-otel-dashboards-postgresql)
-* OTel Logging
-  * OTTL Parsing
+* Logging
+  * [OTTL Parsing](section-logging-ottl-parsing)
   * Receiver Creator Parsing
 * [OTel Profiling](section-otel-profiling)
 * Streams
@@ -114,7 +114,7 @@ All of the following technologies are enabled in this environment. As time allow
   * [SQL Commentor](section-tracing-sql-commentor)
   * eBPF Zero Instrumentation Go
 
-Supporting slides (where available) can be found here: https://docs.google.com/presentation/d/11lkZIvLNwWR8Tm6edCsPTIImypjKiylzwhOAa8527EM/edit?usp=drive_link .
+Supporting slides (where available) can be found [here](https://docs.google.com/presentation/d/11lkZIvLNwWR8Tm6edCsPTIImypjKiylzwhOAa8527EM/edit?usp=drive_link) .
 
 Agentic RCA
 ===
@@ -455,6 +455,79 @@ We are loading the `recorder-java` service with a custom build of the java SQL c
 The SQL commentor library will automatically add `trace.id` (if its available on the current context) to SQL commands as a comment. We are then parsing that `trace.id` out of the comments and putting it into a first-class `trace.id` field.
 
 1. Open the [button label="K8s YAML"](tab-4) Instruqt tab
-2. Navigate to `psotgres.yaml`
+2. Navigate to `postgres.yaml`
 
 Note the `regex_parser` operator specific in the `io.opentelemetry.discovery.logs.postgresql/config` annotation.
+
+Logging: OTTL Parsing
+===
+
+Our `router` service emits logs in JSON format.
+
+1. Open the [button label="Code"](tab-3) Instruqt tab
+2. Navigate to `router/app.ts`
+```
+import { Logger } from "tslog";
+const logger = new Logger({ name: "router", type: "json" });
+```
+
+Logs are emitted to stdout and written to disk by k8s. Let's have a look:
+
+1. Open the [button label="Services Host"](tab-6) Instruqt tab
+2. Enter the following `kubectl` command:
+```bash,run
+kubectl -n trading-1 get pods
+```
+3. Note the `router` pod name as <router-pod-name> (used in the next step)
+4. Enter the following `kubectl` command:
+```bash,run
+kubectl -n trading-1 logs <router-pod-name>
+```
+
+Note that we are writing out logs in JSON format.
+
+We are then using OTTL to parse out the fields in these JSON logs:
+
+1. Open the [button label="OTel Operator YAML"](tab-5) Instruqt tab
+2. Navigate to `apm/serverless.yaml`
+3. Search for `transform/parse_json_body`
+
+Note the OTTL used to parse the JSON.
+
+Let's examine the results.
+
+1. Open the [button label="Elasticsearch"](tab-0) tab
+2. Navigate to `Discover` > `ES|QL`
+3. Search for:
+```
+FROM logs-*
+| WHERE service.name == "router"
+```
+4. Open a record to examine it
+
+Workflows
+===
+
+# Basic
+
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
+2. Navigate to `Workflows`
+3. Open the `hello_world` workflow
+4. Run it
+5. Walk through the execution steps
+
+# Calling an external REST API
+
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
+2. Navigate to `Workflows`
+3. Open the `ip_geolocator` workflow
+4. Run it
+5. Walk through the execution steps
+
+# Calling an external REST API w/ conditionals and retries
+
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
+2. Navigate to `Workflows`
+3. Open the `ip_geolocator_advanced` workflow
+4. Run it
+5. Walk through the execution steps
