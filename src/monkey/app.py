@@ -189,7 +189,7 @@ def generate_trade_requests():
     next_customer = None
     next_symbol = None
 
-    time.sleep(30)
+    time.sleep(5)
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=CONCURRENT_TRADE_REQUESTS) as executor:
         while True:
@@ -691,7 +691,7 @@ def train_label(classification):
     
     return "OK"
 
-#simulation_start()
+simulation_start()
 
 
 
