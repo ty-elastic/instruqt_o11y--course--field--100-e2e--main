@@ -27,13 +27,6 @@ class Train extends React.Component {
             { value: 'F', label: 'Friday' },
         ];
 
-        this.options.region = [
-            { value: 'EMEA', label: 'EMEA' },
-            { value: 'EU', label: 'EU' },
-            { value: 'LATAM', label: 'LATAM' },
-            { value: 'NA', label: 'NA' }
-        ];
-
         this.options.action = [
             { value: 'buy', label: 'Buy' },
             { value: 'sell', label: 'Sell' },
@@ -51,7 +44,6 @@ class Train extends React.Component {
 
         this.state = {
             day_of_week: this.options.day_of_week,
-            region: this.options.region,
             symbol: this.options.symbol,
             action: this.options.action,
             shares: [10, 700],
@@ -85,9 +77,6 @@ class Train extends React.Component {
 
             if (this.state.day_of_week.length > 0) {
                 params.day_of_week = this.state.day_of_week.map(item => item.value)
-            }
-            if (this.state.region.length > 0) {
-                params.region = this.state.region.map(item => item.value)
             }
             if (this.state.symbol.length > 0) {
                 params.symbol = this.state.symbol.map(item => item.value)
@@ -134,20 +123,6 @@ class Train extends React.Component {
                             {...params}
                             variant="standard"
                             label="Day of Week"
-                        />
-                        )}
-                    />
-                    <Autocomplete
-                        multiple
-                        options={this.options.region}
-                        name="region"
-                        value={this.state.region}
-                        onChange={(event, newValue) => {this.setState({['region']: newValue});}}
-                        renderInput={(params) => (
-                        <TextField
-                            {...params}
-                            variant="standard"
-                            label="Region"
                         />
                         )}
                     />

@@ -11,15 +11,14 @@ import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 
-class MarketTputRegion extends React.Component {
+class MarketTput extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            tput_region_speed: 'default',
-            tput_region: 'NA',
+            tput_speed: 'default'
         };
 
-        this.monkeyState = new MonkeyState(this, 'high_tput_per_region');
+        this.monkeyState = new MonkeyState(this, 'high_tput');
 
         this.handleInputChange = this.handleInputChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -41,10 +40,10 @@ class MarketTputRegion extends React.Component {
         event.preventDefault();
 
         try {
-            if (this.state.tput_region_speed === 'default') {
-                await axios.delete(`/monkey/tput/region/${this.state.tput_region}`);
+            if (this.state.tput_speed === 'default') {
+                await axios.delete(`/monkey/tput`);
             } else {
-                await axios.post(`/monkey/tput/region/${this.state.tput_region}/${this.state.tput_region_speed}`);
+                await axios.post(`/monkey/tput/${this.state.tput_speed}`);
             }
             this.monkeyState.fetchData();
         } catch (err) {
@@ -54,14 +53,14 @@ class MarketTputRegion extends React.Component {
 
     render() {
         return (
-            <form name="tput_region" onSubmit={this.handleSubmit}>
+            <form name="tput" onSubmit={this.handleSubmit}>
                 <Grid container spacing={2}>
                     <FormControl>
                         <InputLabel id="label_speed">Speed</InputLabel>
                         <Select
                             labelId="label_speed"
-                            name="tput_region_speed"
-                            value={this.state.tput_region_speed}
+                            name="tput_speed"
+                            value={this.state.tput_speed}
                             label="Speed"
                             onChange={this.handleInputChange}
                         >
@@ -69,22 +68,7 @@ class MarketTputRegion extends React.Component {
                             <MenuItem value="default">Default</MenuItem>
                         </Select>
                     </FormControl>
-                    <FormControl>
-                        <InputLabel id="label_region">Region</InputLabel>
-                        <Select
-                            labelId="label_region"
-                            name="tput_region"
-                            value={this.state.tput_region}
-                            label="Region"
-                            onChange={this.handleInputChange}
-                        >
-                            <MenuItem value="EMEA">EMEA</MenuItem>
-                            <MenuItem value="EU">EU</MenuItem>
-                            <MenuItem value="LATAM">LATAM</MenuItem>
-                            <MenuItem value="NA">NA</MenuItem>
-                        </Select>
-                    </FormControl>
-                    <Box width="100%"><Button variant="contained" data-transaction-name="MarketTputRegion" type="submit">Submit</Button></Box>
+                    <Box width="100%"><Button variant="contained" data-transaction-name="MarketTput" type="submit">Submit</Button></Box>
                     {this.monkeyState.render()}
                 </Grid>
             </form>
@@ -92,4 +76,4 @@ class MarketTputRegion extends React.Component {
     }
 }
 
-export default MarketTputRegion;
+export default MarketTput;

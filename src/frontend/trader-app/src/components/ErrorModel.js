@@ -10,19 +10,20 @@ import Grid from '@mui/material/Grid2';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
+import Slider from '@mui/material/Slider';
+import Typography from '@mui/material/Typography';
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 
-class CanaryRegion extends React.Component {
+class ErrorModel extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            canary_region_on: false,
-            canary_region: 'EU'
+            err_model_on: false
         };
 
-        this.monkeyState = new MonkeyState(this, 'canary_per_region');
+        this.monkeyState = new MonkeyState(this, 'model_error');
 
         this.handleInputChange = this.handleInputChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -42,10 +43,10 @@ class CanaryRegion extends React.Component {
         event.preventDefault();
 
         try {
-            if (this.state.canary_region_on === false) {
-                await axios.delete(`/monkey/canary/region/${this.state.canary_region}`);
+            if (this.state.canary_on === false) {
+                await axios.delete(`/monkey/err/model`);
             } else {
-                await axios.post(`/monkey/canary/region/${this.state.canary_region}`);
+                await axios.post(`/monkey/err/model/100`);
             }
             this.monkeyState.fetchData();
         } catch (err) {
@@ -55,32 +56,18 @@ class CanaryRegion extends React.Component {
 
     render() {
         return (
-            <form name="canary_region" onSubmit={this.handleSubmit}>
+
+            <form name="err_model" onSubmit={this.handleSubmit}>
                 <Grid container spacing={2}>
                     <FormGroup>
                         <FormControlLabel control={<Checkbox
-                            name='canary_region_on'
-                            checked={this.state.canary_region_on}
+                            name='err_model_on'
+                            checked={this.state.err_model_on}
                             onChange={this.handleInputChange}
                             inputProps={{ 'aria-label': 'controlled' }}
-                        />} label="Canary" />
+                        />} label="Generate errors" />
                     </FormGroup>
-                    <FormControl>
-                        <InputLabel id="label_region">Region</InputLabel>
-                        <Select
-                            labelId="label_region"
-                            name="canary_region"
-                            value={this.state.canary_region}
-                            label="Region"
-                            onChange={this.handleInputChange}
-                        >
-                            <MenuItem value="EMEA">EMEA</MenuItem>
-                            <MenuItem value="EU">EU</MenuItem>
-                            <MenuItem value="LATAM">LATAM</MenuItem>
-                            <MenuItem value="NA">NA</MenuItem>
-                        </Select>
-                    </FormControl>
-                    <Box width="100%"><Button variant="contained" data-transaction-name="CanaryRegion" type="submit">Submit</Button></Box>
+                    <Box width="100%"><Button variant="contained" data-transaction-name="ErrorModel" type="submit">Submit</Button></Box>
                     {this.monkeyState.render()}
                 </Grid>
             </form>
@@ -88,4 +75,4 @@ class CanaryRegion extends React.Component {
     }
 }
 
-export default CanaryRegion;
+export default ErrorModel;

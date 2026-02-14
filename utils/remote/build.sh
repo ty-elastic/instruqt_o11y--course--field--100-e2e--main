@@ -3,7 +3,7 @@ repo=us-central1-docker.pkg.dev/elastic-sa/tbekiares
 course=o11y--course--field--demo-oneworkflow--main
 current_service=remote
 
-while getopts "c:" opt
+while getopts "a:c:r:" opt
 do
    case "$opt" in
       a ) arch="$OPTARG" ;;

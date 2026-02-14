@@ -16,15 +16,15 @@ import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 
-class ErrorModelRegion extends React.Component {
+class ErrorDb extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            err_model_region_on: false,
-            err_model_region: 'EU'
+            err_db_on: false,
+            err_db_service: 'recorder-java'
         };
 
-        this.monkeyState = new MonkeyState(this, 'model_error_per_region');
+        this.monkeyState = new MonkeyState(this, 'db_error');
 
         this.handleInputChange = this.handleInputChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -44,10 +44,19 @@ class ErrorModelRegion extends React.Component {
         event.preventDefault();
 
         try {
-            if (this.state.canary_region_on === false) {
-                await axios.delete(`/monkey/err/model/region/${this.state.err_model_region}`);
+            if (this.state.err_db_on === false) {
+                await axios.delete(`/monkey/err/db`);
             } else {
-                await axios.post(`/monkey/err/model/region/${this.state.err_model_region}/100`);
+                await axios.post(`/monkey/err/db/100`,
+                    null,
+                    {
+                        params: {
+                            'err_db_service': (this.state.err_db_service === 'all') ? null : this.state.err_db_service
+                        }
+                    }
+                );
+
+
             }
             this.monkeyState.fetchData();
         } catch (err) {
@@ -58,32 +67,31 @@ class ErrorModelRegion extends React.Component {
     render() {
         return (
 
-            <form name="err_model_region" onSubmit={this.handleSubmit}>
+            <form name="err_db" onSubmit={this.handleSubmit}>
                 <Grid container spacing={2}>
                     <FormControl>
-                        <InputLabel id="label_region">Region</InputLabel>
+                        <InputLabel id="label_service">Service</InputLabel>
                         <Select
-                            labelId="label_region"
-                            name="err_model_region"
-                            value={this.state.err_model_region}
-                            label="Region"
+                            labelId="label_service"
+                            name="err_db_service"
+                            value={this.state.err_db_service}
+                            label="Service"
                             onChange={this.handleInputChange}
                         >
-                            <MenuItem value="EMEA">EMEA</MenuItem>
-                            <MenuItem value="EU">EU</MenuItem>
-                            <MenuItem value="LATAM">LATAM</MenuItem>
-                            <MenuItem value="NA">NA</MenuItem>
+                            <MenuItem value="all">All</MenuItem>
+                            <MenuItem value="recorder-java">recorder-java</MenuItem>
+                            <MenuItem value="recorder-go">recorder-go</MenuItem>
                         </Select>
                     </FormControl>
                     <FormGroup>
                         <FormControlLabel control={<Checkbox
-                            name='err_model_region_on'
-                            checked={this.state.err_model_region_on}
+                            name='err_db_on'
+                            checked={this.state.err_db_on}
                             onChange={this.handleInputChange}
                             inputProps={{ 'aria-label': 'controlled' }}
                         />} label="Generate errors" />
                     </FormGroup>
-                    <Box width="100%"><Button variant="contained" data-transaction-name="ErrorModelRegion" type="submit">Submit</Button></Box>
+                    <Box width="100%"><Button variant="contained" data-transaction-name="ErrorDb" type="submit">Submit</Button></Box>
                     {this.monkeyState.render()}
                 </Grid>
             </form>
@@ -91,4 +99,4 @@ class ErrorModelRegion extends React.Component {
     }
 }
 
-export default ErrorModelRegion;
+export default ErrorDb;

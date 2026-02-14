@@ -53,7 +53,11 @@ ua_generator_options.version_ranges = {
 DAYS_OF_WEEK = ['M', 'Tu', 'W', 'Th', 'F']
 ACTIONS = ['buy', 'sell', 'hold']
 
-REGIONS = ['NA', 'LATAM', 'EU', 'EMEA', 'APAC']
+def get_region():
+    region = os.environ.get("REGION")
+    region_split = region.split("-")
+    return region_split[1].upper()
+REGIONS = [get_region()]
 
 SYMBOLS = ['ZVZZT', 'ZALM', 'ZYX', 'CBAZ', 'BAA', 'OELK']
 
@@ -346,6 +350,7 @@ def simulation_start():
         Thread(target=generate_trade_requests, daemon=False).start()
     return "OK"
 
+
 @app.get('/state')
 def get_state():
     state = {
@@ -367,14 +372,16 @@ def get_state():
     }
     return state
 
-@app.post('/tput/region/<region>/<speed>')
-def tput_region(region, speed):
+@app.post('/tput/<speed>')
+def tput_region(speed):
+    region = get_region()
     global high_tput_per_region
     if region in REGIONS:
         high_tput_per_region[region] = HIGH_TPUT_PCT
     return high_tput_per_region
-@app.delete('/tput/region/<region>')
-def tput_region_delete(region):
+@app.delete('/tput')
+def tput_region_delete():
+    region = get_region()
     if region in high_tput_per_region:
         del high_tput_per_region[region]
     return high_tput_per_region
@@ -402,8 +409,9 @@ def tput_symbol_delete(symbol):
         del high_tput_per_symbol[symbol]
     return high_tput_per_symbol
 
-@app.post('/latency/region/<region>/<amount>')
-def latency_region(region, amount):
+@app.post('/latency/<amount>')
+def latency_region(amount):
+    region = get_region()
     app.logger.info(f"latency start {region}={amount}") 
 
     global latency_per_action_per_region
@@ -414,8 +422,9 @@ def latency_region(region, amount):
         if latency_oneshot:
             high_tput_per_region[region] = HIGH_TPUT_PCT
     return latency_per_action_per_region    
-@app.delete('/latency/region/<region>')
-def latency_region_delete(region):
+@app.delete('/latency')
+def latency_region_delete():
+    region = get_region()
     app.logger.info(f"latency stop {region}") 
 
     global latency_per_action_per_region
@@ -425,8 +434,9 @@ def latency_region_delete(region):
         del high_tput_per_region[region]
     return latency_per_action_per_region    
 
-@app.post('/err/db/region/<region>/<amount>')
-def err_db_region(region, amount):
+@app.post('/err/db/<amount>')
+def err_db_region(amount):
+    region = get_region()
     global db_error_per_region
     err_db_service = request.args.get('err_db_service', default=None, type=str)
     err_db_oneshot = request.args.get('err_db_oneshot', default=True, type=conform_request_bool)
@@ -434,8 +444,9 @@ def err_db_region(region, amount):
         db_error_per_region[region] = {'service': err_db_service, 'amount': int(amount), 'start': time.time(), 'oneshot': err_db_oneshot}
         #high_tput_per_region[region] = HIGH_TPUT_PCT
     return db_error_per_region
-@app.delete('/err/db/region/<region>')
-def err_db_region_delete(region):
+@app.delete('/err/db')
+def err_db_region_delete():
+    region = get_region()
     global db_error_per_region
     if region in db_error_per_region:
         del db_error_per_region[region]
@@ -488,7 +499,7 @@ def err_request_ua(browser):
             if err_request_oneshot:
                 high_tput_per_customer[customer] = HIGH_TPUT_PCT
     return request_error_per_customer
-@app.delete('/err/ua/region/<region>')
+@app.delete('/err/ua')
 def err_request_customer_delete(browser):
     global request_error_per_customer
     for customer in request_error_per_customer:
@@ -499,15 +510,17 @@ def err_request_customer_delete(browser):
                 del high_tput_per_customer[customer]
     return request_error_per_customer
 
-@app.post('/err/model/region/<region>/<amount>')
-def err_model_region(region, amount):
+@app.post('/err/model/<amount>')
+def err_model_region(amount):
+    region = get_region()
     global model_error_per_region
     model_error_per_region[region] = {'amount': int(amount), 'start': time.time()}
     if region in REGIONS:
         high_tput_per_region[region] = HIGH_TPUT_PCT
     return model_error_per_region    
-@app.delete('/err/model/region/<region>')
-def err_model_region_delete(region):
+@app.delete('/err/model')
+def err_model_region_delete():
+    region = get_region()
     global model_error_per_region
     if region in model_error_per_region:
         del model_error_per_region[region]
@@ -527,14 +540,16 @@ def skew_pr_symbol_delete(symbol):
         del skew_market_factor_per_symbol[symbol]
     return skew_market_factor_per_symbol
 
-@app.post('/canary/region/<region>')
-def canary_region(region):
+@app.post('/canary')
+def canary_region():
+    region = get_region()
     global canary_per_region
     if region in REGIONS:
         canary_per_region[region] = True
     return canary_per_region    
-@app.delete('/canary/region/<region>')
-def canary_region_delete(region):
+@app.delete('/canary')
+def canary_region_delete():
+    region = get_region()
     global canary_per_region
     if region in canary_per_region:
         del canary_per_region[region]
@@ -676,6 +691,7 @@ def train_label(classification):
     
     return "OK"
 
+simulation_start()
 
 
 

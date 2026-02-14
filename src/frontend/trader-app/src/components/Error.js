@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 
-import ErrorLatencyRegion from './ErrorLatencyRegion'
+import ErrorLatency from './ErrorLatency'
 import Page from './Page'
 
-import ErrorModelRegion from './ErrorModelRegion'
-import ErrorDbRegion from './ErrorDbRegion'
+import ErrorModel from './ErrorModel'
+import ErrorDb from './ErrorDb'
 import ErrorReset from './ErrorReset'
 import ErrorLocal from './ErrorLocal'
 
 const sections = [
   { label: 'Reset', desc: 'Reset error conditions', element: ErrorReset }, 
   { label: 'Browser', desc: 'Browser (Javascript) error', element: ErrorLocal },
-  { label: 'Model', desc: 'Model error by region', element: ErrorModelRegion },
-  { label: 'DB', desc: 'Database error by region', element: ErrorDbRegion },
-  { label: 'Latency', desc: 'Latency by region', element: ErrorLatencyRegion }
+  { label: 'Model', desc: 'Model error', element: ErrorModel },
+  { label: 'DB', desc: 'Database error', element: ErrorDb },
+  { label: 'Latency', desc: 'Latency', element: ErrorLatency }
 ];
 
 class Error extends React.Component {

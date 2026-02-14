@@ -69,9 +69,9 @@ class MarketTputSymbol extends React.Component {
                         </Select>
                     </FormControl>
                     <FormControl>
-                        <InputLabel id="label_region">Symbol</InputLabel>
+                        <InputLabel id="label_symbol">Symbol</InputLabel>
                         <Select
-                            labelId="label_region"
+                            labelId="label_symbol"
                             name="tput_symbol"
                             value={this.state.tput_symbol}
                             label="Symbol"

@@ -16,8 +16,8 @@ const metricTransactions = new promClient.Counter({
 });
 const metricSharesTraded = new promClient.Counter({
   name: 'shares_traded',
-  help: 'Number of shares traded per region',
-  labelNames: ['region', 'symbol', 'action']
+  help: 'Number of shares traded',
+  labelNames: ['symbol', 'action']
 });
 const epm = new ExpressPrometheusMiddleware();
 
@@ -37,7 +37,7 @@ function customRouter(req: any) {
   metricTransactions.inc();
   //logger.info(req.query)
   if (req.query.shares > 0)
-    metricSharesTraded.labels({ region: req.query.region, symbol: req.query.symbol, action: req.query.action }).inc(Number(req.query.shares));
+    metricSharesTraded.labels({ symbol: req.query.symbol, action: req.query.action }).inc(Number(req.query.shares));
   else
     logger.warn(`negative shares`);
 

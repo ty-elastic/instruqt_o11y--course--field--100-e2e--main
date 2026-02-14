@@ -18,7 +18,7 @@ spec:
     metadata:
       annotations:
         instrumentation.opentelemetry.io/inject-python: "opentelemetry-operator-system/elastic-instrumentation"
-        io.opentelemetry.discovery.logs/enabled: "false"
+        io.opentelemetry.discovery.logs/enabled: "true"
         resource.opentelemetry.io/service.version: "$SERVICE_VERSION"
       labels:
         app: trading
@@ -33,11 +33,13 @@ spec:
             - containerPort: 9002
           env:
             - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
-              value: "true"
+              value: "false"
             - name: TRADER_SERVICE
               value: proxy:9090/trader
             - name: REGION
-              value: "$REGION"
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
       restartPolicy: Always
 ---
 apiVersion: v1

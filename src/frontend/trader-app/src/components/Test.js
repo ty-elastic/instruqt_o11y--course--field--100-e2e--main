@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Page from './Page'
-import CanaryRegion from './CanaryRegion'
+import Canary from './Canary'
 import TestReset from './TestReset'
 
 const sections = [
     { label: 'Reset', desc: 'Reset test conditions', element: TestReset },
-    { label: 'Canary', desc: 'Canary by region', element: CanaryRegion }
+    { label: 'Canary', desc: 'Canary', element: Canary }
 ];
 
 class Test extends React.Component {

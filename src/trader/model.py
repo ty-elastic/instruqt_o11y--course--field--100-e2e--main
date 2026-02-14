@@ -69,7 +69,7 @@ def sim_market_data(*, symbol, day_of_week, skew_market_factor=0):
 
     return market_factor, smoothed_share_price
 
-def sim_decide(*, symbol, region, market_factor, error, latency_amount, latency_action):
+def sim_decide(*, symbol, market_factor, error, latency_amount, latency_action):
 
     if error:
         raise Exception(random.choice(MODEL_EXCEPTIONS))
@@ -93,7 +93,7 @@ def sim_decide(*, symbol, region, market_factor, error, latency_amount, latency_
         if latency_action is not None:
             action = latency_action
         time.sleep(latency_amount)
-        inst = f"HTTPSConnectionPool(host=market.{region.lower()}.example.com, port=443): Max retries exceeded with url: / (Caused by NameResolutionError(Failed to resolve market.{region.lower()}.example.com ([Errno -2] Name or service not known)))"
+        inst = f"HTTPSConnectionPool(host=market.example.com, port=443): Max retries exceeded with url: / (Caused by NameResolutionError(Failed to resolve market.example.com ([Errno -2] Name or service not known)))"
         app.logger.warn(f"unable to fetch current market data; skipping: {inst}")
 
     return action, shares

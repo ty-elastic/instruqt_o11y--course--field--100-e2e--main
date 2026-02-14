@@ -22,7 +22,6 @@ class TradeRequest extends React.Component {
             symbol: 'OELK',
             day_of_week: 'M',
             customer_id: "tb93",
-            region: 'NA',
             loading: false,
             result: null
         };
@@ -51,7 +50,6 @@ class TradeRequest extends React.Component {
                     'symbol': this.state.symbol,
                     'day_of_week': this.state.day_of_week,
                     'customer_id': this.state.customer_id,
-                    'region': this.state.region,
                     'data_source': 'customer'
             });
             if (response.status != 200) {
@@ -104,21 +102,6 @@ class TradeRequest extends React.Component {
                         onChange={this.handleInputChange}
                         label="Customer ID"
                     />
-                    <FormControl>
-                        <InputLabel id="label_region">Region</InputLabel>
-                        <Select
-                            labelId="label_region"
-                            name="region"
-                            value={this.state.region}
-                            label="Region"
-                            onChange={this.handleInputChange}
-                        >
-                            <MenuItem value="EMEA">EMEA</MenuItem>
-                            <MenuItem value="EU">EU</MenuItem>
-                            <MenuItem value="LATAM">LATAM</MenuItem>
-                            <MenuItem value="NA">NA</MenuItem>
-                        </Select>
-                    </FormControl>
 
                     <div>
                         {this.state.loading ? (

@@ -21,7 +21,6 @@ class TradeForce extends React.Component {
             symbol: 'OELK',
             day_of_week: 'M',
             customer_id: "tb93",
-            region: 'NA',
             shares: 93,
             share_price: 107.10,
             action: 'buy'
@@ -49,7 +48,6 @@ class TradeForce extends React.Component {
                     'symbol': this.state.symbol,
                     'day_of_week': this.state.day_of_week,
                     'customer_id': this.state.customer_id,
-                    'region': this.state.region,
                     'action': this.state.action,
                     'shares': this.state.shares,
                     'share_price': this.state.share_price,
@@ -95,21 +93,6 @@ class TradeForce extends React.Component {
                         onChange={this.handleInputChange}
                         label="Customer ID"
                     />
-                    <FormControl>
-                        <InputLabel id="label_region">Region</InputLabel>
-                        <Select
-                            labelId="label_region"
-                            name="region"
-                            value={this.state.region}
-                            label="Region"
-                            onChange={this.handleInputChange}
-                        >
-                            <MenuItem value="EMEA">EMEA</MenuItem>
-                            <MenuItem value="EU">EU</MenuItem>
-                            <MenuItem value="LATAM">LATAM</MenuItem>
-                            <MenuItem value="NA">NA</MenuItem>
-                        </Select>
-                    </FormControl>
                     <Grid size={4}>
                         <Typography gutterBottom>Shares</Typography>
                         <Slider onChange={this.handleInputChange}

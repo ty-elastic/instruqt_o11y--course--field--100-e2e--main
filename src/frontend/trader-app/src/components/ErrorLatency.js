@@ -13,17 +13,16 @@ import Box from '@mui/material/Box';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormGroup from '@mui/material/FormGroup';
 
-class ErrorLatencyRegion extends React.Component {
+class ErrorLatency extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            latency_region_on: false,
-            latency_region: 'NA',
+            latency_on: false,
             latency_action: 'any',
             latency_oneshot: true
         };
 
-        this.monkeyState = new MonkeyState(this, 'latency_per_action_per_region');
+        this.monkeyState = new MonkeyState(this, 'latency_per_action');
 
         this.handleInputChange = this.handleInputChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -43,10 +42,10 @@ class ErrorLatencyRegion extends React.Component {
         event.preventDefault();
 
         try {
-            if (this.state.latency_region_on === false) {
-                await axios.delete(`/monkey/latency/region/${this.state.latency_region}`);
+            if (this.state.latency_on === false) {
+                await axios.delete(`/monkey/latency`);
             } else {
-                await axios.post(`/monkey/latency/region/${this.state.latency_region}/800`,
+                await axios.post(`/monkey/latency/800`,
                     null,
                     {
                         params: {
@@ -64,27 +63,12 @@ class ErrorLatencyRegion extends React.Component {
 
     render() {
         return (
-            <form name="latency_region" onSubmit={this.handleSubmit}>
+            <form name="latency" onSubmit={this.handleSubmit}>
                 <Grid container spacing={2}>
-                    <FormControl>
-                        <InputLabel id="label_region">Region</InputLabel>
-                        <Select
-                            labelId="label_region"
-                            name="latency_region"
-                            value={this.state.latency_region}
-                            label="Region"
-                            onChange={this.handleInputChange}
-                        >
-                            <MenuItem value="EMEA">EMEA</MenuItem>
-                            <MenuItem value="EU">EU</MenuItem>
-                            <MenuItem value="LATAM">LATAM</MenuItem>
-                            <MenuItem value="NA">NA</MenuItem>
-                        </Select>
-                    </FormControl>
                     <FormGroup>
                         <FormControlLabel control={<Checkbox
-                            name='latency_region_on'
-                            checked={this.state.latency_region_on}
+                            name='latency_on'
+                            checked={this.state.latency_on}
                             onChange={this.handleInputChange}
                             inputProps={{ 'aria-label': 'controlled' }}
                         />} label="Generate latency" />
@@ -112,7 +96,7 @@ class ErrorLatencyRegion extends React.Component {
                             <MenuItem value="hold">Hold</MenuItem>
                         </Select>
                     </FormControl> */}
-                    <Box width="100%"><Button variant="contained" data-transaction-name="ErrorLatencyRegion" type="submit">Submit</Button></Box>
+                    <Box width="100%"><Button variant="contained" data-transaction-name="ErrorLatency" type="submit">Submit</Button></Box>
                     {this.monkeyState.render()}
                 </Grid>
             </form>
@@ -120,4 +104,4 @@ class ErrorLatencyRegion extends React.Component {
     }
 }
 
-export default ErrorLatencyRegion;
+export default ErrorLatency;
