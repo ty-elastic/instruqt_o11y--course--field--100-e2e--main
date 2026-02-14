@@ -224,6 +224,10 @@ collectors:
       processors:
         resource/environment:
           attributes:
+            - key: k8s.namespace.name
+              from_attribute: http.request.header.x-k8snamespacename
+              action: upsert
+
             - key: deployment.environment.name
               from_attribute: k8s.namespace.name
               action: upsert
@@ -233,6 +237,7 @@ collectors:
             - key: resource.attributes.cloud.region
               from_attribute: k8s.namespace.name
               action: upsert
+
         transform/parse_json_body:
             error_mode: ignore
             log_statements:
@@ -379,6 +384,7 @@ collectors:
               endpoint: 0.0.0.0:4317
             http:
               endpoint: 0.0.0.0:4318
+              include_metadata: true
         receiver_creator/logs:
           watch_observers: [k8s_observer]
           discovery:
