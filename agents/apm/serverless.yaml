@@ -225,7 +225,7 @@ collectors:
         resource/environment:
           attributes:
             - key: k8s.namespace.name
-              from_attribute: metadata.X-k8snamespacename
+              from_context: metadata.x-k8snamespacename
               action: upsert
 
             - key: deployment.environment.name
