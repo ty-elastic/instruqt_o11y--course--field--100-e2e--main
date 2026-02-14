@@ -16,14 +16,11 @@
                     "platform.core.get_workflow_execution_status",
 
                     "observability.get_trace_metrics",
-                    "observability.get_trace_change_points",
 
                     "observability.get_hosts",
-                    "observability.get_metric_change_points",
                     "search_k8s_pod_metrics",
 
                     "observability.run_log_rate_analysis",
-                    "observability.get_log_change_points",
                     "search_logs_error",
 
                     "get_topologies",
