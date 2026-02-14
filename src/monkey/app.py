@@ -359,15 +359,15 @@ def get_state():
         'symbols': SYMBOLS,
         'regions': list(CUSTOMERS_PER_REGION.keys()),
         
-        'latency_per_action_per_region': latency_per_action_per_region,
-        'canary_per_region': canary_per_region,
+        'latency_per_action': latency_per_action_per_region,
+        'canary': canary_per_region,
         'high_tput_per_customer': high_tput_per_customer,
         'high_tput_per_symbol': high_tput_per_symbol,
-        'high_tput_per_region': high_tput_per_region,
-        'db_error_per_region': db_error_per_region,
+        'high_tput': high_tput_per_region,
+        'db_error': db_error_per_region,
         'db_error_per_customer': db_error_per_customer,
         'request_error_per_customer': request_error_per_customer,
-        'model_error_per_region': model_error_per_region,
+        'model_error': model_error_per_region,
         'skew_market_factor_per_symbol': skew_market_factor_per_symbol
     }
     return state
