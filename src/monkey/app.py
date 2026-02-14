@@ -691,7 +691,5 @@ def train_label(classification):
     
     return "OK"
 
+# on startup, start
 simulation_start()
-
-
-
