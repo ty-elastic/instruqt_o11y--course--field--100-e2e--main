@@ -15,7 +15,7 @@
                 "tool_ids": [
                     "platform.core.get_workflow_execution_status",
 
-                    "observability.get_trace_metrics",
+                    "search_traces_error",
 
                     "observability.get_hosts",
                     "search_k8s_pod_metrics",
