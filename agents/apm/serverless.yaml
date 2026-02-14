@@ -225,13 +225,13 @@ collectors:
         resource/environment:
           attributes:
             - key: deployment.environment.name
-              from_context: x-k8snamespacename
+              from_context: metadata.x-k8snamespacename
               action: upsert
             - key: data_stream.namespace
-              from_context: x-k8snamespacename
+              from_context: metadata.x-k8snamespacename
               action: upsert
             - key: resource.attributes.cloud.region
-              from_context: x-k8snamespacename
+              from_context: metadata.x-k8snamespacename
               action: upsert
 
             - key: deployment.environment.name
@@ -268,7 +268,10 @@ collectors:
               from_attribute: service.name
               action: upsert
         # [Batch Processor](https://github.com/open-telemetry/opentelemetry-collector/tree/main/processor/batchprocessor)
-        batch: {}
+        batch:
+          metadata_keys:
+            - "x-k8snamespacename"
+
         batch/metrics:
           # explicitly set send_batch_max_size to 0, as splitting metrics requests may cause version_conflict_engine_exception in TSDB
           send_batch_max_size: 0
