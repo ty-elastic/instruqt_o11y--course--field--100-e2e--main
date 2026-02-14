@@ -69,6 +69,8 @@ elasticsearch_api_key="na"
 elasticsearch_otlp_endpoint="na"
 remote_endpoint="na"
 
+proxy_port=8081
+
 unameOut="$(uname -s)"
 case "${unameOut}" in
     Linux*)     machine=Linux;;
@@ -199,6 +201,9 @@ for current_region in "${regions[@]}"; do
     export REPO=$repo
     export NAMESPACE=$namespace
     export REGION=$current_region
+
+    ((proxy_port++))
+    export PROXY_PORT=proxy_port
 
     if [[ "$deploy_service" == "true" || "$deploy_service" == "delete" || "$deploy_service" == "force" ]]; then
         export SERVICE_VERSION=$service_version

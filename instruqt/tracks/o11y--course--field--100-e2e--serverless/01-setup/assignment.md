@@ -138,7 +138,7 @@ Perform these steps before you start the demo.
 
 1. Open the [button label="Trader"](tab-2) Instruqt tab
 2. Navigate to `ERROR`
-3. Open `DB`, select `Generate errors`, select region `EU`, and click `SUBMIT`
+3. Open `DB`, select `Generate errors` and click `SUBMIT`
 4. Open the [button label="Elastic"](tab-0) Instruqt tab
 5. Navigate to `Alerts`
 6. Wait for new alerts to appear
