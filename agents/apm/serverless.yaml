@@ -225,13 +225,13 @@ collectors:
         resource/environment:
           attributes:
             - key: deployment.environment.name
-              from_context: metadata.x-k8snamespacename
+              from_context: x-k8snamespacename
               action: upsert
             - key: data_stream.namespace
-              from_context: metadata.x-k8snamespacename
+              from_context: x-k8snamespacename
               action: upsert
             - key: resource.attributes.cloud.region
-              from_context: metadata.x-k8snamespacename
+              from_context: x-k8snamespacename
               action: upsert
 
             - key: deployment.environment.name
