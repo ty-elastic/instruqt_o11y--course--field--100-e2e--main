@@ -37,7 +37,7 @@ tabs:
   type: service
   hostname: k3s
   path: /
-  port: 8081
+  port: 8082
 - id: acj1llndlxop
   title: Code
   type: code

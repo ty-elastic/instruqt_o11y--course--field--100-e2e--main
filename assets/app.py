@@ -240,14 +240,18 @@ def load_synthetics(kibana_server, kibana_auth, namespaces):
         for file in files:
             if file.endswith(target_extension):
                 full_path = os.path.join(root, file)
+                port=8081
                 for namespace in namespaces:
                     with open(full_path, 'r') as fileo:
                         #content = file.read()
 
                         synthetic = json.load(fileo)
                         print(f'namespace={namespace}')
+                        synthetic['name'] = synthetic['name'] + ' (' + namespace + ')'
                         synthetic['inline_script'] = synthetic['inline_script'].replace('$NAMESPACE', namespace)
-
+                        port = port+1
+                        synthetic['inline_script'] = synthetic['inline_script'].replace('$PORT', port)
+                        
                         print(synthetic)
                         resp = requests.post(f"{kibana_server}/api/synthetics/monitors",
                                             json=synthetic,

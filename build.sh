@@ -234,7 +234,6 @@ for current_region in "${regions[@]}"; do
                         envsubst < k8s/yaml/$current_service.yaml | kubectl delete -f -
                     else
 
-
                         printf "deploying $current_service to region $REGION\n"
                         #echo $PROXY_PORT
                         #envsubst < k8s/yaml/$current_service.yaml | yq '.spec.ports[].port |= to_number'
@@ -306,7 +305,7 @@ if [ "$remote_endpoint" != "na" ]; then
     cd ../..
 
     if [ "$remote_endpoint" = "cluster" ]; then
-        retry_command_lin get_lb_address 'utils' remote-ext
+        retry_command_lin get_lb_address utils remote-ext
         remote_endpoint=http://SERVICE_IP:SERVICE_PORT
     fi
 fi
