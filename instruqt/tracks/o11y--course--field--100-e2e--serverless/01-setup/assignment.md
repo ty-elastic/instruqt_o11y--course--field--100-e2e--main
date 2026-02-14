@@ -33,7 +33,7 @@ tabs:
       style-src ''unsafe-inline'' ''self'' https://kibana.estccdn.com; style-src-elem
       ''unsafe-inline'' ''self'' https://kibana.estccdn.com'
 - id: ip5dkifrpofc
-  title: Trader
+  title: Trader (NA)
   type: service
   hostname: k3s
   path: /

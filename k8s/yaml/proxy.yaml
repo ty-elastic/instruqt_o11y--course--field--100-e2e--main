@@ -77,10 +77,9 @@ metadata:
 spec:
   ports:
     - name: proxy
-      port: $PROXY_PORT
+      port: {PROXY_PORT}
       targetPort: 80
   type: LoadBalancer
   selector:
     app: trading
     service: proxy
----

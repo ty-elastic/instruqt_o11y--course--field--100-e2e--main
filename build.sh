@@ -203,7 +203,7 @@ for current_region in "${regions[@]}"; do
     export REGION=$current_region
 
     ((proxy_port++))
-    export PROXY_PORT=proxy_port
+    export PROXY_PORT=$proxy_port
 
     if [[ "$deploy_service" == "true" || "$deploy_service" == "delete" || "$deploy_service" == "force" ]]; then
         export SERVICE_VERSION=$service_version
@@ -236,7 +236,15 @@ for current_region in "${regions[@]}"; do
 
 
                         printf "deploying $current_service to region $REGION\n"
-                        envsubst < k8s/yaml/$current_service.yaml | kubectl apply -f -
+                        #echo $PROXY_PORT
+                        #envsubst < k8s/yaml/$current_service.yaml | yq '.spec.ports[].port |= to_number'
+
+                        cat k8s/yaml/$current_service.yaml > tmp.yaml
+                        sed "s/{PROXY_PORT}/$PROXY_PORT/g" tmp.yaml > tmp2.yaml
+                        envsubst < tmp2.yaml | kubectl apply -f -
+                        rm tmp.yaml
+                        rm tmp2.yaml
+
                         if [ "$deploy_service" = "force" ]; then
                             kubectl -n $namespace rollout restart deployment/$current_service
                         fi
