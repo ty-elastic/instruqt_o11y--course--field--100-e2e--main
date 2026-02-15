@@ -366,7 +366,7 @@ After the agent has completed the task, let's verify that the service was restar
 1. Open the [button label="Services Host"](tab-6) Instruqt tab
 2. Enter the following `kubectl` command:
 ```bash,run
-kubectl -n trading-1 get pods
+kubectl -n trading-na get pods
 ```
 3. Note that the `monkey` pod was recently restarted
 
