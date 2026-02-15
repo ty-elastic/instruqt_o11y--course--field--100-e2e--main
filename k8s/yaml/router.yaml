@@ -79,6 +79,11 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 9000
+          env:
+            - name: REGION
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
         - name: collector
           image: otel/opentelemetry-collector-contrib:0.130.1
           command:
