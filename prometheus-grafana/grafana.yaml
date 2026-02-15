@@ -113,7 +113,8 @@ data:
       scheme: http
       static_configs:
       - targets:
-        - router.trading-1.svc.cluster.local:9000
+        - router.trading-na.svc.cluster.local:9000
+        - router.trading-emea.svc.cluster.local:9000
 kind: ConfigMap
 metadata:
   labels:
