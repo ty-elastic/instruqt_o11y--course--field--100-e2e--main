@@ -75,15 +75,14 @@ spec:
               value: recorder-go
             - name: RECORDER_HOST_CANARY
               value: recorder-go-zero
-          image: $REPO/router:$COURSE
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 9000
-          env:
             - name: REGION
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+          image: $REPO/router:$COURSE
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9000
         - name: collector
           image: otel/opentelemetry-collector-contrib:0.130.1
           command:
