@@ -14,6 +14,8 @@ data:
               scrape_interval: 5s
               static_configs:
                 - targets: ['0.0.0.0:9000']
+                  labels:
+                    region: ${env:REGION}
 
     processors:
       batch:
@@ -93,6 +95,11 @@ spec:
               name: data
               subPath: config.yaml
               readOnly: true
+          env:
+            - name: REGION
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
       volumes:
         - name: data
           configMap:
