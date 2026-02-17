@@ -8,7 +8,10 @@ import { Logger } from "tslog";
 const logger = new Logger({ name: "router", type: "json" });
 
 const { ExpressPrometheusMiddleware } = require('@matteodisabatino/express-prometheus-middleware')
+
 const promClient = require('prom-client');
+const defaultLabels = { region: process.env.REGION };
+promClient.register.setDefaultLabels(defaultLabels);
 
 const metricTransactions = new promClient.Counter({
   name: 'transactions',
@@ -17,7 +20,7 @@ const metricTransactions = new promClient.Counter({
 const metricSharesTraded = new promClient.Counter({
   name: 'shares_traded',
   help: 'Number of shares traded',
-  labelNames: ['region','symbol', 'action']
+  labelNames: ['symbol', 'action']
 });
 const epm = new ExpressPrometheusMiddleware();
 
@@ -37,7 +40,7 @@ function customRouter(req: any) {
   metricTransactions.inc();
   //logger.info(req.query)
   if (req.query.shares > 0)
-    metricSharesTraded.labels({ region: process.env.REGION, symbol: req.query.symbol, action: req.query.action }).inc(Number(req.query.shares));
+    metricSharesTraded.labels({ symbol: req.query.symbol, action: req.query.action }).inc(Number(req.query.shares));
   else
     logger.warn(`negative shares`);
 
