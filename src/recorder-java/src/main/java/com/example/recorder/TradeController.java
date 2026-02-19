@@ -14,6 +14,9 @@ import java.util.concurrent.ExecutionException;
 
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 
+import de.mkammerer.argon2.Argon2;
+import de.mkammerer.argon2.Argon2Factory;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -22,7 +25,8 @@ import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 public class TradeController {
 
     private final TradeService tradeService;
-	private final Argon2PasswordEncoder arg2SpringSecurity = new Argon2PasswordEncoder(16, 32, 1, 10000, 10);
+	//private final Argon2PasswordEncoder arg2SpringSecurity = new Argon2PasswordEncoder(16, 32, 1, 10000, 10);
+	private final Argon2 argon2 = Argon2Factory.create();
 
 	@GetMapping("/health")
     public ResponseEntity<String> health() {
@@ -40,9 +44,10 @@ public class TradeController {
 			Trade trade = new Trade(tradeId, customerId, symbol, shares, sharePrice, action);
 			
 			if (flags.contains("ENCRYPT")) {
-				log.info("encrypting...");
-				for (int i=0; i < 25; i++) {
-					String hash = arg2SpringSecurity.encode(customerId);
+				log.info("encrypting w/ argon...");
+				for (int i=0; i < 2; i++) {
+					String hash = argon2.hash(10, 10000, 1, customerId);
+					argon2.verify(hash, customerId);
 				}
 			}
 			if (flags.contains("GC")) {

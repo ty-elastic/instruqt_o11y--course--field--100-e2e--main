@@ -109,8 +109,8 @@ spec:
         app: trading
         service: mysql
       annotations:
-        io.opentelemetry.discovery.logs/enabled: "true"
-        io.opentelemetry.discovery.logs/config: |
+        io.opentelemetry.discovery.logs.mysql/enabled: "true"
+        io.opentelemetry.discovery.logs.mysql/config: |
           operators:
             - id: container-parser # Extract container's metadata
               type: container
