@@ -16,8 +16,8 @@ GRANT SUPER, REPLICATION CLIENT ON *.* TO 'otelu'@'%';
 FLUSH PRIVILEGES;
 
 CREATE TABLE IF NOT EXISTS trades (
-    share_price float4, 
-    shares integer, 
+    share_price float4 check (share_price>=0), 
+    shares integer check (shares>=0), 
     action varchar(255), 
     customer_id varchar(255), 
     symbol varchar(255), 

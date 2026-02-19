@@ -113,16 +113,6 @@ do
    esac
 done
 
-export MSSQL_HOST=mssql
-export MSSQL_USER=sa
-export MSSQL_PASSWORD=Pa55w0rd2019
-export MSSQL_DBNAME=trades
-export MSSQL_PORT=1433
-export MSSQL_PROTOCOL=sqlserver
-export MSSQL_SETUP=none
-export MSSQL_OPTIONS=";Database=trades;Integrated Security=false;Encrypt=false;TrustServerCertificate=true"
-export MSSQL_DIALECT="SQLServerDialect"
-
 export MYSQL_HOST=mysql
 export MYSQL_USER=root
 export MYSQL_PASSWORD=password

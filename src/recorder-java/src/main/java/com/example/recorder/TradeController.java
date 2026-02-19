@@ -41,7 +41,7 @@ public class TradeController {
 			
 			if (flags.contains("ENCRYPT")) {
 				log.info("encrypting...");
-				for (int i=0; i < 100; i++) {
+				for (int i=0; i < 25; i++) {
 					String hash = arg2SpringSecurity.encode(customerId);
 				}
 			}

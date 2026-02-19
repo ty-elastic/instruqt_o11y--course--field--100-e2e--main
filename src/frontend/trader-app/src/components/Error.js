@@ -7,13 +7,15 @@ import ErrorModel from './ErrorModel'
 import ErrorDb from './ErrorDb'
 import ErrorReset from './ErrorReset'
 import ErrorLocal from './ErrorLocal'
+import ErrorGc from './ErrorGc'
 
 const sections = [
   { label: 'Reset', desc: 'Reset error conditions', element: ErrorReset }, 
   { label: 'Browser', desc: 'Browser (Javascript) error', element: ErrorLocal },
   { label: 'Model', desc: 'Model error', element: ErrorModel },
   { label: 'DB', desc: 'Database error', element: ErrorDb },
-  { label: 'Latency', desc: 'Latency', element: ErrorLatency }
+  { label: 'Latency', desc: 'Latency', element: ErrorLatency },
+  { label: 'GC', desc: 'Garbage Collector', element: ErrorGc }
 ];
 
 class Error extends React.Component {
