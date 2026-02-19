@@ -12,6 +12,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.concurrent.ExecutionException;
 
+import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
+
+
 @RestController
 @RequiredArgsConstructor
 @Validated
@@ -19,6 +22,7 @@ import java.util.concurrent.ExecutionException;
 public class TradeController {
 
     private final TradeService tradeService;
+	private final Argon2PasswordEncoder arg2SpringSecurity = new Argon2PasswordEncoder(16, 32, 1, 10000, 10);
 
 	@GetMapping("/health")
     public ResponseEntity<String> health() {
@@ -28,16 +32,23 @@ public class TradeController {
 	@PostMapping("/record")
     public ResponseEntity<Trade> trade(@RequestParam(value = "customer_id") String customerId,
 		@RequestParam(value = "trade_id") String tradeId,
+		@RequestParam(value = "flags", defaultValue="") String flags,
 		@RequestParam(value = "symbol") String symbol,
 		@RequestParam(value = "shares") int shares,
 		@RequestParam(value = "share_price") float sharePrice,
 		@RequestParam(value = "action") String action) throws ExecutionException, InterruptedException {
 			Trade trade = new Trade(tradeId, customerId, symbol, shares, sharePrice, action);
 			
-			// intentionally thrash GC in NA region
-			// if (region.equals("EU") || region.equals("EMEA") || region.equals("APAC")) {
-			// 	Utilities.thrashGarbageCollector();
-			// }
+			if (flags.contains("ENCRYPT")) {
+				log.info("encrypting...");
+				for (int i=0; i < 100; i++) {
+					String hash = arg2SpringSecurity.encode(customerId);
+				}
+			}
+			if (flags.contains("GC")) {
+				log.info("thrash GC");
+				Utilities.thrashGarbageCollector();
+			}
 
 			CompletableFuture<Trade> resp = tradeService.processTrade(trade);
 

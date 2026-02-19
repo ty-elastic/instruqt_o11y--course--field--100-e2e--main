@@ -9,8 +9,9 @@ const logger = new Logger({ name: "router", type: "json" });
 
 const { ExpressPrometheusMiddleware } = require('@matteodisabatino/express-prometheus-middleware')
 
-const promClient = require('prom-client');
 const defaultLabels = { region: process.env.REGION };
+
+const promClient = require('prom-client');
 promClient.register.setDefaultLabels(defaultLabels);
 
 const metricTransactions = new promClient.Counter({
@@ -22,12 +23,18 @@ const metricSharesTraded = new promClient.Counter({
   help: 'Number of shares traded',
   labelNames: ['symbol', 'action']
 });
-const epm = new ExpressPrometheusMiddleware();
+
+const defaultMetricsCollectorConfig = 
+{
+  register: promClient.register
+}
+
+const epm = new ExpressPrometheusMiddleware(defaultMetricsCollectorConfig);
 
 const PORT: number = parseInt(process.env.PORT || '9000');
 
 const app: Express = express();
-app.use(epm.handler)
+
 
 function getRandomBoolean() {
   return Math.random() < 0.5;
@@ -39,7 +46,7 @@ function customRouter(req: any) {
 
   metricTransactions.inc();
   //logger.info(req.query)
-  if (req.query.shares > 0)
+  if (req.query.shares >= 0)
     metricSharesTraded.labels({ symbol: req.query.symbol, action: req.query.action }).inc(Number(req.query.shares));
   else
     logger.warn(`negative shares`);
@@ -84,6 +91,8 @@ app.use(express.json());
 app.get('/health', (req, res) => {
   res.send("KERNEL OK")
 });
+
+app.use(epm.handler)
 
 app.use('/', proxyMiddleware);
 

@@ -123,6 +123,12 @@ export MSSQL_SETUP=none
 export MSSQL_OPTIONS=";Database=trades;Integrated Security=false;Encrypt=false;TrustServerCertificate=true"
 export MSSQL_DIALECT="SQLServerDialect"
 
+export MYSQL_HOST=mysql
+export MYSQL_USER=root
+export MYSQL_PASSWORD=password
+export MYSQL_DBNAME=main
+export MYSQL_PORT=3306
+
 export POSTGRESQL_HOST=postgresql
 export POSTGRESQL_USER=postgres
 export POSTGRESQL_PASSWORD=postgres

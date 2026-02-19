@@ -12,17 +12,22 @@ data:
           scrape_configs:
             - job_name: 'router'
               scrape_interval: 5s
+              static_configs:
+                - targets: ['0.0.0.0:9000']
 
     processors:
       batch:
         send_batch_size: 1000
         timeout: 1s
         send_batch_max_size: 1500
-      resource/servicename:
+      resource/meta:
         attributes:
           - key: service.name
             value: router
             action: insert
+          - key: resource.attributes.cloud.region
+            from_context: "${env:OTEL_K8S_NAMESPACE}"
+            action: upsert
 
     exporters:
       debug:
@@ -36,7 +41,7 @@ data:
       pipelines:
         metrics:
           receivers: [prometheus]
-          processors: [resource/servicename, batch]
+          processors: [batch, resource/meta]
           exporters: [debug, otlp/gateway]
 ---
 apiVersion: apps/v1
@@ -91,6 +96,11 @@ spec:
               name: data
               subPath: config.yaml
               readOnly: true
+          env:
+            - name: OTEL_K8S_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
       volumes:
         - name: data
           configMap:

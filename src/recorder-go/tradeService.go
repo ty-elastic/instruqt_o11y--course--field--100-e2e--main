@@ -15,7 +15,7 @@ import (
 
 	"database/sql"
 
-	_ "github.com/microsoft/go-mssqldb"
+	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/XSAM/otelsql"
 	semconv "go.opentelemetry.io/otel/semconv/v1.37.0"
@@ -32,21 +32,22 @@ func NewTradeService() (*TradeService, error) {
 	// [scheme://][user[:password]@][protocol([addr])]/dbname[?param1=value1&paramN=valueN]
 	// spring.datasource.url=jdbc:${DB_PROTOCOL}://${POSTGRESQL_HOST}:${DB_PORT}${DB_OPTIONS}
 
-	//connString := fmt.Sprintf("%s://%s:%s@%s:%s/trades?Trusted_Connection=false&Encrypt=false&TrustServerCertificate=true", os.Getenv("MSSQL_PROTOCOL"), os.Getenv("MSSQL_USER"), os.Getenv("MSSQL_PASSWORD"), os.Getenv("MSSQL_HOST"), os.Getenv("MSSQL_PORT"))
-	connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%s%s", os.Getenv("MSSQL_HOST"), os.Getenv("MSSQL_USER"), os.Getenv("MSSQL_PASSWORD"), os.Getenv("MSSQL_PORT"), os.Getenv("MSSQL_OPTIONS"))
+	//connString := fmt.Sprintf("%s://%s:%s@%s:%s/trades?Trusted_Connection=false&Encrypt=false&TrustServerCertificate=true", os.Getenv("MYSQL_PROTOCOL"), os.Getenv("MYSQL_USER"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_HOST"), os.Getenv("MYSQL_PORT"))
+	connString := fmt.Sprintf("%s:%s@tcp(%s:%s)/main?tls=false", os.Getenv("MYSQL_USER"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_HOST"), os.Getenv("MYSQL_PORT"))
 	logger.Warn(connString)
 
-	port, err := strconv.ParseInt(os.Getenv("MSSQL_PORT"), 10, 64)
+	port, err := strconv.ParseInt(os.Getenv("MYSQL_PORT"), 10, 64)
 
-	db, err := otelsql.Open("mssql", connString, otelsql.WithSQLCommenter(true), otelsql.WithAttributes(
-		semconv.DBSystemNameMicrosoftSQLServer,
-		semconv.ServerAddress(os.Getenv("MSSQL_HOST")),
+	db, err := otelsql.Open("mysql", connString, otelsql.WithSQLCommenter(true), otelsql.WithAttributes(
+		semconv.DBSystemNameMySQL,
+		semconv.ServerAddress(os.Getenv("MYSQL_HOST")),
 		semconv.ServerPortKey.Int64(port),
-		attribute.String("db.system", "mssql"),
-		attribute.String("span.destination.service.resource", os.Getenv("MSSQL_HOST")),
-		attribute.String("span.subtype", "mssql"),
-		attribute.String("service.target.name", os.Getenv("MSSQL_HOST")),
+		attribute.String("db.system", "mysql"),
+		attribute.String("span.destination.service.resource", os.Getenv("MYSQL_HOST")),
+		attribute.String("span.subtype", "mysql"),
+		attribute.String("service.target.name", os.Getenv("MYSQL_HOST")),
 	))
+
 	if err != nil {
 		log.Fatal("unable to connect to database: ", err)
 		os.Exit(1)
@@ -55,8 +56,8 @@ func NewTradeService() (*TradeService, error) {
 
 	// Register DB stats to meter
 	err = otelsql.RegisterDBStatsMetrics(db, otelsql.WithAttributes(
-		semconv.DBSystemNameMicrosoftSQLServer,
-		semconv.ServerAddress(os.Getenv("MSSQL_HOST")),
+		semconv.DBSystemNameMySQL,
+		semconv.ServerAddress(os.Getenv("MYSQL_HOST")),
 		semconv.ServerPortKey.Int64(port),
 	))
 	if err != nil {
@@ -84,8 +85,9 @@ func NewTradeService() (*TradeService, error) {
 func (c *TradeService) RecordTrade(context context.Context, trade *Trade) (*Trade, error) {
 	sqlStatement := `
 		INSERT INTO trades (trade_id, customer_id, symbol, action, shares, share_price)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		VALUES (?, ?, ?, ?, ?, ?)
 	`
+
 	// insert trade
 	res, err := c.db.ExecContext(context, sqlStatement, trade.TradeId, trade.CustomerId, trade.Symbol, trade.Action, trade.Shares, trade.SharePrice)
 	if err != nil {
@@ -94,6 +96,7 @@ func (c *TradeService) RecordTrade(context context.Context, trade *Trade) (*Trad
 		span.RecordError(err, trace.WithStackTrace(true))
 		return nil, err
 	}
+
 	c.transactionCounter.Add(context, 1)
 
 	insertId, _ := res.LastInsertId()

@@ -1,0 +1,225 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-collector-config
+  namespace: $NAMESPACE
+data:
+  config.yaml: |-
+    receivers:
+      mysql:
+        endpoint: localhost:3306
+        tls:
+          insecure: true
+        username: otelu
+        password: abcd1234567
+        collection_interval: 10s
+        statement_events:
+          digest_text_limit: 120
+          time_limit: 24h
+          limit: 250
+        query_sample_collection:
+          max_rows_per_query: 100
+        top_query_collection:
+          collection_interval: 30s
+          lookback_time: 60
+          max_query_sample_count: 1000
+          top_query_count: 100
+        events:
+          db.server.query_sample:
+            enabled: true
+          db.server.top_query:
+            enabled: true
+        metrics:
+          mysql.client.network.io:
+            enabled: true
+          mysql.connection.errors:
+            enabled: true
+          mysql.max_used_connections:
+            enabled: true
+          mysql.query.client.count:
+            enabled: true
+          mysql.query.count:
+            enabled: true
+          mysql.query.slow.count:
+            enabled: true
+          mysql.table.rows:
+            enabled: true
+          mysql.table.size:
+            enabled: true
+
+          mysql.commands:
+            enabled: true
+          mysql.connection.count:
+            enabled: true
+          mysql.table_open_cache:
+            enabled: true
+          mysql.replica.sql_delay:
+            enabled: true
+          mysql.replica.time_behind_source:
+            enabled: true
+
+    processors:
+      resourcedetection/system:
+        detectors:
+          - system
+      transform/routing:
+        metric_statements:
+          - context: datapoint
+            statements:
+              - set(attributes["data_stream.type"], "metrics")
+              - set(attributes["data_stream.dataset"], "mysqlreceiver")
+              - set(attributes["data_stream.namespace"], "$NAMESPACE")
+
+    exporters:
+      debug:
+        verbosity: basic
+      otlp/gateway:
+        endpoint: "http://opentelemetry-kube-stack-daemon-collector.opentelemetry-operator-system.svc.cluster.local:4317"
+        tls:
+          insecure: true
+
+    service:
+      pipelines:
+        logs:
+          receivers: [mysql]
+          exporters: [debug, otlp/gateway]
+        metrics:
+          receivers: [mysql]
+          processors: [resourcedetection/system, transform/routing]
+          exporters: [debug, otlp/gateway]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+  namespace: $NAMESPACE
+data:
+  my.cnf: |-
+    [mysqld]
+    bind-address = 0.0.0.0
+    port = 3306
+    require_secure_transport = OFF
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-initdb-config
+  namespace: $NAMESPACE
+data:
+  init.sql: |
+    SET GLOBAL require_secure_transport = OFF;
+
+    CREATE DATABASE IF NOT EXISTS main;
+    USE main;
+
+    UPDATE performance_schema.setup_instruments SET ENABLED = 'YES', TIMED = 'YES' WHERE NAME LIKE 'wait/%';
+    UPDATE performance_schema.setup_consumers SET ENABLED = 'YES' WHERE NAME = 'events_statements_current';
+    UPDATE performance_schema.setup_consumers SET ENABLED = 'YES' WHERE NAME = 'statements_digest';
+    UPDATE performance_schema.setup_consumers SET ENABLED = 'YES' WHERE NAME = 'events_waits_current';
+
+    CREATE USER 'otelu'@'%' IDENTIFIED BY 'abcd1234567';
+    GRANT PROCESS ON *.* TO 'otelu'@'%';
+    GRANT SELECT ON performance_schema.* TO 'otelu'@'%';
+    GRANT SELECT ON main.* TO 'otelu'@'%';
+    GRANT SUPER, REPLICATION CLIENT ON *.* TO 'otelu'@'%';
+    FLUSH PRIVILEGES;
+
+    CREATE TABLE IF NOT EXISTS trades (
+      share_price float4, 
+      shares integer, 
+      action varchar(255), 
+      customer_id varchar(255), 
+      symbol varchar(255), 
+      trade_id varchar(255) not null, 
+      primary key (trade_id));
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: trading
+    service: mysql
+  name: mysql
+  namespace: $NAMESPACE
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trading
+      service: mysql
+  template:
+    metadata:
+      labels:
+        app: trading
+        service: mysql
+        type: mysql
+        dbName: $mysql_DBNAME
+      annotations:
+        io.opentelemetry.discovery.logs/enabled: "true"
+        io.opentelemetry.discovery.logs/config: |
+          operators:
+            - id: container-parser # Extract container's metadata
+              type: container
+            - id: es_index
+              type: add
+              field: attributes["elasticsearch.index"]
+              value: logs
+    spec:
+      containers:
+        - name: collector
+          image: otel/opentelemetry-collector-contrib:0.145.0
+          command:
+            - "/otelcol-contrib"
+            - "--config=/etc/otelcol-contrib/config.yaml"
+          volumeMounts:
+            - mountPath: /etc/otelcol-contrib/config.yaml
+              name: data
+              subPath: config.yaml
+              readOnly: true
+        - name: mysql
+          volumeMounts:
+            - name: mysql-initdb
+              mountPath: /docker-entrypoint-initdb.d
+            - name: mysql-conf
+              mountPath: /etc/mysql/conf.d # Mount to a directory where MySQL loads extra configs
+          image: mysql:9.4
+          ports:
+            - containerPort: 3306
+              protocol: TCP
+          env:
+            - name: MYSQL_DATABASE
+              value: $MYSQL_DBNAME
+            - name: MYSQL_ROOT_PASSWORD
+              value: $MYSQL_PASSWORD
+      volumes:
+        - name: mysql-initdb
+          configMap:
+            name: mysql-initdb-config
+        - name: data
+          configMap:
+            name: mysql-collector-config
+        - name: mysql-conf
+          configMap:
+            name: mysql-config
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: trading
+    service: mysql
+  name: mysql
+  namespace: $NAMESPACE
+spec:
+  ports:
+    - name: mysql
+      port: 3306
+      targetPort: 3306
+      protocol: TCP
+  selector:
+    app: trading
+    service: mysql
+---

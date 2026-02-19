@@ -119,8 +119,6 @@ spec:
       labels:
         app: trading
         service: postgresql
-        type: postgresql
-        dbName: $POSTGRESQL_DBNAME
       annotations:
         io.opentelemetry.discovery.logs.postgresql/enabled: "true"
         io.opentelemetry.discovery.logs.postgresql/config: |

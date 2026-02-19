@@ -26,24 +26,14 @@ spec:
     spec:
       containers:
         - env:
-            - name: MSSQL_HOST
-              value: $MSSQL_HOST
-            - name: MSSQL_PASSWORD
-              value: $MSSQL_PASSWORD
-            - name: MSSQL_USER
-              value: $MSSQL_USER
-            - name: MSSQL_DBNAME
-              value: $MSSQL_DBNAME
-            - name: MSSQL_PROTOCOL
-              value: $MSSQL_PROTOCOL
-            - name: MSSQL_SETUP
-              value: $MSSQL_SETUP
-            - name: MSSQL_OPTIONS
-              value: $MSSQL_OPTIONS
-            - name: MSSQL_PORT
-              value: "$MSSQL_PORT"
-            - name: MSSQL_DIALECT
-              value: $MSSQL_DIALECT
+            - name: MYSQL_HOST
+              value: $MYSQL_HOST
+            - name: MYSQL_PASSWORD
+              value: $MYSQL_PASSWORD
+            - name: MYSQL_USER
+              value: $MYSQL_USER
+            - name: MYSQL_PORT
+              value: "$MYSQL_PORT"
           image: $REPO/recorder-go:$COURSE
           imagePullPolicy: Always
           name: recorder-go

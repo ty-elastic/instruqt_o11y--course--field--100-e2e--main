@@ -106,6 +106,10 @@ def decode_common_args():
     if classification is not None:
         set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.classification", classification)
 
+    flags = params.get('flags', None)
+    # if flags is not None:
+    #     set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.flags", flags)
+
     canary = params.get('canary', False)
     set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.canary", canary)
 
@@ -123,10 +127,10 @@ def decode_common_args():
 
     skew_market_factor = params.get('skew_market_factor', 0)
 
-    return trade_id, customer_id, day_of_week, symbol, latency_amount, latency_action, error_model, error_db, error_db_service, skew_market_factor, canary, data_source, classification
+    return trade_id, customer_id, day_of_week, symbol, latency_amount, latency_action, error_model, error_db, error_db_service, skew_market_factor, canary, data_source, classification, flags
 
 @tracer.start_as_current_span("trade")
-def trade(*, trade_id, customer_id, symbol, day_of_week, shares, share_price, canary, action, error_db, data_source, classification, error_db_service=None):
+def trade(*, trade_id, customer_id, symbol, day_of_week, shares, share_price, canary, action, error_db, data_source, classification, error_db_service=None, flags):
 
     app.logger.info(f"trade requested for {symbol} on day {day_of_week}")
 
@@ -150,6 +154,8 @@ def trade(*, trade_id, customer_id, symbol, day_of_week, shares, share_price, ca
         params['shares'] = -shares
         if error_db_service is not None:
             params['service'] = error_db_service
+    if flags is not None:
+        params['flags'] = flags
         
     trade_response = requests.post(f"http://{os.environ['ROUTER_HOST']}:9000/record", params=params, timeout=TRADE_TIMEOUT)
     trade_response.raise_for_status()
@@ -164,23 +170,23 @@ def trade(*, trade_id, customer_id, symbol, day_of_week, shares, share_price, ca
     
 @app.post('/trade/force')
 def trade_force():
-    trade_id, customer_id, day_of_week, symbol, latency_amount, latency_action, error_model, error_db, error_db_service, skew_market_factor, canary, data_source, classification = decode_common_args()
+    trade_id, customer_id, day_of_week, symbol, latency_amount, latency_action, error_model, error_db, error_db_service, skew_market_factor, canary, data_source, classification, flags = decode_common_args()
 
     params = request.get_json()
     action = params.get('action')
     shares = params.get('shares')
     share_price = params.get('share_price')
 
-    return trade (data_source=data_source, classification=classification, trade_id=trade_id, symbol=symbol, customer_id=customer_id, day_of_week=day_of_week, shares=shares, share_price=share_price, canary=canary, action=action, error_db=False)
+    return trade (data_source=data_source, classification=classification, trade_id=trade_id, symbol=symbol, customer_id=customer_id, day_of_week=day_of_week, shares=shares, share_price=share_price, canary=canary, action=action, error_db=False, flags=flags)
 
 @app.post('/trade/request')
 def trade_request():
-    trade_id, customer_id, day_of_week, symbol, latency_amount, latency_action, error_model, error_db, error_db_service, skew_market_factor, canary, data_source, classification = decode_common_args()
+    trade_id, customer_id, day_of_week, symbol, latency_amount, latency_action, error_model, error_db, error_db_service, skew_market_factor, canary, data_source, classification, flags = decode_common_args()
     
     action, shares, share_price = run_model(trade_id=trade_id, customer_id=customer_id, day_of_week=day_of_week, symbol=symbol, 
                                                    error=error_model, latency_amount=latency_amount, latency_action=latency_action, skew_market_factor=skew_market_factor)
     
-    return trade (data_source=data_source, classification=classification, trade_id=trade_id, symbol=symbol, customer_id=customer_id, day_of_week=day_of_week, shares=shares, share_price=share_price, canary=canary, action=action, error_db=error_db, error_db_service=error_db_service)
+    return trade (data_source=data_source, classification=classification, trade_id=trade_id, symbol=symbol, customer_id=customer_id, day_of_week=day_of_week, shares=shares, share_price=share_price, canary=canary, action=action, error_db=error_db, error_db_service=error_db_service, flags=flags)
 
 @tracer.start_as_current_span("run_model")
 def run_model(*, trade_id, customer_id, day_of_week, symbol, error=False, latency_amount=0.0, latency_action=None, skew_market_factor=0):

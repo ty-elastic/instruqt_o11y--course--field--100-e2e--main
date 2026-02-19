@@ -116,6 +116,7 @@ db_error_per_region = {}
 db_error_per_customer = {}
 model_error_per_region = {}
 skew_market_factor_per_symbol = {}
+flags_per_region = {}
 
 def get_customers():
     customers = []
@@ -146,7 +147,7 @@ def conform_request_bool(value):
     return value.lower() == 'true'
 
 @tracer.start_as_current_span("generate_trade_request")
-def generate_trade_request(*, subscription, customer_id, symbol, day_of_week, region, latency_amount, latency_action, error_model, error_db, error_db_service, error_request, skew_market_factor, canary, classification=None, data_source):
+def generate_trade_request(*, subscription, customer_id, symbol, day_of_week, region, latency_amount, latency_action, error_model, error_db, error_db_service, error_request, skew_market_factor, canary, classification=None, flags, data_source):
     try:
         params={'symbol': symbol, 
                 'day_of_week': day_of_week,
@@ -161,6 +162,7 @@ def generate_trade_request(*, subscription, customer_id, symbol, day_of_week, re
                 'error_request': error_request,
                 'skew_market_factor': skew_market_factor,
                 'canary': canary,
+                'flags': flags,
                 'data_source': data_source}
         if classification is not None:
             params['classification'] = classification
@@ -224,6 +226,11 @@ def generate_trade_requests():
             else:
                 error_model = False
 
+            if region in flags_per_region:
+                flags = flags_per_region[region]
+            else:
+                flags = None
+
             if customer_id in request_error_per_customer:
                 error_request = True if random.randint(0, 100) > (100-request_error_per_customer[customer_id]['amount']) else False
                 if request_error_per_customer[customer_id]['oneshot'] and time.time() - request_error_per_customer[customer_id]['start'] >= ERROR_TIMEOUT_S:
@@ -264,13 +271,14 @@ def generate_trade_requests():
             else:
                 canary = False
 
-            app.logger.info(f"trading {symbol} for {customer_id} on {DAYS_OF_WEEK[idx_of_week]} from {region} with latency {latency_amount}, error_model={error_model}, error_request={error_request}, error_db={error_db}, skew_market_factor={skew_market_factor}, canary={canary}")
+            app.logger.info(f"trading {symbol} for {customer_id} on {DAYS_OF_WEEK[idx_of_week]} from {region} with latency {latency_amount}, error_model={error_model}, error_request={error_request}, error_db={error_db}, skew_market_factor={skew_market_factor}, canary={canary}, flags={flags}")
 
             executor.submit(generate_trade_request, subscription=subscription, customer_id=customer_id, symbol=symbol, day_of_week=DAYS_OF_WEEK[idx_of_week], region=region,
                         latency_amount=latency_amount, latency_action=latency_action, 
                         error_model=error_model, 
                         error_db=error_db, error_db_service=error_db_service, error_request=error_request,
                         skew_market_factor=skew_market_factor, canary=canary,
+                        flags=flags,
                         data_source='monkey')
 
             next_region = None
@@ -554,6 +562,23 @@ def canary_region_delete():
     if region in canary_per_region:
         del canary_per_region[region]
     return canary_per_region  
+
+@app.post('/flags/<flag>')
+def flags_region(flag):
+    region = get_region()
+    global flags_per_region
+    if region in REGIONS and region not in flags_per_region:
+        flags_per_region[region] = []
+    if flag not in flags_per_region[region]:
+        flags_per_region[region].append(flag)
+    return flags_per_region    
+@app.delete('/flags/<flag>')
+def flags_region_delete(flag):
+    region = get_region()
+    global flags_per_region
+    if region in flags_per_region and flag in flags_per_region[region]:
+        flags_per_region[region].remove(flag)
+    return flags_per_region  
 
 def generate_trade_force(*, subscription, customer_id, day_of_week, region, symbol, action, shares, share_price, data_source, classification):
     try:
