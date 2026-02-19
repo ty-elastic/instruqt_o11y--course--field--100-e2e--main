@@ -376,7 +376,8 @@ def get_state():
         'db_error_per_customer': db_error_per_customer,
         'request_error_per_customer': request_error_per_customer,
         'model_error': model_error_per_region,
-        'skew_market_factor_per_symbol': skew_market_factor_per_symbol
+        'skew_market_factor_per_symbol': skew_market_factor_per_symbol,
+        'flags': flags_per_region
     }
     return state
 

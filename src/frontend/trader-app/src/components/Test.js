@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Page from './Page'
 import Canary from './Canary'
+import Encrypt from './Encrypt'
 import TestReset from './TestReset'
 
 const sections = [
     { label: 'Reset', desc: 'Reset test conditions', element: TestReset },
-    { label: 'Canary', desc: 'Canary', element: Canary }
+    { label: 'Canary', desc: 'Canary', element: Canary },
+    { label: 'Encrypt', desc: 'Encrypt', element: Encrypt }
 ];
 
 class Test extends React.Component {
