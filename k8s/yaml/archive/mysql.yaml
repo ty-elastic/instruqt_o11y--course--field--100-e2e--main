@@ -67,8 +67,6 @@ data:
         metric_statements:
           - context: datapoint
             statements:
-              - set(attributes["data_stream.type"], "metrics")
-              - set(attributes["data_stream.dataset"], "mysqlreceiver")
               - set(attributes["data_stream.namespace"], "$NAMESPACE")
 
     exporters:

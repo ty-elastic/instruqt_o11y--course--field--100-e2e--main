@@ -66,7 +66,7 @@ function initOpenTelemetry(config) {
   diag.info('OTEL bootstrap', config);
 
   // Resource definition
-  const resourceAttributes = { 'data_stream.dataset': 'rum', ...config.resourceAttributes, ...SDK_INFO };
+  const resourceAttributes = { ...config.resourceAttributes, ...SDK_INFO };
   const detectedResources = detectResources({ detectors: [browserDetector] });
   const resource = resourceFromAttributes(resourceAttributes)
                               .merge(detectedResources);

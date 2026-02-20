@@ -43,11 +43,11 @@ data:
         send_batch_size: 1000
         timeout: 1s
         send_batch_max_size: 1500
-      resource/attributes:
-        attributes:
-          - key: data_stream.dataset
-            value: postgresqlreceiver
-            action: insert
+      transform/routing:
+        metric_statements:
+          - context: datapoint
+            statements:
+              - set(attributes["data_stream.namespace"], "$NAMESPACE")
 
     exporters:
       debug:
@@ -61,11 +61,11 @@ data:
       pipelines:
         logs:
           receivers: [postgresql]
-          processors: [resource/attributes, batch]
+          processors: [transform/routing, batch]
           exporters: [debug, otlp/gateway]
         metrics:
           receivers: [postgresql]
-          processors: [resource/attributes, batch]
+          processors: [transform/routing, batch]
           exporters: [debug, otlp/gateway]
 ---
 apiVersion: v1

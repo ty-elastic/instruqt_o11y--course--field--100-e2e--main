@@ -13,7 +13,7 @@
     "@opentelemetry/api-logs": "^0.211.0",
     "@opentelemetry/auto-instrumentations-web": "^0.56.0",
     "@opentelemetry/context-zone": "^2.5.0",
-    "@opentelemetry/core": "^2.5.0",
+    "@opentelemetry/core": "^2.5.1",
     "@opentelemetry/exporter-logs-otlp-http": "^0.211.0",
     "@opentelemetry/exporter-metrics-otlp-http": "^0.211.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.211.0",

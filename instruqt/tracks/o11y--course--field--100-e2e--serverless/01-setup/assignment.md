@@ -93,6 +93,7 @@ All of the following technologies are enabled in this environment. As time allow
   * k8s
   * Hosts
   * [Postgresql](section-ootb-otel-dashboards-postgresql)
+  * [MySQL](section-ootb-otel-dashboards-mysql)
 * Logging
   * [OTTL Parsing](section-logging-ottl-parsing)
   * Receiver Creator Parsing
@@ -401,6 +402,13 @@ remediation
 OTel Profiling
 ===
 
+# Setup
+
+Let's enable the feature flag to use the new hashing algorithm in the `trading-na` region:
+1. Open the [button label="Trader"](tab-2) Instruqt tab
+2. Navigate to `Test`
+3. Open `Flags`, select `Test New Hashing Algorithm` and click `SUBMIT`
+
 # Dashboard
 
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
@@ -415,7 +423,7 @@ OTel Profiling
 
 Note the OTel Collector configuration with the `profiling` receiver and `profilingmetrics` connector.
 
-OOTB OTel Dashboards: Postgresql
+OOTB OTel Dashboards: PostgreSQL
 ===
 
 # Dashboard
@@ -430,6 +438,57 @@ OOTB OTel Dashboards: Postgresql
 2. Navigate to `postgresql.yaml`
 
 Note the OTel Collector configuration with the `postgresql` receiver.
+
+OOTB OTel Dashboards: MySQL
+===
+
+Here, we will demo Elastic's ability to automatically load content packs (dashboards) in response to observing relevant incoming OTel metrics.
+
+First, we need to show that the dashboards for MySQL do not yet exist in our cluster:
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
+2. Navigate to `Dashboards`
+3. Search for `[MySQL OTel] Overview`
+
+Note that this dashboard is not yet loaded.
+
+Let's also show the current service architecture:
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
+2. Navigate to `Applications` > `Service map`
+
+Note that all trades flow through `recorder-java` to `postgresql`
+
+# Enable MySQL Path
+
+1. Open the [button label="Trader"](tab-2) Instruqt tab
+2. Navigate to `Test`
+3. Open `Flags`, select `Test MySQL Database` and click `SUBMIT`
+
+This will cause the `router` service to start directing trade requests toward a MySQL database path (via `recorder-go`).
+
+Let's see how this changes the service architecture:
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
+2. Navigate to `Applications` > `Service map`
+
+Note that all trades are now split between `postgresql` (for `trading-emea` region) and `mysql` (for `trading-na` region).
+
+# Dynamic Content Pack Loading
+
+When we send metrics collected from mysql via an OTel Collector, Elasticsearch dynamically loads the relevant dashboards:
+
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
+2. Navigate to `Dashboards`
+3. Open dashboard `[Metrics PostgreSQL OTel] Database Overview`
+
+Note that is dashboard dynamically loaded.
+
+# How does this work?
+
+To collect mysql metrics, we use a sidecar vanilla OTel Collector configured with the `mysql` receiver.
+
+1. Open the [button label="K8s YAML"](tab-4) Instruqt tab
+2. Navigate to `mysql.yaml`
+
+Note the OTel Collector configuration with the `mysql` receiver.
 
 Tracing: SQL Commentor
 ===
