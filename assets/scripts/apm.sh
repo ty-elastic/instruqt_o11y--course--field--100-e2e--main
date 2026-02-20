@@ -12,8 +12,8 @@ do
    esac
 done
 
-config_apm() {
-    echo -e "Configuring APM\n"
+config_apm_ml() {
+    echo -e "Configuring APM ML\n"
     curl -X POST "$elasticsearch_kibana_endpoint/internal/apm/settings/anomaly-detection/jobs" \
         -H 'Content-Type: application/json' \
         -H 'kbn-xsrf: true' \
@@ -22,4 +22,14 @@ config_apm() {
         -d '{"environments":["'$namespace'"]}'
 }
 
-#config_apm
+config_apm_dv() {
+    echo -e "Configuring APM Dataview\n"
+    curl -X POST "$elasticsearch_kibana_endpoint/internal/apm/data_view/static" \
+        -H 'Content-Type: application/json' \
+        -H 'kbn-xsrf: true' \
+        -H 'x-elastic-internal-origin: Kibana' \
+        -H "Authorization: ApiKey ${elasticsearch_api_key}"
+}
+
+#config_apm_ml
+config_apm_dv

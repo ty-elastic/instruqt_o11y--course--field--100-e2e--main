@@ -1,10 +1,10 @@
 ---
-slug: setup
-id: jzt084dwebvk
+slug: tracing
+id: gvzmzw7kwoxq
 type: challenge
-title: Setup
+title: Tracing
 tabs:
-- id: apziqi98f6vo
+- id: pfptoiwk7zqy
   title: Elastic
   type: service
   hostname: es3-api
@@ -20,7 +20,7 @@ tabs:
     value: 'script-src ''self'' https://kibana.estccdn.com; worker-src blob: ''self'';
       style-src ''unsafe-inline'' ''self'' https://kibana.estccdn.com; style-src-elem
       ''unsafe-inline'' ''self'' https://kibana.estccdn.com'
-- id: yxqjd199fxhh
+- id: gagbfc6nuiza
   title: Elastic-Breakout
   type: service
   hostname: es3-api
@@ -32,49 +32,49 @@ tabs:
     value: 'script-src ''self'' https://kibana.estccdn.com; worker-src blob: ''self'';
       style-src ''unsafe-inline'' ''self'' https://kibana.estccdn.com; style-src-elem
       ''unsafe-inline'' ''self'' https://kibana.estccdn.com'
-- id: ip5dkifrpofc
+- id: lpyi1phio11f
   title: Trader (NA)
   type: service
   hostname: k3s
   path: /
   port: 8082
-- id: acj1llndlxop
+- id: a1g4vlm2tqxr
   title: Code
   type: code
   hostname: k3s
   path: /workspace/workshop/src
-- id: fqewbjcpqcys
+- id: 898dz6gry5lz
   title: K8s YAML
   type: code
   hostname: k3s
   path: /workspace/workshop/k8s/yaml
-- id: ded3xt94i2f7
+- id: xctjob9ashcd
   title: OTel Operator YAML
   type: code
   hostname: k3s
   path: /workspace/workshop/agents
-- id: oheg6ftlfcme
+- id: is8qcqmrkmzj
   title: Services Host
   type: terminal
   hostname: k3s
-- id: csyzrgrkku19
+- id: dayltllzirgj
   title: GitHub Issues
   type: website
   url: https://github.com/ty-elastic/instruqt_o11y--course--field--100-e2e--main/issues
   new_window: true
-- id: u9fjrlxngckz
+- id: nshbihcko4x4
   title: Slides
   type: website
   url: https://docs.google.com/presentation/d/11lkZIvLNwWR8Tm6edCsPTIImypjKiylzwhOAa8527EM/edit?usp=drive_link
   new_window: true
-- id: s1uqc0oc3nlk
+- id: tvbhw7wgewh8
   title: Grafana
   type: service
   hostname: k3s
   path: /
   port: 3000
   new_window: true
-- id: qr48xrusvahx
+- id: srkqhqutapty
   title: ES Host
   type: terminal
   hostname: es3-api
@@ -83,36 +83,29 @@ timelimit: 43200
 enhanced_loading: null
 ---
 
-All of the following technologies are enabled in this environment. As time allows, I will be adding additional scripts for demonstration of specific features (linked to this ToC). In the interim, please feel free to explore on your own. All of the features iterated below are enabled in this demo.
+OTel Profiling
+===
 
-* Agentic RCA
-  * [Alert Correlation, Agentic Root Cause Analysis, and HIL Remediation](section-agentic-rca)
-* [Workflows](section-workflows)
-* Synthetics
-* OOTB OTel Dashboards
-  * k8s
-  * Hosts
-  * [Postgresql](section-ootb-otel-dashboards-postgresql)
-  * [MySQL](section-ootb-otel-dashboards-mysql)
-* Logging
-  * [OTTL Parsing](section-logging-ottl-parsing)
-  * Receiver Creator Parsing
-* [OTel Profiling](section-otel-profiling)
-* Streams
-  * Wired
-    * Partitioning
-    * Parsing
-    * Significant Events
-* Metrics
-  * OTel Metrics
-  * Metrics w/ ES|QL
-  * Prometheus Metrics
-  * PROMQL
-* Tracing
-  * Custom Attributes
-  * Baggage
-  * OTel-based RUM
-  * [SQL Commentor](section-tracing-sql-commentor)
-  * eBPF Zero Instrumentation Go
+# Setup
 
-Supporting slides (where available) can be found [here](https://docs.google.com/presentation/d/11lkZIvLNwWR8Tm6edCsPTIImypjKiylzwhOAa8527EM/edit?usp=drive_link) .
+Do this before you begin the demo.
+
+1. Open the [button label="Trader"](tab-2) Instruqt tab
+2. Navigate to `Test`
+3. Open `Flags`, select `Test New Hashing Algorithm` and click `SUBMIT`
+
+# 
+
+# Dashboard
+
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
+2. Navigate to `Infrastructure` > `Hosts`
+3. Select host `k3s`
+4. Select `Dashboards` tab
+
+# How does this work?
+
+1. Open the [button label="OTel Operator YAML"](tab-5) Instruqt tab
+2. Navigate to `profiling/profiler.yaml`
+
+Note the OTel Collector configuration with the `profiling` receiver and `profilingmetrics` connector.

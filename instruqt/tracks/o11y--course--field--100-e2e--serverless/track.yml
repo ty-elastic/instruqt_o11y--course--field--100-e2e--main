@@ -17,5 +17,6 @@ lab_config:
   loadingMessages:
   - Setting up your Elastic experience...
   hideStopButton: false
-checksum: "9504440179347544029"
+checksum: "3249352610572274387"
 enhanced_loading: false
+skipping_enabled: true
