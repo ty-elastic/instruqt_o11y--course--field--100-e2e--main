@@ -107,7 +107,6 @@ def generate_ipaddress_per_user():
 generate_ipaddress_per_user()
 
 latency_per_action_per_region = {}
-canary_per_region = {}
 high_tput_per_customer = {}
 high_tput_per_symbol = {}
 high_tput_per_region = {}
@@ -147,7 +146,7 @@ def conform_request_bool(value):
     return value.lower() == 'true'
 
 @tracer.start_as_current_span("generate_trade_request")
-def generate_trade_request(*, subscription, customer_id, symbol, day_of_week, region, latency_amount, latency_action, error_model, error_db, error_db_service, error_request, skew_market_factor, canary, classification=None, flags, data_source):
+def generate_trade_request(*, subscription, customer_id, symbol, day_of_week, region, latency_amount, latency_action, error_model, error_db, error_db_service, error_request, skew_market_factor, classification=None, flags, data_source):
     try:
         params={'symbol': symbol, 
                 'day_of_week': day_of_week,
@@ -161,7 +160,6 @@ def generate_trade_request(*, subscription, customer_id, symbol, day_of_week, re
                 'error_db_service': error_db_service,
                 'error_request': error_request,
                 'skew_market_factor': skew_market_factor,
-                'canary': canary,
                 'flags': flags,
                 'data_source': data_source}
         if classification is not None:
@@ -266,18 +264,13 @@ def generate_trade_requests():
             else:
                 skew_market_factor = 0
 
-            if region in canary_per_region:
-                canary = True
-            else:
-                canary = False
-
-            app.logger.info(f"trading {symbol} for {customer_id} on {DAYS_OF_WEEK[idx_of_week]} from {region} with latency {latency_amount}, error_model={error_model}, error_request={error_request}, error_db={error_db}, skew_market_factor={skew_market_factor}, canary={canary}, flags={flags}")
+            app.logger.info(f"trading {symbol} for {customer_id} on {DAYS_OF_WEEK[idx_of_week]} from {region} with latency {latency_amount}, error_model={error_model}, error_request={error_request}, error_db={error_db}, skew_market_factor={skew_market_factor}, flags={flags}")
 
             executor.submit(generate_trade_request, subscription=subscription, customer_id=customer_id, symbol=symbol, day_of_week=DAYS_OF_WEEK[idx_of_week], region=region,
                         latency_amount=latency_amount, latency_action=latency_action, 
                         error_model=error_model, 
                         error_db=error_db, error_db_service=error_db_service, error_request=error_request,
-                        skew_market_factor=skew_market_factor, canary=canary,
+                        skew_market_factor=skew_market_factor,
                         flags=flags,
                         data_source='monkey')
 
@@ -342,9 +335,9 @@ def reset_error():
 
 @app.post('/reset/test')
 def test_error():
-    global canary_per_region
+    global flags_per_region
 
-    canary_per_region = {}
+    flags_per_region = {}
     
     app.logger.info(f"test reset")
     return "OK"
@@ -368,7 +361,6 @@ def get_state():
         'regions': list(CUSTOMERS_PER_REGION.keys()),
         
         'latency_per_action': latency_per_action_per_region,
-        'canary': canary_per_region,
         'high_tput_per_customer': high_tput_per_customer,
         'high_tput_per_symbol': high_tput_per_symbol,
         'high_tput': high_tput_per_region,
@@ -548,21 +540,6 @@ def skew_pr_symbol_delete(symbol):
     if symbol in skew_market_factor_per_symbol:
         del skew_market_factor_per_symbol[symbol]
     return skew_market_factor_per_symbol
-
-@app.post('/canary')
-def canary_region():
-    region = get_region()
-    global canary_per_region
-    if region in REGIONS:
-        canary_per_region[region] = True
-    return canary_per_region    
-@app.delete('/canary')
-def canary_region_delete():
-    region = get_region()
-    global canary_per_region
-    if region in canary_per_region:
-        del canary_per_region[region]
-    return canary_per_region  
 
 @app.post('/flags/<flag>')
 def flags_region(flag):

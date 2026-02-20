@@ -56,27 +56,25 @@ function customRouter(req: any) {
     host = `http://${req.query.service}:9003`;
   }
   else {
-    if (req.query.canary === 'true') {
-      method = "canary";
+    if (req.query.flags != null && req.query.flags.includes("GOZERO"))
+    {
+      method = "flags";
       host = `http://${process.env.RECORDER_HOST_CANARY}:9003`;
     }
+
+    else if (req.query.flags != null && req.query.flags.includes("MYSQL"))
+    {
+      method = "flags";
+      host = `http://${process.env.RECORDER_HOST_2}:9003`;
+    }
+
     else {
-      if (process.env.RECORDER_HOST_2 == null) {
-        method = "default";
-        host = `http://${process.env.RECORDER_HOST_1}:9003`;
-      }
-      else
-      {
-        method = "random";
-        if (getRandomBoolean())
-          host = `http://${process.env.RECORDER_HOST_1}:9003`;
-        else
-          host = `http://${process.env.RECORDER_HOST_2}:9003`;
-      }
+      method = "default";
+      host = `http://${process.env.RECORDER_HOST_1}:9003`;
     }
   }
 
-  logger.info(`routing request to ${host}`);
+  logger.info(`routing request to ${host} because of ${method}`);
   return host;
 };
 
