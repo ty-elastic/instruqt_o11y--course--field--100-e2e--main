@@ -3,9 +3,12 @@ Metrics
 
 # Metrics Discovery
 
-(add the Grafana comparison if this customer is an existing Grafana user)
+The goal of this demo is to demonstrate that the metrics experience in Elastic is optimized to derive value with few clicks.
 
 ## Metrics Discovery in Grafana (optional)
+
+> [!NOTE]
+> Typically, you would demo the Grafana comparison only if the customer is an existing Prometheus/Grafana user
 
 1. Open the [button label="Grafana"](tab-9) tab
 2. Navigate to `Drilldown` > `Metrics`

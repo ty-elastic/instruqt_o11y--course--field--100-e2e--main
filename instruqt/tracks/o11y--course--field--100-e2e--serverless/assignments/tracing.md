@@ -1,4 +1,4 @@
-Traciong
+Tracing
 ===
 
 # OTel Profiling

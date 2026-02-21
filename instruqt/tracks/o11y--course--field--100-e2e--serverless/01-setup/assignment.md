@@ -85,35 +85,11 @@ enhanced_loading: null
 
 All of the following technologies are enabled in this environment. As time allows, I will be adding additional scripts for demonstration of specific features (linked to this ToC). In the interim, please feel free to explore on your own. All of the features iterated below are enabled in this demo.
 
-* Agentic RCA
-  * [Alert Correlation, Agentic Root Cause Analysis, and HIL Remediation](section-agentic-rca)
+* [Agentic RCA](section-agentic-rca)
+* [Logs](section-logs)
+* [Metrics](section-metrics)
+* [Tracing](section-tracing)
 * [Workflows](section-workflows)
-* Synthetics
-* OOTB OTel Dashboards
-  * k8s
-  * Hosts
-  * [Postgresql](section-ootb-otel-dashboards-postgresql)
-  * [MySQL](section-ootb-otel-dashboards-mysql)
-* Logging
-  * [OTTL Parsing](section-logging-ottl-parsing)
-  * Receiver Creator Parsing
-* [OTel Profiling](section-otel-profiling)
-* Streams
-  * Wired
-    * Partitioning
-    * Parsing
-    * Significant Events
-* Metrics
-  * OTel Metrics
-  * Metrics w/ ES|QL
-  * Prometheus Metrics
-  * PROMQL
-* Tracing
-  * Custom Attributes
-  * Baggage
-  * OTel-based RUM
-  * [SQL Commentor](section-tracing-sql-commentor)
-  * eBPF Zero Instrumentation Go
 
 Supporting slides (where available) can be found [here](https://docs.google.com/presentation/d/11lkZIvLNwWR8Tm6edCsPTIImypjKiylzwhOAa8527EM/edit?usp=drive_link) .
 
@@ -399,9 +375,10 @@ remediation
 8. Click on `call_remote` and select `Input`
 9. Note the http call to restart the `monkey` service
 
-SQL Commentor
+Logs
 ===
 
+# SQL Commentor
 Typically, database audit logs cannot easily be associated with traces. Using SQL Commentor, however, it becomes possible to follow a trace all the way from user interaction down to the database audit log.
 
 [SQL Commentor](https://google.github.io/sqlcommenter/) is a library that can be used by Java applications making SQL calls (here, `recorder-java`). SQL Commentor will look for an active OpenTelemetry trace and append the appropriate `traceparent` header as a comment to the SQL query. Most SQL databases (including postgresql) will output the comment as part of the audit log!
@@ -413,7 +390,7 @@ Typically, database audit logs cannot easily be associated with traces. Using SQ
 5. Click on the `Logs` tab under `Trace sample`
 6. Note the inclusion of logs from `postgresql`
 
-# How does this work?
+## How does this work?
 
 We are loading the `recorder-java` service with a custom build of the java SQL commentor library.
 
@@ -427,8 +404,7 @@ The SQL commentor library will automatically add `trace.id` (if its available on
 
 Note the `regex_parser` operator specific in the `io.opentelemetry.discovery.logs.postgresql/config` annotation.
 
-OTTL Parsing
-===
+# OTTL Parsing
 
 Our `router` service emits logs in JSON format.
 
@@ -472,12 +448,14 @@ FROM logs-*
 | WHERE service.name == "router"
 ```
 4. Open a record to examine it
-Metrics Discovery
+Metrics
 ===
+
+# Metrics Discovery
 
 (add the Grafana comparison if this customer is an existing Grafana user)
 
-# Metrics Discovery in Grafana (optional)
+## Metrics Discovery in Grafana (optional)
 
 1. Open the [button label="Grafana"](tab-9) tab
 2. Navigate to `Drilldown` > `Metrics`
@@ -492,7 +470,7 @@ http_requests_total
 
 (add alert rule?)
 
-# Metrics Discovery in Kibana
+## Metrics Discovery in Kibana
 
 Now let's mirror that experience in Kibana.
 
@@ -522,12 +500,11 @@ Note that Kibana detected that this is a monotonically increasing counter and au
 
 (add alert rule?)
 
-PROMQL
-===
+# PROMQL
 
 (generally only applicable if customer is coming from prometheus/grafana)
 
-# PROMQL in Grafana
+## PROMQL in Grafana
 
 1. Open the [button label="Grafana"](tab-9) tab
 2. Navigate to `Explore`
@@ -538,7 +515,7 @@ sum by (region) (rate(http_requests_total[5m]))
 ```
 5. Click `Run query`
 
-# PROMQL in Kibana
+## PROMQL in Kibana
 
 1. Open the [button label="Elasticsearch"](tab-0) tab
 2. Navigate to `Discover`
@@ -551,66 +528,30 @@ PROMQL index=metrics-* start=?_tstart end=?_tend step=5m sum by (region) (rate(h
 
 Note the same result as in Grafana.
 
-OOTB OTel Dashboards
-===
+# OOTB OTel Dashboards
 
-# PostgreSQL
+## PostgreSQL
 
-## Dashboard
+### Dashboard
 
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Dashboards`
 3. Open dashboard `[Metrics PostgreSQL OTel] Database Overview`
 
-## How does this work?
+### How does this work?
 
 1. Open the [button label="K8s YAML"](tab-4) Instruqt tab
 2. Navigate to `postgresql.yaml`
 
 Note the OTel Collector configuration with the `postgresql` receiver.
 
-# MySQL
-
-Here, we will demo Elastic's ability to automatically load content packs (dashboards) in response to observing relevant incoming OTel metrics.
-
-First, we need to show that the dashboards for MySQL do not yet exist in our cluster:
-1. Open the [button label="Elastic"](tab-0) Instruqt tab
-2. Navigate to `Dashboards`
-3. Search for `[MySQL OTel] Overview`
-
-Note that this dashboard is not yet loaded.
-
-Let's also show the current service architecture:
-1. Open the [button label="Elastic"](tab-0) Instruqt tab
-2. Navigate to `Applications` > `Service map`
-
-Note that all trades flow through `recorder-java` to `postgresql`
-
-## Enable MySQL Path
-
-1. Open the [button label="Trader"](tab-2) Instruqt tab
-2. Navigate to `Test`
-3. Open `Flags`, select `Test MySQL Database` and click `SUBMIT`
-
-This will cause the `router` service to start directing trade requests toward a MySQL database path (via `recorder-go`).
-
-Let's see how this changes the service architecture:
-1. Open the [button label="Elastic"](tab-0) Instruqt tab
-2. Navigate to `Applications` > `Service map`
-
-Note that all trades are now split between `postgresql` (for `trading-emea` region) and `mysql` (for `trading-na` region).
-
-## Dynamic Content Pack Loading
-
-When we send metrics collected from mysql via an OTel Collector, Elasticsearch dynamically loads the relevant dashboards:
+## MySQL
 
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Dashboards`
-3. Open dashboard `[Metrics PostgreSQL OTel] Database Overview`
+3. Open dashboard `[MySQL OTel] Overview`
 
-Note that is dashboard dynamically loaded.
-
-## How does this work?
+### How does this work?
 
 To collect mysql metrics, we use a sidecar vanilla OTel Collector configured with the `mysql` receiver.
 
@@ -619,16 +560,30 @@ To collect mysql metrics, we use a sidecar vanilla OTel Collector configured wit
 
 Note the OTel Collector configuration with the `mysql` receiver.
 
-# nginx
+## nginx
 
-ES|QL Analytics
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
+2. Navigate to `Dashboards`
+3. Open dashboard `[Metrics Nginx OTEL] Overview`
+
+### How does this work?
+
+To collect mysql metrics, we use a sidecar vanilla OTel Collector configured with the `mysql` receiver.
+
+1. Open the [button label="K8s YAML"](tab-4) Instruqt tab
+2. Navigate to `proxy.yaml`
+
+Note that we use the creator receiver pattern to tell the daemonet OTel Collector to invoke the `nginx` receiver
+
+# ES|QL Analytics
+
+
+Traciong
 ===
 
+# OTel Profiling
 
-OTel Profiling
-===
-
-# Setup
+## Setup
 
 Do this before you begin the demo.
 
@@ -636,16 +591,14 @@ Do this before you begin the demo.
 2. Navigate to `Test`
 3. Open `Flags`, select `Test New Hashing Algorithm` and click `SUBMIT`
 
-#
-
-# Dashboard
+## Dashboard
 
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Infrastructure` > `Hosts`
 3. Select host `k3s`
 4. Select `Dashboards` tab
 
-# How does this work?
+## How does this work?
 
 1. Open the [button label="OTel Operator YAML"](tab-5) Instruqt tab
 2. Navigate to `profiling/profiler.yaml`
