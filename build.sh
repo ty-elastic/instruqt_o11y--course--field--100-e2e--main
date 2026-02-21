@@ -273,7 +273,6 @@ done
 printf "deploying services...SUCCESS\n"
 
 if [ "$profiling" = "true" ]; then
-    assets/scripts/features_dep.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
     assets/scripts/profiling.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 fi
 
@@ -336,3 +335,7 @@ for current_region in "${regions[@]}"; do
         retry_command_lin start_simulation $SERVICE_IP $SERVICE_PORT
     fi
 done
+
+if [ "$assets" = "true" ]; then
+    assets/scripts/features_dep.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+fi
