@@ -317,6 +317,14 @@ if [ "$assets" = "true" ]; then
 
     retry_command_lin check_assets $JOB_ID
 
+    for current_region in "${regions[@]}"; do
+        namespace=$namespace_base-$current_region
+
+        if [[ "$service" == "all" || "$service" == "monkey" ]]; then
+            check_services $namespace
+            printf "check services for $namespace\n"
+        fi
+    done
     assets/scripts/features_dep.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 fi
 
@@ -326,15 +334,4 @@ if [ "$grafana" = "true" ]; then
     cd ..
 fi
 
-# for current_region in "${regions[@]}"; do
-#     namespace=$namespace_base-$current_region
 
-#     if [[ "$service" == "all" || "$service" == "monkey" ]]; then
-#         check_services $namespace
-#         printf "check services for $namespace\n"
-
-#         retry_command_lin get_lb_address $namespace proxy-ext
-#         printf "proxy-ext SERVICE_IP=$SERVICE_IP, SERVICE_PORT=$SERVICE_PORT)\n"
-#         retry_command_lin start_simulation $SERVICE_IP $SERVICE_PORT
-#     fi
-# done
