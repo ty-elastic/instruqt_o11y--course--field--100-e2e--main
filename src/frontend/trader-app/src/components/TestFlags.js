@@ -19,7 +19,6 @@ class TestFlags extends React.Component {
         super(props);
         this.state = {
             hashnewalg_on: false,
-            mysql_on: false,
             gozero_on: false
         };
 
@@ -48,11 +47,6 @@ class TestFlags extends React.Component {
             } else {
                 await axios.post(`/monkey/flags/HASHNEWALG`);
             }
-            if (this.state.mysql_on === false) {
-                await axios.delete(`/monkey/flags/MYSQL`);
-            } else {
-                await axios.post(`/monkey/flags/MYSQL`);
-            }
             if (this.state.gozero_on === false) {
                 await axios.delete(`/monkey/flags/GOZERO`);
             } else {
@@ -76,14 +70,6 @@ class TestFlags extends React.Component {
                             onChange={this.handleInputChange}
                             inputProps={{ 'aria-label': 'controlled' }}
                         />} label="Test New Hashing Algorithm" />
-                    </FormGroup>
-                    <FormGroup>
-                        <FormControlLabel control={<Checkbox
-                            name='mysql_on'
-                            checked={this.state.mysql_on}
-                            onChange={this.handleInputChange}
-                            inputProps={{ 'aria-label': 'controlled' }}
-                        />} label="Test MySQL Database" />
                     </FormGroup>
                     <FormGroup>
                         <FormControlLabel control={<Checkbox
