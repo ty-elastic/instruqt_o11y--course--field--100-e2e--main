@@ -453,9 +453,12 @@ Metrics
 
 # Metrics Discovery
 
-(add the Grafana comparison if this customer is an existing Grafana user)
+The goal of this demo is to demonstrate that the metrics experience in Elastic is optimized to derive value with few clicks.
 
 ## Metrics Discovery in Grafana (optional)
+
+> [!NOTE]
+> Typically, you would demo the Grafana comparison only if the customer is an existing Prometheus/Grafana user
 
 1. Open the [button label="Grafana"](tab-9) tab
 2. Navigate to `Drilldown` > `Metrics`
@@ -578,7 +581,7 @@ Note that we use the creator receiver pattern to tell the daemonet OTel Collecto
 # ES|QL Analytics
 
 
-Traciong
+Tracing
 ===
 
 # OTel Profiling
@@ -603,8 +606,7 @@ Do this before you begin the demo.
 1. Open the [button label="OTel Operator YAML"](tab-5) Instruqt tab
 2. Navigate to `profiling/profiler.yaml`
 
-Note the OTel Collector configuration with the `profiling` receiver and `profilingmetrics` connector.
-Workflows
+Note the OTel Collector configuration with the `profiling` receiver and `profilingmetrics` connector.Workflows
 ===
 
 # Basic
