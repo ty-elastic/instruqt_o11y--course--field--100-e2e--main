@@ -1,3 +1,4 @@
+
 Metrics
 ===
 
@@ -127,7 +128,3 @@ To collect mysql metrics, we use a sidecar vanilla OTel Collector configured wit
 2. Navigate to `proxy.yaml`
 
 Note that we use the creator receiver pattern to tell the daemonet OTel Collector to invoke the `nginx` receiver
-
-# ES|QL Analytics
-
-

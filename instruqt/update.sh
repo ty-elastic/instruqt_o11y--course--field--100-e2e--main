@@ -13,7 +13,7 @@ do
 done
 
 cd tools/pandoc
-docker build --platform linux/amd64 -t pandoc-inter .
+docker build --platform linux/amd64 -t pandoc-inter-custom .
 cd ../..
 
 upload_bundle() {
@@ -39,6 +39,25 @@ upload_bundle() {
   cd instruqt
 }
 upload_bundle
+
+upload_script() {
+  ARTIFACT_VERSION=1.0
+
+  gcloud artifacts versions delete $ARTIFACT_VERSION \
+      --quiet \
+      --package=$course-script.pdf \
+      --location=us-central1 \
+      --repository=tbekiares-instruqt
+
+  # curl -o test.pdf -v https://artifactregistry.googleapis.com/download/v1/projects/elastic-sa/locations/us-central1/repositories/tbekiares-instruqt/files/o11y--course--field--100-e2e-script.pdf:1.0:script.pdf:download\?alt\=media
+
+  gcloud artifacts generic upload \
+      --source=assets/script.pdf \
+      --package=$course-script.pdf \
+      --version=$ARTIFACT_VERSION \
+      --location=us-central1 \
+      --repository=tbekiares-instruqt
+}
 
 for dir in ./tracks/*/; do
   echo $dir
@@ -105,10 +124,12 @@ for dir in ./tracks/*/; do
           echo "" >> input.md
         fi
       done
-      docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc-inter --pdf-engine xelatex --include-in-header /pandoc/pandoc.tex -V geometry:margin=0.25in -f markdown-implicit_figures --highlight-style=breezedark --resource-path=/assets --output=/assets/script.pdf /data/input.md
+      docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc-inter-custom --pdf-engine xelatex --include-in-header /pandoc/pandoc.tex -V geometry:margin=0.25in -f markdown-implicit_figures --highlight-style=breezedark --resource-path=/assets --output=/assets/script.pdf /data/input.md
       rm -rf input.md
-      docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc-inter --pdf-engine xelatex --include-in-header /pandoc/pandoc.tex -V geometry:margin=0.25in -f markdown-implicit_figures --highlight-style=breezedark --resource-path=/assets --output=/assets/brief.pdf /data/docs/brief.md
-      docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc-inter --pdf-engine xelatex --include-in-header /pandoc/pandoc.tex -V geometry:margin=0.25in -f markdown-implicit_figures --highlight-style=breezedark --resource-path=/assets --output=/assets/notes.pdf /data/docs/notes.md
+      docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc-inter-custom --pdf-engine xelatex --include-in-header /pandoc/pandoc.tex -V geometry:margin=0.25in -f markdown-implicit_figures --highlight-style=breezedark --resource-path=/assets --output=/assets/brief.pdf /data/docs/brief.md
+      docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc-inter-custom --pdf-engine xelatex --include-in-header /pandoc/pandoc.tex -V geometry:margin=0.25in -f markdown-implicit_figures --highlight-style=breezedark --resource-path=/assets --output=/assets/notes.pdf /data/docs/notes.md
+
+      upload_script
 
       instruqt track push --force
       cd ../..
