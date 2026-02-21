@@ -85,35 +85,11 @@ enhanced_loading: null
 
 All of the following technologies are enabled in this environment. As time allows, I will be adding additional scripts for demonstration of specific features (linked to this ToC). In the interim, please feel free to explore on your own. All of the features iterated below are enabled in this demo.
 
-* Agentic RCA
-  * [Alert Correlation, Agentic Root Cause Analysis, and HIL Remediation](section-agentic-rca)
+* [Agentic RCA](section-agentic-rca)
+* [Logs](section-logs)
+* [Metrics](section-metrics)
+* [Tracing](section-tracing)
 * [Workflows](section-workflows)
-* Synthetics
-* OOTB OTel Dashboards
-  * k8s
-  * Hosts
-  * [Postgresql](section-ootb-otel-dashboards-postgresql)
-  * [MySQL](section-ootb-otel-dashboards-mysql)
-* Logging
-  * [OTTL Parsing](section-logging-ottl-parsing)
-  * Receiver Creator Parsing
-* [OTel Profiling](section-otel-profiling)
-* Streams
-  * Wired
-    * Partitioning
-    * Parsing
-    * Significant Events
-* Metrics
-  * OTel Metrics
-  * Metrics w/ ES|QL
-  * Prometheus Metrics
-  * PROMQL
-* Tracing
-  * Custom Attributes
-  * Baggage
-  * OTel-based RUM
-  * [SQL Commentor](section-tracing-sql-commentor)
-  * eBPF Zero Instrumentation Go
 
 Supporting slides (where available) can be found [here](https://docs.google.com/presentation/d/11lkZIvLNwWR8Tm6edCsPTIImypjKiylzwhOAa8527EM/edit?usp=drive_link) .
 

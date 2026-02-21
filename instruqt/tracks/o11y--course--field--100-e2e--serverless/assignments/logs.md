@@ -1,7 +1,8 @@
 
-SQL Commentor
+Logs
 ===
 
+# SQL Commentor
 Typically, database audit logs cannot easily be associated with traces. Using SQL Commentor, however, it becomes possible to follow a trace all the way from user interaction down to the database audit log.
 
 [SQL Commentor](https://google.github.io/sqlcommenter/) is a library that can be used by Java applications making SQL calls (here, `recorder-java`). SQL Commentor will look for an active OpenTelemetry trace and append the appropriate `traceparent` header as a comment to the SQL query. Most SQL databases (including postgresql) will output the comment as part of the audit log!
@@ -13,7 +14,7 @@ Typically, database audit logs cannot easily be associated with traces. Using SQ
 5. Click on the `Logs` tab under `Trace sample`
 6. Note the inclusion of logs from `postgresql`
 
-# How does this work?
+## How does this work?
 
 We are loading the `recorder-java` service with a custom build of the java SQL commentor library.
 
@@ -27,8 +28,7 @@ The SQL commentor library will automatically add `trace.id` (if its available on
 
 Note the `regex_parser` operator specific in the `io.opentelemetry.discovery.logs.postgresql/config` annotation.
 
-OTTL Parsing
-===
+# OTTL Parsing
 
 Our `router` service emits logs in JSON format.
 
