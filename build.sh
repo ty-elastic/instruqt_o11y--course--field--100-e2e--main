@@ -336,6 +336,6 @@ for current_region in "${regions[@]}"; do
     fi
 done
 
-if [ "$assets" = "true" ]; then
+if [ "$service" != "none" ]; then
     assets/scripts/features_dep.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 fi
