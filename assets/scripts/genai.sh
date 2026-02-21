@@ -35,15 +35,6 @@ config_o11y_ai_assistant() {
 }
 config_o11y_ai_assistant
 
-
-
-POST kbn://internal/kibana/settings
-{
-  "changes": {
-     "agentBuilder:dashboardTools": true
-  }
-}
-
 config_o11y_ai_docs() {
    printf "$FUNCNAME...\n"
 
