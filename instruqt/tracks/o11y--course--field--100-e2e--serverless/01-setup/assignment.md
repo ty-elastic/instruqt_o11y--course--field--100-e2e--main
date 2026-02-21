@@ -93,6 +93,7 @@ All of the following technologies are enabled in this environment. As time allow
 
 Supporting slides (where available) can be found [here](https://docs.google.com/presentation/d/11lkZIvLNwWR8Tm6edCsPTIImypjKiylzwhOAa8527EM/edit?usp=drive_link) .
 
+
 Agentic RCA
 ===
 
@@ -448,6 +449,7 @@ FROM logs-*
 | WHERE service.name == "router"
 ```
 4. Open a record to examine it
+
 Metrics
 ===
 
@@ -578,9 +580,6 @@ To collect mysql metrics, we use a sidecar vanilla OTel Collector configured wit
 
 Note that we use the creator receiver pattern to tell the daemonet OTel Collector to invoke the `nginx` receiver
 
-# ES|QL Analytics
-
-
 Tracing
 ===
 
@@ -606,7 +605,8 @@ Do this before you begin the demo.
 1. Open the [button label="OTel Operator YAML"](tab-5) Instruqt tab
 2. Navigate to `profiling/profiler.yaml`
 
-Note the OTel Collector configuration with the `profiling` receiver and `profilingmetrics` connector.Workflows
+Note the OTel Collector configuration with the `profiling` receiver and `profilingmetrics` connector.
+Workflows
 ===
 
 # Basic

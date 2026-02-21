@@ -74,6 +74,7 @@ function customRouter(req: any) {
         else
           host = `http://${process.env.RECORDER_HOST_2}:9003`;
       }
+    }
   }
 
   logger.info(`routing request to ${host} because of ${method}`);
