@@ -76,6 +76,12 @@ for dir in ./tracks/*/; do
         docker run --rm -u `id -u`:`id -g` -v $PWD/diagrams:/diagrams -v $PWD/assets:/assets minlag/mermaid-cli -i /diagrams/$diag_base -o /assets/$diag_base.png
       done
 
+      cat '01-setup/base.md' > '01-setup/assignment.md'
+      for assignment in assignments/*.md; do
+        cat $assignment >> '01-setup/assignment.md'
+      done
+
+      #docs
       title=$(yq .title track.yml)
       echo "![](./header.png)" > input.md
       echo "" >> input.md

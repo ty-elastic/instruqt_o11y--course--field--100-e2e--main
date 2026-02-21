@@ -1,10 +1,10 @@
 ---
-slug: agentsworkflows
-id: cce3tbymjnsc
+slug: setup
+id: xmql1z1hdt2c
 type: challenge
-title: Agents & Workflows
+title: Setup
 tabs:
-- id: udgjapje19s2
+- id: zvxdesnpamie
   title: Elastic
   type: service
   hostname: es3-api
@@ -20,7 +20,7 @@ tabs:
     value: 'script-src ''self'' https://kibana.estccdn.com; worker-src blob: ''self'';
       style-src ''unsafe-inline'' ''self'' https://kibana.estccdn.com; style-src-elem
       ''unsafe-inline'' ''self'' https://kibana.estccdn.com'
-- id: ycm2gzaeeumb
+- id: od0txjt2rf8q
   title: Elastic-Breakout
   type: service
   hostname: es3-api
@@ -32,49 +32,49 @@ tabs:
     value: 'script-src ''self'' https://kibana.estccdn.com; worker-src blob: ''self'';
       style-src ''unsafe-inline'' ''self'' https://kibana.estccdn.com; style-src-elem
       ''unsafe-inline'' ''self'' https://kibana.estccdn.com'
-- id: ux1gyn9va8x3
+- id: 9falvisnya86
   title: Trader (NA)
   type: service
   hostname: k3s
   path: /
   port: 8082
-- id: 2qhk2m4kxo60
+- id: uxmg2e791nft
   title: Code
   type: code
   hostname: k3s
   path: /workspace/workshop/src
-- id: 4jr18rzknrmq
+- id: egfjlbcitmki
   title: K8s YAML
   type: code
   hostname: k3s
   path: /workspace/workshop/k8s/yaml
-- id: to9gtiqjbfqj
+- id: 0hvtwlczt4y6
   title: OTel Operator YAML
   type: code
   hostname: k3s
   path: /workspace/workshop/agents
-- id: qzziqwyh6duo
+- id: hdp9opgzqab3
   title: Services Host
   type: terminal
   hostname: k3s
-- id: mkpbttxyvsmq
+- id: ajbo9kz0lxtx
   title: GitHub Issues
   type: website
   url: https://github.com/ty-elastic/instruqt_o11y--course--field--100-e2e--main/issues
   new_window: true
-- id: wkukufxgilvu
+- id: mvodj4cdjhua
   title: Slides
   type: website
   url: https://docs.google.com/presentation/d/11lkZIvLNwWR8Tm6edCsPTIImypjKiylzwhOAa8527EM/edit?usp=drive_link
   new_window: true
-- id: y4wlbkmx0agr
+- id: ppfqqvaqdevp
   title: Grafana
   type: service
   hostname: k3s
   path: /
   port: 3000
   new_window: true
-- id: fw7964ipiesi
+- id: oae9yx2izef4
   title: ES Host
   type: terminal
   hostname: es3-api
@@ -83,29 +83,37 @@ timelimit: 43200
 enhanced_loading: null
 ---
 
-Workflows
-===
+All of the following technologies are enabled in this environment. As time allows, I will be adding additional scripts for demonstration of specific features (linked to this ToC). In the interim, please feel free to explore on your own. All of the features iterated below are enabled in this demo.
 
-# Basic
+* Agentic RCA
+  * [Alert Correlation, Agentic Root Cause Analysis, and HIL Remediation](section-agentic-rca)
+* [Workflows](section-workflows)
+* Synthetics
+* OOTB OTel Dashboards
+  * k8s
+  * Hosts
+  * [Postgresql](section-ootb-otel-dashboards-postgresql)
+  * [MySQL](section-ootb-otel-dashboards-mysql)
+* Logging
+  * [OTTL Parsing](section-logging-ottl-parsing)
+  * Receiver Creator Parsing
+* [OTel Profiling](section-otel-profiling)
+* Streams
+  * Wired
+    * Partitioning
+    * Parsing
+    * Significant Events
+* Metrics
+  * OTel Metrics
+  * Metrics w/ ES|QL
+  * Prometheus Metrics
+  * PROMQL
+* Tracing
+  * Custom Attributes
+  * Baggage
+  * OTel-based RUM
+  * [SQL Commentor](section-tracing-sql-commentor)
+  * eBPF Zero Instrumentation Go
 
-1. Open the [button label="Elastic"](tab-0) Instruqt tab
-2. Navigate to `Workflows`
-3. Open the `hello_world` workflow
-4. Run it
-5. Walk through the execution steps
+Supporting slides (where available) can be found [here](https://docs.google.com/presentation/d/11lkZIvLNwWR8Tm6edCsPTIImypjKiylzwhOAa8527EM/edit?usp=drive_link) .
 
-# Calling an external REST API
-
-1. Open the [button label="Elastic"](tab-0) Instruqt tab
-2. Navigate to `Workflows`
-3. Open the `ip_geolocator` workflow
-4. Run it
-5. Walk through the execution steps
-
-# Calling an external REST API w/ conditionals and retries
-
-1. Open the [button label="Elastic"](tab-0) Instruqt tab
-2. Navigate to `Workflows`
-3. Open the `ip_geolocator_advanced` workflow
-4. Run it
-5. Walk through the execution steps
