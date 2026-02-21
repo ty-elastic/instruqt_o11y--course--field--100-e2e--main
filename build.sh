@@ -297,6 +297,9 @@ if [ "$remote_endpoint" != "na" ]; then
 fi
 
 if [ "$assets" = "true" ]; then
+
+    assets/scripts/features_dep.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+
     cd assets
 
     if [ "$build_lib" = "true" ]; then
@@ -315,8 +318,6 @@ if [ "$assets" = "true" ]; then
     cd ..
 
     retry_command_lin check_assets $JOB_ID
-
-    assets/scripts/features_dep.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 fi
 
 if [ "$grafana" = "true" ]; then

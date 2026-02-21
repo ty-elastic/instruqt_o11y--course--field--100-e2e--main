@@ -25,7 +25,6 @@ config_apm_ml() {
 config_apm_dv() {
     echo -e "Configuring APM Dataview\n"
     curl -X POST "$elasticsearch_kibana_endpoint/internal/apm/data_view/static" \
-        -H 'Content-Type: application/json' \
         -H 'kbn-xsrf: true' \
         -H 'x-elastic-internal-origin: Kibana' \
         -H "Authorization: ApiKey ${elasticsearch_api_key}"
