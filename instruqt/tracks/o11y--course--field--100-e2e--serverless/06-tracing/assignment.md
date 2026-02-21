@@ -94,7 +94,7 @@ Do this before you begin the demo.
 2. Navigate to `Test`
 3. Open `Flags`, select `Test New Hashing Algorithm` and click `SUBMIT`
 
-# 
+#
 
 # Dashboard
 

@@ -8,6 +8,7 @@ tags: []
 owner: elastic
 developers:
 - tyrone.bekiares@elastic.co
+skipping_enabled: true
 idle_timeout: 21600
 timelimit: 43200
 lab_config:
@@ -17,6 +18,5 @@ lab_config:
   loadingMessages:
   - Setting up your Elastic experience...
   hideStopButton: false
-checksum: "3249352610572274387"
+checksum: "12097357419607249550"
 enhanced_loading: false
-skipping_enabled: true

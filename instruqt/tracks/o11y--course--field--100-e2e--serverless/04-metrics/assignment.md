@@ -160,7 +160,7 @@ PROMQL index=metrics-* start=?_tstart end=?_tend step=5m sum by (region) (rate(h
 ```
 (note, you can copy and paste `sum by (region) (rate(http_requests_total[5m]))` from Grafana into Kibana for greater effect)
 
-Note the same result as in Grafana. 
+Note the same result as in Grafana.
 
 OOTB OTel Dashboards
 ===
