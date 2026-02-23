@@ -36,12 +36,11 @@ public class TradeController {
 			Trade trade = new Trade(tradeId, customerId, symbol, shares, sharePrice, action);
 			
 			if (flags.contains("GC")) {
-				log.info("thrash GC");
 				Utilities.thrashGarbageCollector();
 			}
 
-			CompletableFuture<Trade> resp = tradeService.processTrade(trade);
+			Trade resp = tradeService.processTrade(trade);
 
-			return ResponseEntity.ok().body(resp.get());
+			return ResponseEntity.ok().body(resp);
     }
 }

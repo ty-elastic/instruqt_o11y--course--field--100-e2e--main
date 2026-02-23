@@ -18,11 +18,11 @@ public class TradeService {
 	private final TradeNotifier tradeNotifier;
 	private final TradeRecorder tradeRecorder;
 
-    @Async
-    public CompletableFuture<Trade> processTrade (Trade trade){
+    public Trade processTrade (Trade trade){
+        Trade resp = tradeRecorder.recordTrade(trade);
+
         tradeNotifier.notify(trade);
 
-        Trade resp = tradeRecorder.recordTrade(trade);
-        return CompletableFuture.completedFuture(resp);
+        return resp;
     }
 }

@@ -30,7 +30,7 @@ public class TradeNotifier {
     }
 
     @Async
-    public CompletableFuture<HttpResponse<String>> notify (Trade trade) {
+    public HttpResponse<String> notify (Trade trade) {
         try {
             String body = mapper.writeValueAsString(trade);
 
@@ -40,11 +40,11 @@ public class TradeNotifier {
                     .POST(HttpRequest.BodyPublishers.ofString(body))
                     .build();
 
-            CompletableFuture<HttpResponse<String>> response = HttpClient.newBuilder()
+            HttpResponse<String> response = HttpClient.newBuilder()
                     .build()
-                    .sendAsync(request, BodyHandlers.ofString());
+                    .send(request, BodyHandlers.ofString());
 
-            log.info("sent async notification to " + notifierEndpoint);
+            log.info("sent notification to " + notifierEndpoint);
 
             return response;
         }

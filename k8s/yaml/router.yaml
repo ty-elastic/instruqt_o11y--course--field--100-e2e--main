@@ -9,6 +9,12 @@ data:
     receivers:
       prometheus:
         config:
+          global:
+            # Required: Include PrometheusProto to scrape native histograms
+            scrape_protocols: [ PrometheusProto, OpenMetricsText1.0.0, OpenMetricsText0.0.1, PrometheusText0.0.4 ]
+            # Enable native histogram scraping globally
+            scrape_native_histograms: true
+            always_scrape_classic_histograms: true
           scrape_configs:
             - job_name: 'router'
               scrape_interval: 5s
@@ -31,7 +37,7 @@ data:
 
     exporters:
       debug:
-        verbosity: basic
+        verbosity: detailed
       otlp/gateway:
         endpoint: "http://opentelemetry-kube-stack-daemon-collector.opentelemetry-operator-system.svc.cluster.local:4317"
         tls:
@@ -87,10 +93,11 @@ spec:
           ports:
             - containerPort: 9000
         - name: collector
-          image: otel/opentelemetry-collector-contrib:0.130.1
+          image: otel/opentelemetry-collector-contrib:0.146.0
           command:
             - "/otelcol-contrib"
             - "--config=/etc/otelcol-contrib/config.yaml"
+            - "--feature-gates=receiver.prometheusreceiver.EnableNativeHistograms"
           volumeMounts:
             - mountPath: /etc/otelcol-contrib/config.yaml
               name: data

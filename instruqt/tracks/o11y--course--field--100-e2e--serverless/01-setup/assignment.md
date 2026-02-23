@@ -453,14 +453,18 @@ FROM logs-*
 Metrics
 ===
 
+* [Metrics Discovery](section-metrics-discovery)
+* [PROMQL](section-promql)
+* [OOTB OTel Dashboards](section-ootb-otel-dashboards)
+
 # Metrics Discovery
 
-The goal of this demo is to demonstrate that the metrics experience in Elastic is optimized to derive value with few clicks.
+The goal of this demo is to demonstrate that the metrics experience in Elastic is optimized to derive value with just a few clicks.
 
 ## Metrics Discovery in Grafana (optional)
 
 > [!NOTE]
-> Typically, you would demo the Grafana comparison only if the customer is an existing Prometheus/Grafana user
+> Typically, you would demo the Grafana comparison only if the customer is an existing Prometheus/Grafana user.
 
 1. Open the [button label="Grafana"](tab-9) tab
 2. Navigate to `Drilldown` > `Metrics`
@@ -507,9 +511,10 @@ Note that Kibana detected that this is a monotonically increasing counter and au
 
 # PROMQL
 
-(generally only applicable if customer is coming from prometheus/grafana)
-
 ## PROMQL in Grafana
+
+> [!NOTE]
+> Typically, you would demo the Grafana comparison only if the customer is an existing Prometheus/Grafana user.
 
 1. Open the [button label="Grafana"](tab-9) tab
 2. Navigate to `Explore`
@@ -529,7 +534,9 @@ sum by (region) (rate(http_requests_total[5m]))
 ```
 PROMQL index=metrics-* start=?_tstart end=?_tend step=5m sum by (region) (rate(http_requests_total[5m]))
 ```
-(note, you can copy and paste `sum by (region) (rate(http_requests_total[5m]))` from Grafana into Kibana for greater effect)
+
+> [!NOTE]
+> You can copy and paste `sum by (region) (rate(http_requests_total[5m]))` from Grafana into Kibana for greater effect.
 
 Note the same result as in Grafana.
 
@@ -606,6 +613,7 @@ Do this before you begin the demo.
 2. Navigate to `profiling/profiler.yaml`
 
 Note the OTel Collector configuration with the `profiling` receiver and `profilingmetrics` connector.
+
 Workflows
 ===
 

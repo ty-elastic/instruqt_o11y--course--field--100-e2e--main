@@ -64,7 +64,7 @@ class ErrorGc extends React.Component {
                             inputProps={{ 'aria-label': 'controlled' }}
                         />} label="ErrorGc" />
                     </FormGroup>
-                    <Box width="100%"><Button variant="contained" data-transaction-name="ErrorGc" type="submit">Submit</Button></Box>
+                    <Box width="100%"><Button variant="contained" data-transaction-name="Thrash Garbage Collector" type="submit">Submit</Button></Box>
                     {this.monkeyState.render()}
                 </Grid>
             </form>
