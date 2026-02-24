@@ -1,6 +1,7 @@
 {
     "data_view": {
       "name": "metrics.trader",
-      "title": "metrics.trader"
+      "title": "metrics.trader",
+      "timeFieldName": "@timestamp"
     }
-  }
+}

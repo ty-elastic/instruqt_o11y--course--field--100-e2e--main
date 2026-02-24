@@ -420,8 +420,6 @@ def load_agent_tools(kibana_server, kibana_auth):
                                         json=tool,
                                         headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
                     print(resp.json())     
- 
-
 
 def backup_agent_tools(kibana_server, kibana_auth):
     

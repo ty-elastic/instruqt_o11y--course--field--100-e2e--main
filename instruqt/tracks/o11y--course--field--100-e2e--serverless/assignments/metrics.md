@@ -24,10 +24,13 @@ http_requests_total
 ```
 4. Click `Select` in the upper-right of the `http_requests_total` graph
 5. Set `Breakdown` > `By label` to `region`
-6. Click the `Add to dashboard` control in the upper-right of the `http_requests_total` graph in the top pane
+6. Click the `Add to dashboard` control in the upper-right of the `http_requests_total` graph (in the top pane)
 7. Click `Open dashboard` in the `Add to dashboard` dialog
 8. Click `Save dashboard` in the upper-right
-9. Set `Title` to `node.js Monitor`
+9. Set `Title` to:
+```
+node.js Monitor
+```
 10. Click `Save`
 
 ## Metrics Discovery in Kibana
@@ -43,7 +46,7 @@ TS metrics-* | WHERE data_stream.dataset == "prometheusreceiver.otel"
 > [!NOTE]
 > Note how easy it is to quickly visualize a large set of related metrics.
 
-5. Click the search (magnifying glass) icon in the upper-right of the graph area and enter the following in the `Search metric` bar:
+5. Click the search (magnifying glass) icon in the upper-right of the graph area and enter the following in the `Search metric` field:
 ```
 http_requests_total
 ```
@@ -51,13 +54,16 @@ http_requests_total
 > [!NOTE]
 > Hover over the series in the graph and note that Kibana automatically detected that this is a monotonically increasing counter and automatically applied a rate (derivative) transformation.
 
-6. Click `No dimension selected` and select `attributes.region`
+6. Click `No dimension selected` and select `region`
 7. Click on the three vertical dots in the upper right of one of the `http_requests_total` graphs
 8. Select `Copy to dashboard`
 9. Click `New` in the `Save Lens visualization` dialog
 10. Click `Save and go to Dashboard`
 11. Click `Save in the upper-right
-12. Set `Title` to `node.js Monitor`
+12. Set `Title` to: 
+```
+node.js Monitor
+```
 13. Click `Save`
 
 ### Create Alert Rule
@@ -190,8 +196,11 @@ Elastic makes it easy to create SLOs for OOTB metrics like APM Availability.
 This will monitor all APM services. If there is a violation, an alert will be generated specific to a service (`service.name`) and region (`region`).
 
 7. Under `Set objectives` you could change the target SLO parameters (e.g., 99.9% uptime over 7 days)
-8. In the `Describe SLO` section, enter `Service Availability` as the `SLO Name`
-9. Enter `examnple` in `Tags`
+8. In the `Describe SLO` section, enter the following as the `SLO Name`:
+```
+Service Availability
+```
+9. Enter `example` in `Tags`
 10. Click `Create SLO`
 
 ## Setting Actions
@@ -236,17 +245,17 @@ First, let's create a database problem:
 
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Dashboards` > `[Metrics PostgreSQL OTel] Database Overview`
-3. Change the time picker to be `Last 15 minutes`
+3. Change the time picker to be `Last 15 minutes` (if not already)
 4. Scroll down to `Transactions Committed vs Rolled Back`
 5. Wait for `rolled back` series to be non-zero for a minute
 
 ## Assisted RCA
 
 > [!WARNING]
-> Ensure you are issuing questions against the `Observability Agent`
+> Ensure you are issuing questions against the `Observability Agent (Extended)`
 
 1. Click the `AI Agent` button in the upper-right corner of the dashboard
-2. Select `Observability Agent` (important)
+2. Select `Observability Agent (Extended)`
 3. Execute the following question:
 ```
 are the rolled back transactions causing trace failures?
@@ -260,10 +269,17 @@ are the rolled back transactions causing trace failures?
 ```
 did the rolled back transactions cause a spike in log rate?
 ```
-
 5. Execute the following question:
 ```
 were there any logs which explain the change in rolled back transactions?
+```
+6. Execute the following question:
+```
+can you create a graph of that log rate spike?
+```
+7. Execute the following question:
+```
+can you create a case to capture this issue including a summary of this conversation?
 ```
 
 # Custom Metrics
@@ -281,7 +297,7 @@ Let's create a few visualizations. First, let's create a visualization with lens
 ```
 TS metrics.trader
 ```
-5. Enter the following in the `Search metric` bar
+5. Click the search (magnifying glass) icon in the upper-right of the graph area and enter the following in the `Search metric` field:
 ```
 shares_traded_per_customer
 ```
@@ -291,7 +307,7 @@ shares_traded_per_customer
 TS metrics.trader
   | STATS avg_shares_traded = AVG(metrics.shares_traded_per_customer) BY BUCKET(@timestamp, 100, ?_tstart, ?_tend), symbol
 ```
-8. Click on the pencil icon in the upper-right of the graph and select the `Line` graph
+8. Click on the pencil icon in the upper-right of the graph and select the `Line` graph (if not already selected)
 9. Click on the `Save visualization` (Disk) icon in the upper-right of the graph
 10. Set the `Title` to:
 ```
@@ -309,8 +325,11 @@ Now let's use Lens to add another graph to our dashboard:
 5. Find the field `@timestamp` and drag it to `Horizontal axis`
 6. Set the visualization type to `Line`
 7. Click `Save and return`
-8. Click `Save in the upper-right of the dashboard
-9. Set `Title` to `Trading Operations`
+8. Click `Save` in the upper-right of the dashboard
+9. Set `Title` to:
+```
+Trading Operations
+```
 10. Click `Save`
 
 ## Machine Learning
@@ -318,7 +337,7 @@ Now let's use Lens to add another graph to our dashboard:
 Let's create a ML job to look for suspicious trade activity.
 
 > [!NOTE]
-> A pre-populated ML job has already been created for you. This step is simply to show the customer how relatively easy it is to create ML jobs on custom data.
+> A pre-populated ML job has already been created for you. This step is simply to show the customer how relatively easy it is to create ML jobs on custom data. You could optionally skip it.
 
 1. Open the [button label="Elasticsearch"](tab-0) tab
 2. Navigate to `Machine Learning` > `Overview`
