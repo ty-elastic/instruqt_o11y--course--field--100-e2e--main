@@ -206,22 +206,33 @@ Here, you could define thresholds for actions based on how quickly you are burni
 3. Click on `Actions` tab
 4. Click on `Add action`
 5. Select `Cases`
-6. Click `Save changes`
 
-This will automatically create a case when this SLO is breached.
+This will automatically create a case whenever this SLO breaches the lowest burn rate threshold (i.e., days before we violate the SLO).
 
-## AI Agent Assist
+6. Click on `Add action`
+7. Select `Elastic-Cloud-SMTP`
+8. In the `To` field, enter `sre@example.com`
+9. Click the button to the right of the `Subject` field
+10. Select `context.sloName`
+11. Click `Settings` tab
+12. Under `Action frequency`, set `For each alert` to `On custom action intervals`
+13. Set `Run when` to `Critical`
+14. Click `Save changes`
+
+This will automatically page a SRE if and only if we have breached the highest burn rate threshold (i.e., hours before we violate the SLO).
+
+# AI Agent Assist
 
 The goal of this demo is to demonstrate how you can use an AI Agent to interrogate metrics and cross-correlate with other signals through natural language.
 
-### Trigger Errors
+## Trigger Errors
 
 First, let's create a database problem:
 1. Open the [button label="Trader"](tab-2) Instruqt tab
 2. Navigate to `ERROR`
 3. Open `DB`, select `Generate errors` and click `SUBMIT`
 
-### Observing the problem
+## Observing the problem
 
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Dashboards` > `[Metrics PostgreSQL OTel] Database Overview`
@@ -229,7 +240,7 @@ First, let's create a database problem:
 4. Scroll down to `Transactions Committed vs Rolled Back`
 5. Wait for `rolled back` series to be non-zero for a minute
 
-### AI-Agent Assist
+## Assisted RCA
 
 > [!WARNING]
 > Ensure you are issuing questions against the `Observability Agent`
@@ -363,7 +374,7 @@ Wait a minute or so and look for `q.bert` and note that it is an anomaly.
 
 Note the active alert for `q.bert`.
 
-## Using a Custom Agent
+## Using a Custom Agent to interrogate our data
 
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Dashboards` > `Trading Operation`

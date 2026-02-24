@@ -634,11 +634,54 @@ FROM traces-*
 
 This lets us nicely examine the overall difference in latency between the 2 paths along with a comparative breakdown of the individual components which contribute to the overall latency.
 
-## SLO Setup
+# SLOs
 
-SLOs are critical for monitoring metrics. SLOs allow metrics to naturally ebb and flow ...
+SLOs are critical for monitoring metrics. SLOs allow metrics to naturally ebb and flow a little at scale while still holding organizations (and technology) accountable.
 
-WIP
+## Creating a SLO to monitor our APM Services
+
+Elastic makes it easy to create SLOs for OOTB metrics like APM Availability.
+
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
+2. Navigate to `SLOs`
+3. Click `Create SLO`
+4. Under `Choose the SLI type`, select `APM availability`
+5. Under `Service name`, select `All`
+6. Under `Group by`, select `service.name` and `cloud.region`
+
+This will monitor all APM services. If there is a violation, an alert will be generated specific to a service (`service.name`) and region (`region`).
+
+7. Under `Set objectives` you could change the target SLO parameters (e.g., 99.9% uptime over 7 days)
+8. In the `Describe SLO` section, enter `Service Availability` as the `SLO Name`
+9. Enter `examnple` in `Tags`
+10. Click `Create SLO`
+
+## Setting Actions
+
+Now that we have a SLO, we can define what happens when that SLO is breached.
+
+1. Click on the `Service Availability` SLO you just created
+2. Click on the `Actions` menu and select `Manage burn rate rule`
+
+Here, you could define thresholds for actions based on how quickly you are burning through the error budget.
+
+3. Click on `Actions` tab
+4. Click on `Add action`
+5. Select `Cases`
+
+This will automatically create a case whenever this SLO breaches the lowest burn rate threshold (i.e., days before we violate the SLO).
+
+6. Click on `Add action`
+7. Select `Elastic-Cloud-SMTP`
+8. In the `To` field, enter `sre@example.com`
+9. Click the button to the right of the `Subject` field
+10. Select `context.sloName`
+11. Click `Settings` tab
+12. Under `Action frequency`, set `For each alert` to `On custom action intervals`
+13. Set `Run when` to `Critical`
+14. Click `Save changes`
+
+This will automatically page a SRE if and only if we have breached the highest burn rate threshold (i.e., hours before we violate the SLO).
 
 ## AI Agent Assist
 
