@@ -171,7 +171,7 @@ This lets us nicely examine the overall difference in latency between the 2 path
 
 The goal of this demo is to demonstrate how you can use an AI Agent to interrogate metrics and cross-correlate with other signals through natural language.
 
-### Trigger Alert
+### Trigger Errors
 
 > [!NOTE]
 > Don't need to show this setup step to customers
@@ -213,7 +213,7 @@ were there any logs which explain the change in rolled back transactions?
 
 # Custom Metrics
 
-We are generating a variety of OTel custom metrics from our `trader` application. We want to create a dashboard and agent which leverages those metrics to monitor the health of our trading operations.
+We are generating a variety of OTel custom metrics from our `trader` application. The goal of this demo is to create a custom dashboard and agent which leverages those metrics to monitor the health of our trading operations.
 
 ## [optional] How does this work?
 
