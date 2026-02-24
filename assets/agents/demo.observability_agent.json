@@ -3,9 +3,7 @@
     "type": "chat",
     "name": "Observability Agent (Extended)",
     "description": "Agent specialized in logs, metrics, and traces",
-    "labels": [
-        "demo"
-    ],
+    "labels": ["demo"],
     "avatar_color": "",
     "avatar_symbol": "",
     "configuration": {
@@ -21,19 +19,19 @@
                     "observability.get_anomaly_detection_jobs",
                     "observability.get_alerts",
                     "observability.get_log_groups",
-                    "observability.get_correlated_logs",
                     "observability.get_services",
-                    "observability.get_downstream_dependencies",
                     "observability.get_hosts",
                     "observability.get_trace_metrics",
+                    "observability.get_traces",
                     "observability.get_runtime_metrics",
                     "observability.get_log_change_points",
                     "observability.get_metric_change_points",
                     "observability.get_trace_change_points",
                     "observability.get_index_info",
-                    "platform.core.create_visualization",
+                    "observability.get_service_topology",
+
                     "create_case",
-                    "add_comment_to_case"
+                    "platform.core.create_visualization"
                 ]
             }
         ]

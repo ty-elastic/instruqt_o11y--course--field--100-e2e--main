@@ -102,11 +102,13 @@ In the following sections, you will find various walk-throughs and notes in the 
 * [Tracing](section-tracing)
 * [Workflows](section-workflows)
 
-
 > [!NOTE]
-> Pick and choose the demos and order for your particular customer. You do not need to show all of these items.
+> Pick and choose the demos and order for your particular customer. You do not need to show every demo or sub-demo.
 
 Supporting slides (where available) can be found [here](https://docs.google.com/presentation/d/11lkZIvLNwWR8Tm6edCsPTIImypjKiylzwhOAa8527EM/edit?usp=drive_link) .
+
+
+___
 
 
 Agentic RCA
@@ -391,6 +393,9 @@ remediation
 8. Click on `call_remote` and select `Input`
 9. Note the http call to restart the `monkey` service
 
+___
+
+
 Logs
 ===
 
@@ -464,6 +469,9 @@ FROM logs-*
 | WHERE service.name == "router"
 ```
 4. Open a record to examine it
+
+___
+
 
 Metrics
 ===
@@ -813,9 +821,9 @@ Let's create a ML job to look for suspicious trade activity.
 6. Click `Population`
 7. Click `Use full data`
 8. Click `Next`
-9. For `Population field`, select `customer_id`
-10. Under `Add metric`, select `Mean(shares_traded_per_customer)`
-11. Under `Split data`, select `symbol`
+9. For `Population field`, select `attributes.customer_id`
+10. Under `Add metric`, select `Mean(metrics.shares_traded_per_customer)`
+11. Under `Split data`, select `attributes.symbol`
 12. Click `Next`
 13. Under `Job ID`, name the job:
 ```
@@ -923,6 +931,9 @@ We can use cases to track work related to custom business metrics.
 
 If you'd like to demonstrate metric-driven (alert) agentic RCA which looks at logs, traces, and metrics, see [Agentic RCA](section-agentic-rca).
 
+___
+
+
 Tracing
 ===
 
@@ -949,6 +960,9 @@ Do this before you begin the demo.
 2. Navigate to `profiling/profiler.yaml`
 
 Note the OTel Collector configuration with the `profiling` receiver and `profilingmetrics` connector.
+
+___
+
 
 Workflows
 ===

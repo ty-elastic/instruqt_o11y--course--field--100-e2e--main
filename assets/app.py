@@ -430,10 +430,10 @@ def backup_agent_tools(kibana_server, kibana_auth):
     
     for tool in resp.json()['results']:
         #print(tool)
-        if 'rca' in tool['tags']:
+        #if 'rca' in tool['tags']:
             
-            with open(f"tools/{tool['id']}.json", "w") as json_file:
-                json.dump(tool, json_file)
+        with open(f"tools/{tool['id']}.json", "w") as json_file:
+            json.dump(tool, json_file)
 
 def delete_existing_agent(kibana_server, kibana_auth, agent_id):
 
@@ -478,10 +478,10 @@ def backup_agents(kibana_server, kibana_auth):
     
     for agent in resp.json()['results']:
         #print(agent)
-        if 'labels' in agent and 'rca' in agent['labels']:
+        #if 'labels' in agent and 'rca' in agent['labels']:
             
-            with open(f"agents/{agent['id']}.json", "w") as json_file:
-                json.dump(agent, json_file)
+        with open(f"agents/{agent['id']}.json", "w") as json_file:
+            json.dump(agent, json_file)
 
 def run_workflow(kibana_server, kibana_auth, workflow_name):
     

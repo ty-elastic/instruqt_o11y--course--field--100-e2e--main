@@ -97,6 +97,9 @@ for dir in ./tracks/*/; do
 
       cat '01-setup/base.md' > '01-setup/assignment.md'
       for assignment in assignments/*.md; do
+        echo "" >> '01-setup/assignment.md'
+        echo "___" >> '01-setup/assignment.md'
+        echo "" >> '01-setup/assignment.md'
         cat $assignment >> '01-setup/assignment.md'
       done
 
