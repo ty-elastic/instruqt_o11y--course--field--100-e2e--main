@@ -236,6 +236,9 @@ The goal of this demo is to demonstrate how you can use an AI Agent to interroga
 
 ## Trigger Errors
 
+> [!NOTE]
+> There isn't a need to _show_ customers this step.
+
 First, let's create a database problem:
 1. Open the [button label="Trader"](tab-2) Instruqt tab
 2. Navigate to `ERROR`
@@ -351,21 +354,26 @@ Let's create a ML job to look for suspicious trade activity.
 10. Under `Add metric`, select `Mean(shares_traded_per_customer)`
 11. Under `Split data`, select `symbol`
 12. Click `Next`
-13. Under `Job ID`, name the job `example_shares_traded_anomalies`
-14. Click `Next`
+13. Under `Job ID`, name the job:
+```
+example_ml_job
+```
+14. Click `Next` on the `Population` step
 14. Click `Next` on the `Validation` step
 15. Click `Create job`
 
 ### Generate anomalous trading behavior
+
+> [!NOTE]
+> There isn't a need to _show_ customers this step.
 
 1. Open the [button label="Trader"](tab-2) Instruqt tab
 2. Navigate to `TRADE`
 3. Open `Force Trade`
 4. `Customer ID` to `q.bert`
 5. Set `Shares` to `10000`
-6. Click `SUBMIT` 15 times
-7. Set `Symbol` to `JUNK`
-8. Click `SUBMIT` 15 times
+6. Set `Symbol` to `JUNK`
+7. Click `SUBMIT` 10 (or so) times
 
 ### Add our swim lane graph to our dashboard
 
@@ -376,12 +384,10 @@ Let's create a ML job to look for suspicious trade activity.
 5. Select `shares_traded_anomalies` (this is the job we pre-created which has been running for awhile)
 
 > [!WARNING]
-> Please use the pre-populated `shares_traded_anomalies` job (it has been running for awhile), not the `example_shares_traded_anomalies` job you just created.
+> Please use the pre-populated `shares_traded_anomalies` job (it has been running for awhile), not the `example_ml_job` job you just created.
 
-6. Click `View by` and set `View by` field to `customer_id`
+6. Click `View by` and set `View by` field to `customer_id` (might be `attributes.customer_id`)
 7. Click `Confirm`
-
-Wait a minute or so and look for `q.bert` and note that it is an anomaly.
 
 ### Add alerts to our dashboard
 
@@ -391,6 +397,8 @@ Wait a minute or so and look for `q.bert` and note that it is an anomaly.
 4. Set `Rule tags` to `trading`
 5. Click `Save`
 
+Wait a minute or so and look for `q.bert` and note that it is an anomaly.
+
 Note the active alert for `q.bert`.
 
 ## Using a Custom Agent to interrogate our data
@@ -398,7 +406,8 @@ Note the active alert for `q.bert`.
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Dashboards` > `Trading Operation`
 3. Click `AI Agent` in the upper-right
-4. Select the `Trading Operator` Agent
+4. Click the `+` button in the upper-left of the AI Agent fly-out to start a new conversation
+5. Select the `Trading Operator` Agent
 
 > [!WARNING]
 > Ensure you are issuing questions against the `Trading Operator`
@@ -409,15 +418,15 @@ are there any trading anomalies I should be aware of?
 ```
 6. Execute the following question:
 ```
-is there a runbook I should follow?
+can you graph q.bert's trading behavior?
 ```
 7. Execute the following question:
 ```
-can you graph q.bert's trading behavior?
+is there a runbook I should follow?
 ```
 8. Execute the following question:
 ```
-can you create a case to handle this anomaly and summarize this conversation and append it to the case?
+can you create a case to capture this issue including a summary of this conversation?
 ```
 
 ### How does this work?
