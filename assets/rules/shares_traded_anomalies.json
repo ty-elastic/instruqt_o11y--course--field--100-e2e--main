@@ -1,12 +1,12 @@
 {
   "tags": ["trading"],
   "params": {
-    "severity": 75,
+    "severity": 70,
     "resultType": "record",
     "includeInterim": false,
     "jobSelection": {
       "jobIds": [
-        "shares_traded_per_customer"
+        "shares_traded_anomalies"
       ],
       "groupIds": []
     },
@@ -18,7 +18,7 @@
     "interval": "1m"
   },
   "consumer": "stackAlerts",
-  "name": "shares_traded_per_customer",
+  "name": "shares_traded_anomalies",
   "enabled": true,
   "throttle": null,
   "artifacts": {

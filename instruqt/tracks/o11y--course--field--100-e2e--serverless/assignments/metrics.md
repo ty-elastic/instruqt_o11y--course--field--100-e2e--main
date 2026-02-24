@@ -195,7 +195,6 @@ First, let's create a database problem:
 > [!WARN]
 > Ensure you are issuing questions against the `Observability Agent`
 
-
 1. Click the `AI Agent` button in the upper-right corner of the dashboard
 2. Select `Observability Agent` (important)
 3. Execute the following question:
@@ -269,7 +268,7 @@ Now let's use Lens to add another graph to our dashboard:
 Let's create a ML job to look for suspicious trade activity.
 
 > [!NOTE]
-> A prepopulated ML job has already been created for you. This step is simply to show the customer how relatively easy it is to create ML jobs on custom data.
+> A pre-populated ML job has already been created for you. This step is simply to show the customer how relatively easy it is to create ML jobs on custom data.
 
 1. Open the [button label="Elasticsearch"](tab-0) tab
 2. Navigate to `Machine Learning` > `Overview`
@@ -285,6 +284,7 @@ Let's create a ML job to look for suspicious trade activity.
 12. Click `Next`
 13. Under `Job ID`, name the job `example_shares_traded_anomalies`
 14. Click `Next`
+14. Click `Next` on the `Validation` step
 15. Click `Create job`
 
 ### Generate anomalous trading behavior
@@ -294,7 +294,9 @@ Let's create a ML job to look for suspicious trade activity.
 3. Open `Force Trade`
 4. `Customer ID` to `q.bert`
 5. Set `Shares` to `10000`
-6. Click `SUBMIT` 10 times
+6. Click `SUBMIT` 15 times
+7. Set `Symbol` to `JUNK`
+8. Click `SUBMIT` 15 times
 
 ### Add our swim lane graph to our dashboard
 
@@ -302,11 +304,15 @@ Let's create a ML job to look for suspicious trade activity.
 2. Navigate to `Dashboards` > `Trading Operation`
 3. Click `Add` in the upper-right and select `+ New panel`
 4. Select `Anomaly Swim Lane`
-5. Select `shares_traded_anomalies` (this is a job we pre-created which has been running for awhile)
-6. Click `View by` and set `View by` field to `attributes.customer_id`
+5. Select `shares_traded_anomalies` (this is the job we pre-created which has been running for awhile)
+
+> [!WARN]
+> Please use the pre-populated `shares_traded_anomalies` job, not the `example_shares_traded_anomalies` job you just created
+
+6. Click `View by` and set `View by` field to `customer_id`
 7. Click `Confirm`
 
-Look for `q.bert` and note that it is an anomaly.
+Wait a minute or so and look for `q.bert` and note that it is an anomaly.
 
 ### Add alerts to our dashboard
 
@@ -324,19 +330,23 @@ Note the active alert for `q.bert`.
 2. Navigate to `Dashboards` > `Trading Operation`
 3. Click `AI Agent` in the upper-right
 4. Select the `Trading Operator` Agent
-5. Ask
+
+> [!WARN]
+> Ensure you are issuing questions against the `Trading Operator`
+
+5. Execute the following question:
 ```
 are there any trading anomalies I should be aware of?
 ```
-6. Ask
+6. Execute the following question:
 ```
 is there a runbook I should follow?
 ```
-7. Ask
+7. Execute the following question:
 ```
 can you graph q.bert's trading behavior?
 ```
-8. Ask
+8. Execute the following question:
 ```
 can you create a case to handle this anomaly and summarize this conversation and append it to the case?
 ```
@@ -349,11 +359,13 @@ can you create a case to handle this anomaly and summarize this conversation and
 4. Select `View all agents`
 5. Select the `Trading Operator` agent
 
-Note the prompt.
+> [!NOTE]
+> Note the custom prompt.
 
 6. Select the `Tools` tab
 
-Note the tools.
+> [!NOTE]
+> Note the selection of tools available to the agent.
 
 ## Custom Cases
 
@@ -361,4 +373,5 @@ Note the tools.
 2. Navigate to `Cases`
 3. Select the newly created case
 
-Note the summary.
+> [!NOTE]
+> Note that the case was automatically opened and amended per our work with the agent.
