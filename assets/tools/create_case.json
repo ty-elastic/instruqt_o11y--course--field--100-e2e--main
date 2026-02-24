@@ -3,7 +3,7 @@
     "type": "workflow",
     "description": "create a case",
     "tags": [
-        "rca"
+        "demo"
     ],
     "configuration": {
         "workflow_id": "workflow-7f09e4f9-0913-442a-a9e8-c62deb99d073",
