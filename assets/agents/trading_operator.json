@@ -3,7 +3,9 @@
   "type": "chat",
   "name": "Trading Operator",
   "description": "Expert on monitoring stock trades",
-  "labels": [],
+    "labels": [
+        "trading"
+    ],
   "avatar_color": "",
   "avatar_symbol": "",
   "configuration": {

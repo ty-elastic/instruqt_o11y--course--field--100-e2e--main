@@ -213,10 +213,49 @@ were there any logs which explain the change in rolled back transactions?
 
 # Custom Metrics
 
-We are generating a variety of custom metrics from our `trader` application.
+We are generating a variety of OTel custom metrics from our `trader` application. We want to create a dashboard and agent which leverages those metrics to monitor the health of our trading operations.
 
-- OTEL
-- prom
+## [optional] How does this work?
+
+1. Open the [button label="Code"](tab-3) Instruqt tab
+2. Navigate to `trader/app.py`
+3. Note the code which initializes the OTel metrics (line 58) and the code which sets the metrics (around line 152)
+
+## Dashboarding
+
+Let's create a few visualizations. First, let's create a visualization with lens:
+
+1. Open the [button label="Elasticsearch"](tab-0) tab
+2. Navigate to `Discover`
+3. Enter `ES|QL` mode (if Discover is not yet in `ES|QL` mode)
+4. Execute the following ES|QL:
+```
+TS metrics.trader
+```
+5. Enter the following in the `Search metric` bar
+```
+shares_traded_per_customer
+```
+6. Click `Explore` in the upper-right corner of the `shares_traded_per_customer` graph
+7. Edit and execute the ES|QL query:
+```
+TS metrics.trader
+  | STATS avg_shares_traded = AVG(metrics.shares_traded_per_customer) BY BUCKET(@timestamp, 100, ?_tstart, ?_tend), symbol
+```
+8. Click on the `Save visualization` (Disk) icon in the upper-right of the graph
+9. Set the `Title` to:
+```
+Shares Traded Per Symbol
+```
+10. Under `Add to dashboard` select `New`
+11. Click `Save and go to dashboard`
+
+Now let's use Lens to add another graph:
+
+1. Click `Add` in the upper-right and select `Visualization`
+2. Set the `Data view` to `metrics.trader`
+3. 
+
 - ML
 - agent builder w/ tools
 - dyn dash
