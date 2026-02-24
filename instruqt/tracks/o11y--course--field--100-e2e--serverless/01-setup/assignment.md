@@ -85,10 +85,10 @@ enhanced_loading: null
 
 This is intended to be an "all-in-one" Observability demo and exploration environment with lots of rich data to work with against a fully-enabled, dedicated (and ephemeral) Serverless Elasticsearch instance.
 
-> [!WARN]
+> [!WARNING]
 > This is not intended to be a customer-facing workshop.
 
-> [!WARN]
+> [!WARNING]
 > The content will likely change (improve) over time, so always take the time to retest your planned demo before going before a customer.
 
 > [!NOTE]
@@ -464,6 +464,9 @@ FROM logs-*
 Metrics
 ===
 
+> [!NOTE]
+> Pick and choose the demos and order for your particular customer. You do not need to show all of these items.
+
 # Metrics Discovery
 
 The goal of this demo is to show that the metrics experience in Elastic is optimized to derive value with just a few clicks, competitive with other products.
@@ -572,8 +575,6 @@ The goal of this demo is to show OOTB support for popular, native OTel metrics. 
 
 ## PostgreSQL
 
-### Dashboard
-
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Dashboards`
 3. Open dashboard `[Metrics PostgreSQL OTel] Database Overview`
@@ -633,6 +634,12 @@ FROM traces-*
 
 This lets us nicely examine the overall difference in latency between the 2 paths along with a comparative breakdown of the individual components which contribute to the overall latency.
 
+## SLO Setup
+
+SLOs are critical for monitoring metrics. SLOs allow metrics to naturally ebb and flow ...
+
+WIP
+
 ## AI Agent Assist
 
 The goal of this demo is to demonstrate how you can use an AI Agent to interrogate metrics and cross-correlate with other signals through natural language.
@@ -654,7 +661,7 @@ First, let's create a database problem:
 
 ### AI-Agent Assist
 
-> [!WARN]
+> [!WARNING]
 > Ensure you are issuing questions against the `Observability Agent`
 
 1. Click the `AI Agent` button in the upper-right corner of the dashboard
@@ -768,7 +775,7 @@ Let's create a ML job to look for suspicious trade activity.
 4. Select `Anomaly Swim Lane`
 5. Select `shares_traded_anomalies` (this is the job we pre-created which has been running for awhile)
 
-> [!WARN]
+> [!WARNING]
 > Please use the pre-populated `shares_traded_anomalies` job (it has been running for awhile), not the `example_shares_traded_anomalies` job you just created.
 
 6. Click `View by` and set `View by` field to `customer_id`
@@ -793,7 +800,7 @@ Note the active alert for `q.bert`.
 3. Click `AI Agent` in the upper-right
 4. Select the `Trading Operator` Agent
 
-> [!WARN]
+> [!WARNING]
 > Ensure you are issuing questions against the `Trading Operator`
 
 5. Execute the following question:
