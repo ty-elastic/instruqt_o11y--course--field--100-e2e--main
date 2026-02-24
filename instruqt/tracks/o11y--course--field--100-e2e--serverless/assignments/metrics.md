@@ -369,9 +369,15 @@ can you create a case to handle this anomaly and summarize this conversation and
 
 ## Custom Cases
 
+We can use cases to track work related to custom business metrics.
+
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Cases`
-3. Select the newly created case
+3. Open the newly created case
 
 > [!NOTE]
 > Note that the case was automatically opened and amended per our work with the agent.
+
+# Agentic RCA
+
+If you'd like to demonstrate metric-driven (alert) agentic RCA which looks at logs, traces, and metrics, see [Agentic RCA](section-agentic-rca).
