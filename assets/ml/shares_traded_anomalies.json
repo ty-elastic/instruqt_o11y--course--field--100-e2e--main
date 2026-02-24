@@ -6,7 +6,7 @@
   "datafeed_config": {
     "datafeed_id": "datafeed-shares_traded_anomalies",
     "job_id": "shares_traded_anomalies",
-    "query_delay": "118623ms",
+    "query_delay": "60s",
     "chunking_config": {
       "mode": "auto"
     },
@@ -27,6 +27,7 @@
         ]
       }
     },
+    "frequency": "120s",
     "indices": [
       "metrics.trader"
     ],

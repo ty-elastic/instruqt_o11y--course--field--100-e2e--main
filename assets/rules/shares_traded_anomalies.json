@@ -1,7 +1,7 @@
 {
   "tags": ["trading"],
   "params": {
-    "severity": 50,
+    "severity": 40,
     "resultType": "record",
     "includeInterim": false,
     "jobSelection": {
