@@ -83,7 +83,18 @@ timelimit: 43200
 enhanced_loading: null
 ---
 
-All of the following technologies are enabled in this environment. As time allows, I will be adding additional scripts for demonstration of specific features (linked to this ToC). In the interim, please feel free to explore on your own. All of the features iterated below are enabled in this demo.
+This is intended to be an "all-in-one" Observability demo and exploration environment with lots of rich data to work with against a fully-enabled, dedicated (and ephemeral) Serverless Elasticsearch instance.
+
+> [!WARNING]
+> This is not intended to be a customer-facing workshop.
+
+> [!WARNING]
+> The content will likely change (improve) over time, so always take the time to retest your planned demo before going before a customer.
+
+> [!NOTE]
+> Share the [button label="Elastic-Breakout"](tab-1) tab (and possibly the [button label="Grafana"](tab-9) tab) with the customer. While the assignment will reference the [button label="Elastic"](tab-0) tab, you should invoke the instructions against the shared [button label="Elastic-Breakout"](tab-1) tab.
+
+In the following sections, you will find various walk-throughs and notes in the assignment. These are for your benefit as a SA. Familiarize yourself with the flows, play around, and perhaps customize to your liking.
 
 * [Agentic RCA](section-agentic-rca)
 * [Logs](section-logs)

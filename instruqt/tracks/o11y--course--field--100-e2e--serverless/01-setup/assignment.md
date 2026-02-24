@@ -83,7 +83,18 @@ timelimit: 43200
 enhanced_loading: null
 ---
 
-All of the following technologies are enabled in this environment. As time allows, I will be adding additional scripts for demonstration of specific features (linked to this ToC). In the interim, please feel free to explore on your own. All of the features iterated below are enabled in this demo.
+This is intended to be an "all-in-one" Observability demo and exploration environment with lots of rich data to work with against a fully-enabled, dedicated (and ephemeral) Serverless Elasticsearch instance.
+
+> [!WARN]
+> This is not intended to be a customer-facing workshop.
+
+> [!WARN]
+> The content will likely change (improve) over time, so always take the time to retest your planned demo before going before a customer.
+
+> [!NOTE]
+> Share the [button label="Elastic-Breakout"](tab-1) tab (and possibly the [button label="Grafana"](tab-9) tab) with the customer. While the assignment will reference the [button label="Elastic"](tab-0) tab, you should invoke the instructions against the shared [button label="Elastic-Breakout"](tab-1) tab.
+
+In the following sections, you will find various walk-throughs and notes in the assignment. These are for your benefit as a SA. Familiarize yourself with the flows, play around, and perhaps customize to your liking.
 
 * [Agentic RCA](section-agentic-rca)
 * [Logs](section-logs)
@@ -758,7 +769,7 @@ Let's create a ML job to look for suspicious trade activity.
 5. Select `shares_traded_anomalies` (this is the job we pre-created which has been running for awhile)
 
 > [!WARN]
-> Please use the pre-populated `shares_traded_anomalies` job, not the `example_shares_traded_anomalies` job you just created
+> Please use the pre-populated `shares_traded_anomalies` job (it has been running for awhile), not the `example_shares_traded_anomalies` job you just created.
 
 6. Click `View by` and set `View by` field to `customer_id`
 7. Click `Confirm`
@@ -775,7 +786,7 @@ Wait a minute or so and look for `q.bert` and note that it is an anomaly.
 
 Note the active alert for `q.bert`.
 
-## Custom Agent
+## Using a Custom Agent
 
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Dashboards` > `Trading Operation`
@@ -820,12 +831,18 @@ can you create a case to handle this anomaly and summarize this conversation and
 
 ## Custom Cases
 
+We can use cases to track work related to custom business metrics.
+
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Cases`
-3. Select the newly created case
+3. Open the newly created case
 
 > [!NOTE]
 > Note that the case was automatically opened and amended per our work with the agent.
+
+# Agentic RCA
+
+If you'd like to demonstrate metric-driven (alert) agentic RCA which looks at logs, traces, and metrics, see [Agentic RCA](section-agentic-rca).
 
 Tracing
 ===
