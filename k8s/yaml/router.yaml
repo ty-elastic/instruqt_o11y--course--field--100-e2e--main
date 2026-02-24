@@ -37,7 +37,7 @@ data:
 
     exporters:
       debug:
-        verbosity: detailed
+        verbosity: basic
       otlp/gateway:
         endpoint: "http://opentelemetry-kube-stack-daemon-collector.opentelemetry-operator-system.svc.cluster.local:4317"
         tls:

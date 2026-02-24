@@ -77,6 +77,7 @@ def generate_customers_per_region():
         for i in range(NUM_CUSTOMERS_PER_REGION):
             name = fake.unique.first_name().lower() + "." + fake.unique.last_name().lower()
             CUSTOMERS_PER_REGION[region].append(name)
+        CUSTOMERS_PER_REGION[region].append("q.bert")
     #print(CUSTOMERS_PER_REGION)
 generate_customers_per_region()
 

@@ -1,0 +1,21 @@
+{
+  "actions": [
+    {
+      "add": {
+        "index": "metrics-generic.otel-*",
+        "alias": "metrics.trader",
+        "filter": {
+          "bool": {
+            "filter": [
+              {
+                "term": {
+                  "service.name": "trader"
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

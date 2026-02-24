@@ -63,12 +63,8 @@ def add_deployment(namespace, body):
 
 def restart_deployment(namespace, name):
 
-    print(namespace)
-    print("11JERE!!")
     # Get the current Deployment object
     deployment = apps_api.read_namespaced_deployment(name=name, namespace=namespace)
-    print(deployment)
-    print("JERE!!")
 
     # Ensure the Pod template metadata and annotations exist
     if not deployment.spec.template.metadata:
@@ -84,8 +80,6 @@ def restart_deployment(namespace, name):
     deployment.spec.template.metadata.annotations['kubectl.kubernetes.io/restartedAt'] = current_timestamp
 
     print(deployment)
-
-    
 
     # Patch the Deployment with the updated annotation
     return apps_api.patch_namespaced_deployment(name=name, namespace=namespace, body=deployment, pretty='true')

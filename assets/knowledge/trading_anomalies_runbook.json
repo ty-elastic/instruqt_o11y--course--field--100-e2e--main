@@ -1,0 +1,5 @@
+{
+    "id": "trading_anomalies_runbook",
+    "title": "runbook for trading anomalies",
+    "text": "If a user is found to be trading in an anomalous fashion, please record your finding in a case and contact security."
+}

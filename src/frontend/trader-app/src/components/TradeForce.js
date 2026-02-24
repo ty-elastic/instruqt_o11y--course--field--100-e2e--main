@@ -20,7 +20,7 @@ class TradeForce extends React.Component {
         this.state = {
             symbol: 'OELK',
             day_of_week: 'M',
-            customer_id: "tb93",
+            customer_id: "q.bert",
             shares: 93,
             share_price: 107.10,
             action: 'buy'

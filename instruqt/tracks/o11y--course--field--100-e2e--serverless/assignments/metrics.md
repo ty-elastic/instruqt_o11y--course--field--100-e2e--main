@@ -4,12 +4,14 @@ Metrics
 
 # Metrics Discovery
 
-The goal of this demo is to demonstrate that the metrics experience in Elastic is optimized to derive value with just a few clicks.
+The goal of this demo is to demonstrate that the metrics experience in Elastic is optimized to derive value with just a few clicks, competitive with other products.
 
 ## Metrics Discovery in Grafana
 
 > [!NOTE]
 > Typically, you would demo the Grafana comparison only if the customer is an existing Prometheus/Grafana user.
+
+We are sending the same set of node.js metrics to both Prometheus/Grafana and Elasticsearch.
 
 1. Open the [button label="Grafana"](tab-9) tab
 2. Navigate to `Drilldown` > `Metrics`
@@ -24,8 +26,6 @@ http_requests_total
 
 ## Metrics Discovery in Kibana
 
-Now let's mirror that experience in Kibana.
-
 1. Open the [button label="Elasticsearch"](tab-0) tab
 2. Navigate to `Discover`
 3. Enter `ES|QL` mode (if Discover is not yet in `ES|QL` mode)
@@ -34,7 +34,7 @@ Now let's mirror that experience in Kibana.
 TS metrics-* | WHERE data_stream.dataset == "prometheusreceiver.otel"
 ```
 
-Note how easy it is to quickly visualize a large set of metrics.
+Note how easy it is to quickly visualize a large set of related metrics.
 
 Now let's find our metric:
 1. Enter the following in the `Search metric` bar
@@ -68,20 +68,6 @@ sum by (region) (rate(http_requests_total[5m]))
 ```
 5. Click `Run query`
 
-Now's let make it an alert (optional).
-
-1. Click the `+` menu in the top-right of the window and select `New alert rule`
-2. Name the rule `http_requests`
-3. Under `2. Define query and alert condition`, make sure `Code` is selected and enter the following PromQL query:
-```
-sum by (region) (rate(http_requests_total[5m]))
-```
-4. Under `3. Add folders and labels` click `+ New folder`
-6. Enter `Test` in the `Enter a name` field of the `New folder` dialog
-7. Under `4. Set evaluation behavior` click `+ New evaluation group`
-8. Enter `Test` in the `Enter a name` field of the `New evaluation group` dialog
-9. Click `Save` at the bottom of the page
-
 ## PROMQL in Kibana
 
 1. Open the [button label="Elasticsearch"](tab-0) tab
@@ -95,9 +81,9 @@ PROMQL index=metrics-* start=?_tstart end=?_tend step=5m sum by (region) (rate(h
 > [!NOTE]
 > You can copy and paste `sum by (region) (rate(http_requests_total[5m]))` from Grafana into Kibana for greater effect.
 
-Note the same result as in Grafana.
-
 # OOTB OTel Dashboards
+
+The goal of this demo is to show OOTB support for popular, native OTel metrics. Elasticsearch will automatically add OOTB dashboards when it recognizes specific OTel data.
 
 ## PostgreSQL
 
@@ -107,27 +93,11 @@ Note the same result as in Grafana.
 2. Navigate to `Dashboards`
 3. Open dashboard `[Metrics PostgreSQL OTel] Database Overview`
 
-### How does this work?
-
-1. Open the [button label="K8s YAML"](tab-4) Instruqt tab
-2. Navigate to `postgresql.yaml`
-
-Note the OTel Collector configuration with the `postgresql` receiver.
-
 ## MySQL
 
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Dashboards`
 3. Open dashboard `[MySQL OTel] Overview`
-
-### How does this work?
-
-To collect mysql metrics, we use a sidecar vanilla OTel Collector configured with the `mysql` receiver.
-
-1. Open the [button label="K8s YAML"](tab-4) Instruqt tab
-2. Navigate to `mysql.yaml`
-
-Note the OTel Collector configuration with the `mysql` receiver.
 
 ## nginx
 
@@ -135,22 +105,13 @@ Note the OTel Collector configuration with the `mysql` receiver.
 2. Navigate to `Dashboards`
 3. Open dashboard `[Metrics Nginx OTEL] Overview`
 
-### How does this work?
+# Advanced ES|QL
 
-To collect mysql metrics, we use a sidecar vanilla OTel Collector configured with the `mysql` receiver.
+The goal of this demo is to demonstrate analytics that go beyond what can be done with OOTB Dashboards.
 
-1. Open the [button label="K8s YAML"](tab-4) Instruqt tab
-2. Navigate to `proxy.yaml`
+## Comparing latency across flows
 
-Note that we use the creator receiver pattern to tell the daemonset OTel Collector to invoke the `nginx` receiver
-
-# Powerful Analytics
-
-ES|QL is a powerful language for performing metric analytics.
-
-## Comparing 2 execution paths
-
-Let's say you are testing an alternative code path which performs similar tasks, but is implemented with a different technology stack. How can you compare performance?
+ES|QL is a powerful language for performing metric analytics. Let's say you are testing an alternative code path which performs similar tasks, but is implemented with a different technology stack. How can you compare performance between the two?
 
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Applications` > `Service map`
@@ -189,6 +150,8 @@ This lets us nicely examine the overall difference in latency between the 2 path
 
 ## AI Agent
 
+The goal of this demo is to demonstrate 
+
 ### Create Alert Rule
 
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
@@ -210,8 +173,8 @@ Let's create an alert.
 ```
 TS metrics-*
   | WHERE event.dataset == "postgresqlreceiver.otel"
-  | STATS rollback_rate = SUM(RATE(metrics.postgresql.rollbacks)) BY TBUCKET(1m)
-  | WHERE rollback_rate > 0
+  | STATS rollback_rate = SUM(RATE(metrics.postgresql.rollbacks)) BY BUCKET(@timestamp, 1, ?_tstart, ?_tend)
+  | WHERE rollback_rate > 0 // alert when any rollbacks occur
 ```
 3. Click the `Alerts` menu in the upper-right
 4. Select `Create search threshold rule` from the menu

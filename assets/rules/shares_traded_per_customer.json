@@ -1,0 +1,35 @@
+{
+  "tags": ["trading"],
+  "params": {
+    "severity": 75,
+    "resultType": "record",
+    "includeInterim": false,
+    "jobSelection": {
+      "jobIds": [
+        "shares_traded_per_customer"
+      ],
+      "groupIds": []
+    },
+    "lookbackInterval": null,
+    "topNBuckets": null,
+    "kqlQueryString": null
+  },
+  "schedule": {
+    "interval": "1m"
+  },
+  "consumer": "stackAlerts",
+  "name": "shares_traded_per_customer",
+  "enabled": true,
+  "throttle": null,
+  "artifacts": {
+    "dashboards": [],
+    "investigation_guide": {
+      "blob": ""
+    }
+  },
+  "rule_type_id": "xpack.ml.anomaly_detection_alert",
+  "actions": [],
+  "alert_delay": {
+    "active": 1
+  }
+}

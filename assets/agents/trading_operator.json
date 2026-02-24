@@ -1,0 +1,34 @@
+{
+  "id": "trading_operator",
+  "type": "chat",
+  "name": "Trading Operator",
+  "description": "Expert on monitoring stock trades",
+  "labels": [],
+  "avatar_color": "",
+  "avatar_symbol": "",
+  "configuration": {
+    "instructions": """You are an expert in monitoring stock trades. You will be asked about stock activity. I keep my trade data in an index called "metrics.trader".""",
+    "tools": [
+      {
+        "tool_ids": [
+          "platform.core.search",
+          "platform.core.list_indices",
+          "platform.core.get_index_mapping",
+          "platform.core.get_document_by_id",
+          "platform.core.get_workflow_execution_status",
+          "platform.core.create_visualization",
+          "observability.get_anomaly_detection_jobs",
+          "search_knowledgebase",
+          "platform.core.execute_esql",
+          "platform.core.generate_esql",
+          "platform.core.index_explorer",
+          "platform.core.cases",
+          "add_comment_to_case",
+          "get_case_alerts",
+          "get_alert_details"
+        ]
+      }
+    ]
+  },
+  "readonly": false
+}

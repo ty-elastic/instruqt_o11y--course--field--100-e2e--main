@@ -259,6 +259,53 @@ def load_synthetics(kibana_server, kibana_auth, namespaces):
                         print(resp.json())     
  
 
+
+def load_aliases(es_host, kibana_auth):
+
+    directory_path = "aliases"
+    target_extension = ".json"
+    
+    for root, dirs, files in os.walk(directory_path):
+        for file in files:
+            if file.endswith(target_extension):
+                full_path = os.path.join(root, file)
+                with open(full_path, 'r') as fileo:
+
+                    alias = json.load(fileo)
+                    #print(rule)
+                    resp = requests.post(f"{es_host}/_aliases",
+                                        json=alias,
+                                        headers={f"Authorization": kibana_auth, "Content-Type": "application/json"})
+                    print(resp.json())     
+
+
+
+def load_ml(es_host, kibana_auth):
+
+    directory_path = "ml"
+    target_extension = ".json"
+    
+    for root, dirs, files in os.walk(directory_path):
+        for file in files:
+            if file.endswith(target_extension):
+                full_path = os.path.join(root, file)
+                with open(full_path, 'r') as fileo:
+
+                    ml = json.load(fileo)
+                    #print(rule)
+                    resp = requests.put(f"{es_host}/_ml/anomaly_detectors/{ml['job_id']}",
+                                        json=ml,
+                                        headers={f"Authorization": kibana_auth, "Content-Type": "application/json"})
+                    print(resp.json())     
+
+                    resp = requests.post(f"{es_host}/_ml/anomaly_detectors/{ml['job_id']}/_open",
+                                        headers={f"Authorization": kibana_auth, "Content-Type": "application/json"})
+                    print(resp.json())     
+
+                    resp = requests.post(f"{es_host}/_ml/datafeeds/{ml['datafeed_config']['datafeed_id']}/_start",
+                                        headers={f"Authorization": kibana_auth, "Content-Type": "application/json"})
+                    print(resp.json())   
+
 def load_rules(kibana_server, kibana_auth, es_host, connect_alerts=False):
 
     body = {
@@ -509,6 +556,8 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, 
 
         run_workflow(kibana_host, auth, 'setup')
         load_synthetics(kibana_host, auth, namespaces_split)
+        load_aliases(es_host, auth)
+        load_ml(es_host, auth)
         print('done')
 
     elif action == 'backup':
