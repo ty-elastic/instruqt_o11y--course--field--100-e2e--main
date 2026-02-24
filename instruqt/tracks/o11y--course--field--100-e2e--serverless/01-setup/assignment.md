@@ -672,6 +672,8 @@ We are generating a variety of OTel custom metrics from our `trader` application
 2. Navigate to `trader/app.py`
 3. Note the code which initializes the OTel metrics (line 58) and the code which sets the metrics (around line 152)
 
+Note that `shares_traded_per_customer` is a "high-cardinality" metric (one series per user).
+
 ## Dashboarding
 
 Let's create a few visualizations. First, let's create a visualization with lens:
@@ -693,23 +695,126 @@ shares_traded_per_customer
 TS metrics.trader
   | STATS avg_shares_traded = AVG(metrics.shares_traded_per_customer) BY BUCKET(@timestamp, 100, ?_tstart, ?_tend), symbol
 ```
-8. Click on the `Save visualization` (Disk) icon in the upper-right of the graph
-9. Set the `Title` to:
+8. Click on the pencil icon in the upper-right of the graph and select the `Line` graph
+9. Click on the `Save visualization` (Disk) icon in the upper-right of the graph
+10. Set the `Title` to:
 ```
 Shares Traded Per Symbol
 ```
-10. Under `Add to dashboard` select `New`
-11. Click `Save and go to dashboard`
+11. Under `Add to dashboard` select `New`
+12. Click `Save and go to dashboard`
 
-Now let's use Lens to add another graph:
+Now let's use Lens to add another graph to our dashboard:
 
 1. Click `Add` in the upper-right and select `Visualization`
 2. Set the `Data view` to `metrics.trader`
-3.
+3. Find the field `share_price` and drag it to the `Vertical axis`
+4. Find the field `symbol` and drag it to `Breakdown`
+5. Find the field `@timestamp` and drag it to `Horizontal axis`
+6. Set the visualization type to `Line`
+7. Click `Save and return`
+8. Click `Save in the upper-right
+9. Set `Title` to `Trading Operations`
+10. Click `Save`
 
-- ML
-- agent builder w/ tools
-- dyn dash
+## Machine Learning
+
+Let's create a ML job to look for suspicious trade activity.
+
+1. Open the [button label="Elasticsearch"](tab-0) tab
+2. Navigate to `Machine Learning` > `Overview`
+3. Click `Manage jobs`
+4. Click `Create job`
+5. In `Select data view`, select `metrics.trader`
+6. Click `Population`
+7. Click `Use full data`
+8. Click `Next`
+9. For `Population field`, select `attributes.customer_id`
+10. Under `Add metric`, select `Mean(shares_traded_per_customer)`
+11. Under `Split data`, select `attributes.symbol`
+12. Set `Bucket span` to `1m`
+13. Click `Next`
+14. Under `Job ID`, name the job `example_shares_traded_anomalies`
+15. Click `Next`
+16. Click `Create job`
+
+### Generate anomalous trading behavior
+
+1. Open the [button label="Trader"](tab-2) Instruqt tab
+2. Navigate to `TRADE`
+3. Open `Force Trade`
+4. Set `Shares` to `10000` and click `SUBMIT` 4 or 5 times
+
+### Add our swim lane graph to our dashboard
+
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
+2. Navigate to `Dashboards` > `Trading Operation`
+3. Click `Add` in the upper-right and select `+ New panel`
+4. Select `Anomaly Swim Lane`
+5. Select `shares_traded_anomalies` (this is a job we pre-created which has been running for awhile)
+6. Click `View by` and set `View by` field to `attributes.customer_id`
+7. Click `Confirm`
+
+Look for `tb93` and note that it is an anomaly.
+
+### Add alerts to our dashboard
+
+1. Click `Add` in the upper-right and select `+ New panel`
+2. Select `Alerts`
+3. Set `Filter by` to `Rule tags`
+4. Set `Rule tags` to `trading`
+5. Click `Save`
+
+Note the active alert for `tb93`.
+
+## Custom Agent
+
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
+2. Navigate to `Dashboards` > `Trading Operation`
+3. Click `AI Agent` in the upper-right
+4. Select the `Trading Operator` Agent
+5. Ask
+```
+are there any trading anomalies I should be aware of?
+```
+6. Ask
+```
+is there a runbook I should follow?
+```
+7. Ask
+```
+can you graph tb93's trading behavior?
+```
+8. Ask
+```
+can you create a case to handle this anomaly and summarize this conversation and append it to the case?
+```
+9. Ask
+```
+Can you append the related alert to the case?
+```
+
+### How does this work?
+
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
+2. Navigate to `Agents`
+3. Select `More` from the upper-right
+4. Select `View all agents`
+5. Select the `Trading Operator` agent
+
+Note the prompt.
+
+6. Select the `Tools` tab
+
+Note the tools.
+
+## Custom Cases
+
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
+2. Navigate to `Cases`
+3. Select the newly created case
+
+Note the summary and alert attachment.
 
 Tracing
 ===

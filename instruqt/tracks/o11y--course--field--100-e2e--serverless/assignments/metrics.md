@@ -292,7 +292,9 @@ Let's create a ML job to look for suspicious trade activity.
 1. Open the [button label="Trader"](tab-2) Instruqt tab
 2. Navigate to `TRADE`
 3. Open `Force Trade`
-4. Set `Shares` to `10000` and click `SUBMIT` 4 or 5 times
+4. `Customer ID` to `q.bert`
+5. Set `Shares` to `10000`
+6. Click `SUBMIT` 10 times
 
 ### Add our swim lane graph to our dashboard
 
@@ -304,7 +306,7 @@ Let's create a ML job to look for suspicious trade activity.
 6. Click `View by` and set `View by` field to `attributes.customer_id`
 7. Click `Confirm`
 
-Look for `tb93` and note that it is an anomaly.
+Look for `q.bert` and note that it is an anomaly.
 
 ### Add alerts to our dashboard
 
@@ -314,7 +316,7 @@ Look for `tb93` and note that it is an anomaly.
 4. Set `Rule tags` to `trading`
 5. Click `Save`
 
-Note the active alert for `tb93`.
+Note the active alert for `q.bert`.
 
 ## Custom Agent
 
@@ -332,15 +334,11 @@ is there a runbook I should follow?
 ```
 7. Ask
 ```
-can you graph tb93's trading behavior?
+can you graph q.bert's trading behavior?
 ```
 8. Ask
 ```
 can you create a case to handle this anomaly and summarize this conversation and append it to the case?
-```
-9. Ask
-```
-Can you append the related alert to the case?
 ```
 
 ### How does this work?
@@ -363,4 +361,4 @@ Note the tools.
 2. Navigate to `Cases`
 3. Select the newly created case
 
-Note the summary and alert attachment.
+Note the summary.

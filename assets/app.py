@@ -558,12 +558,13 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, 
         load_new_knowledge(es_host, auth)
         load_agent_tools(kibana_host, auth)
         load_agents(kibana_host, auth)
-        load_rules(kibana_host, auth, es_host, connect_alerts)
+
 
         run_workflow(kibana_host, auth, 'setup')
         load_synthetics(kibana_host, auth, namespaces_split)
         load_aliases(es_host, auth)
         load_ml(es_host, auth)
+        load_rules(kibana_host, auth, es_host, connect_alerts)
         print('done')
 
     elif action == 'backup':

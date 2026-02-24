@@ -27,7 +27,8 @@
           "platform.core.cases",
           "add_comment_to_case",
           "get_case_alerts",
-          "get_alert_details"
+          "get_alert_details",
+          "create_case"
         ]
       }
     ]
