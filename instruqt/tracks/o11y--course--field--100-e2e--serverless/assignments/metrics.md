@@ -4,7 +4,7 @@ Metrics
 
 # Metrics Discovery
 
-The goal of this demo is to demonstrate that the metrics experience in Elastic is optimized to derive value with just a few clicks, competitive with other products.
+The goal of this demo is to show that the metrics experience in Elastic is optimized to derive value with just a few clicks, competitive with other products.
 
 ## Metrics Discovery in Grafana
 
@@ -15,14 +15,17 @@ We are sending the same set of node.js metrics to both Prometheus/Grafana and El
 
 1. Open the [button label="Grafana"](tab-9) tab
 2. Navigate to `Drilldown` > `Metrics`
-3. Enter the following in the `Search metric` bar
+3. Enter the following in the `Search metric` search box:
 ```
 http_requests_total
 ```
-4. Click `Select`
+4. Click `Select` in the upper-right of the `http_requests_total` graph
 5. Set `Breakdown` > `By label` to `region`
-6. Click the `Add to dashboard` control in the upper-right of the `http_requests_total` graph
+6. Click the `Add to dashboard` control in the upper-right of the `http_requests_total` graph in the top pane
 7. Click `Open dashboard` in the `Add to dashboard` dialog
+8. Click `Save dashboard` in the upper-right
+9. Set `Title` to `node.js Monitor`
+10. Click `Save`
 
 ## Metrics Discovery in Kibana
 
@@ -34,44 +37,45 @@ http_requests_total
 TS metrics-* | WHERE data_stream.dataset == "prometheusreceiver.otel"
 ```
 
-Note how easy it is to quickly visualize a large set of related metrics.
+> [!NOTE]
+> Note how easy it is to quickly visualize a large set of related metrics.
 
-Now let's find our metric:
-1. Enter the following in the `Search metric` bar
+5. Click the search (magnifying glass) icon in the upper-right of the graph area and enter the following in the `Search metric` bar:
 ```
 http_requests_total
 ```
 
-Note that Kibana detected that this is a monotonically increasing counter and automatically applied a rate (derivative) transformation.
+> [!NOTE]
+> Hover over the series in the graph and note that Kibana automatically detected that this is a monotonically increasing counter and automatically applied a rate (derivative) transformation.
 
-2. Click `No dimension selected` and select `region`
-3. Click on the three vertical dots in the upper right of one of the `http_requests_total` graphs
-4. Select `Copy to dashboard`
-5. Click `New` in the `Save Lens visualization` dialog
-6. Click `Save and go to Dashboard`
+6. Click `No dimension selected` and select `attributes.region`
+7. Click on the three vertical dots in the upper right of one of the `http_requests_total` graphs
+8. Select `Copy to dashboard`
+9. Click `New` in the `Save Lens visualization` dialog
+10. Click `Save and go to Dashboard`
+11. Click `Save in the upper-right
+12. Set `Title` to `node.js Monitor`
+13. Click `Save`
 
 ### Create Alert Rule
 
-Once on the dashboard, click the `Explore in Discover` icon at the top of the `http_requests_total` visualization to jump back to Discover.
+We can easily turn a Discovery query into an actionable alert rule.
 
-1. Modify the ES|QL to prepare it for an alert:
+1. From the dashboard, click the three dots in the upper-right of the `http_requests_total` graph
+2. Select `Create alert rule`
+3. Modify the last line of ES|QL (containing `[THRESHOLD]`) to alert when the http_requests_total rate is less than 3 per second:
 ```
-TS metrics-*
-  | WHERE data_stream.dataset == "prometheusreceiver.otel"
-  | STATS http_requests_rate = SUM(RATE(http_requests_total)) BY BUCKET(@timestamp, 1, ?_tstart, ?_tend)
-  | WHERE http_requests_rate > 0
+| WHERE _sum_rate_http_requests_total < 3
 ```
-2. Click the `Alerts` menu in the upper-right
-3. Select `Create search threshold rule` from the menu
-
-Note how the query was auto-populated from your Discover session.
-
-4. Set `Set the time window` to  `1 minute`
-5. Click `Create rule`
+4. Click `Next` to move onto `Actions`
+5. Click `Add action` and select `Cases`
+6. Click `Next` to move onto `Details`
+7. Set `Rule name` to `http_requests_total < 3`
+8. Click `Create rule`
 
 # PROMQL Support
 
-The goal of this demo is to demonstrate our support for PROMQL to help teams using Grafana and PROMQL migrate to Kibana.
+The goal of this demo is to show how teams using Grafana and PROMQL can feel at home using PROMQL in Elasticsearch.
 
 ## PROMQL in Grafana
 
@@ -81,7 +85,7 @@ The goal of this demo is to demonstrate our support for PROMQL to help teams usi
 1. Open the [button label="Grafana"](tab-9) tab
 2. Navigate to `Explore`
 3. Click `Code` toggle (on the right)
-4. Enter the following into the `Enter a PromQL query...` field
+4. Enter the following into the `Enter a PromQL query...` field:
 ```
 sum by (region) (rate(http_requests_total[5m]))
 ```
