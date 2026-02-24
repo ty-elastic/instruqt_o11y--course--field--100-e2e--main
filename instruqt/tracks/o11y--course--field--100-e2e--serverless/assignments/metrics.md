@@ -50,9 +50,28 @@ Note that Kibana detected that this is a monotonically increasing counter and au
 5. Click `New` in the `Save Lens visualization` dialog
 6. Click `Save and go to Dashboard`
 
+### Create Alert Rule
+
 Once on the dashboard, click the `Explore in Discover` icon at the top of the `http_requests_total` visualization to jump back to Discover.
 
+1. Modify the ES|QL to prepare it for an alert:
+```
+TS metrics-*
+  | WHERE data_stream.dataset == "prometheusreceiver.otel"
+  | STATS http_requests_rate = SUM(RATE(http_requests_total)) BY BUCKET(@timestamp, 1, ?_tstart, ?_tend)
+  | WHERE http_requests_rate > 0
+```
+2. Click the `Alerts` menu in the upper-right
+3. Select `Create search threshold rule` from the menu
+
+Note how the query was auto-populated from your Discover session.
+
+4. Set `Set the time window` to  `1 minute`
+5. Click `Create rule`
+
 # PROMQL Support
+
+The goal of this demo is to demonstrate our support for PROMQL to help teams using Grafana and PROMQL migrate to Kibana.
 
 ## PROMQL in Grafana
 
@@ -83,7 +102,7 @@ PROMQL index=metrics-* start=?_tstart end=?_tend step=5m sum by (region) (rate(h
 
 # OOTB OTel Dashboards
 
-The goal of this demo is to show OOTB support for popular, native OTel metrics. Elasticsearch will automatically add OOTB dashboards when it recognizes specific OTel data.
+The goal of this demo is to show OOTB support for popular, native OTel metrics. Elasticsearch will automatically add OOTB dashboards when it recognizes the relevant OTel metric data.
 
 ## PostgreSQL
 
@@ -150,39 +169,7 @@ This lets us nicely examine the overall difference in latency between the 2 path
 
 ## AI Agent
 
-The goal of this demo is to demonstrate 
-
-### Create Alert Rule
-
-1. Open the [button label="Elastic"](tab-0) Instruqt tab
-2. Navigate to `Discover`
-3. Enter `ES|QL` mode (if Discover is not yet in `ES|QL` mode)
-4. Execute the following ES|QL:
-```
-TS metrics-* | WHERE event.dataset == "postgresqlreceiver.otel"
-```
-5. Enter the following in the `Search metric` bar
-```
-rollbacks
-```
-
-Let's create an alert.
-
-1. Select `Explore` from the top-right of the `metrics.postgresql.rollbacks` graph
-2. Modify the ES|QL to prepare it for an alert:
-```
-TS metrics-*
-  | WHERE event.dataset == "postgresqlreceiver.otel"
-  | STATS rollback_rate = SUM(RATE(metrics.postgresql.rollbacks)) BY BUCKET(@timestamp, 1, ?_tstart, ?_tend)
-  | WHERE rollback_rate > 0 // alert when any rollbacks occur
-```
-3. Click the `Alerts` menu in the upper-right
-4. Select `Create search threshold rule` from the menu
-
-Note how the query was auto-populated from your Discover session.
-
-5. Set `Set the time window` to  `1 minute`
-6. Click `Create rule`
+The goal of this demo is to demonstrate how you can use an AI Agent to interrogate metrics and cross-correlate with other signals through natural language.
 
 ### Trigger Alert
 
@@ -194,7 +181,7 @@ Note how the query was auto-populated from your Discover session.
 3. Open `DB`, select `Generate errors` and click `SUBMIT`
 
 > [!NOTE]
-> I wouldn't wait for the alert to fire; just head right to the next step
+> There isn't a need to wait for the alert to fire; just head right to the next step
 
 ### Observing the problem
 
@@ -205,7 +192,7 @@ Note how the query was auto-populated from your Discover session.
 
 ### AI-Agent Assist
 
-1. Click the `AI Agent` button in the upper-right
+1. Click the `AI Agent` button in the upper-right corner of the dashboard
 2. Select `Observability Agent` (important)
 3. Ask
 ```
@@ -225,6 +212,8 @@ were there any logs which explain the change in rolled back transactions?
 ```
 
 # Custom Metrics
+
+We are generating a variety of custom metrics from our `trader` application.
 
 - OTEL
 - prom

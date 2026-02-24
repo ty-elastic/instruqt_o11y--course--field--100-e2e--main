@@ -13,6 +13,8 @@ COPY knowledge knowledge
 COPY synthetics synthetics
 COPY agents agents
 COPY tools tools
+COPY aliases aliases
+COPY ml ml
 
 ENV PYTHONUNBUFFERED=1
 

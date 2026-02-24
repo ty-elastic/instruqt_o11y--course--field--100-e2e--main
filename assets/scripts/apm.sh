@@ -93,15 +93,6 @@ config_rum() {
     return 0
 }
 
-
-PUT /_cluster/settings
-{
-	"persistent": {
-		"esql.query.roundto_pushdown_threshold": -1
-	}
-}
-
-
 #config_apm_ml
 retry_command_lin config_apm_dv
 

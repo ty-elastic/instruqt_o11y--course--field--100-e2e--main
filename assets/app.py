@@ -272,7 +272,7 @@ def load_aliases(es_host, kibana_auth):
                 with open(full_path, 'r') as fileo:
 
                     alias = json.load(fileo)
-                    #print(rule)
+                    #print(alias)
                     resp = requests.post(f"{es_host}/_aliases",
                                         json=alias,
                                         headers={f"Authorization": kibana_auth, "Content-Type": "application/json"})
@@ -546,6 +546,12 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, 
         print('done')
     elif action == 'load_tools':
         load_agent_tools(kibana_host, auth)
+        print('done')
+    elif action == 'load_aliases':
+        load_aliases(es_host, auth)
+        print('done')
+    elif action == 'load_ml':
+        load_ml(es_host, auth)
         print('done')
     elif action == 'load':
         load_workflows(kibana_host, auth, es_host, remote_host)
