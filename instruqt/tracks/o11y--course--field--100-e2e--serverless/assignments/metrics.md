@@ -2,9 +2,6 @@
 Metrics
 ===
 
-> [!NOTE]
-> Pick and choose the demos and order for your particular customer. You do not need to show all of these items.
-
 # Metrics Discovery
 
 The goal of this demo is to show that the metrics experience in Elastic is optimized to derive value with just a few clicks, competitive with other products.
@@ -350,9 +347,9 @@ Let's create a ML job to look for suspicious trade activity.
 6. Click `Population`
 7. Click `Use full data`
 8. Click `Next`
-9. For `Population field`, select `customer_id`
-10. Under `Add metric`, select `Mean(shares_traded_per_customer)`
-11. Under `Split data`, select `symbol`
+9. For `Population field`, select `attributes.customer_id`
+10. Under `Add metric`, select `Mean(metrics.shares_traded_per_customer)`
+11. Under `Split data`, select `attributes.symbol`
 12. Click `Next`
 13. Under `Job ID`, name the job:
 ```

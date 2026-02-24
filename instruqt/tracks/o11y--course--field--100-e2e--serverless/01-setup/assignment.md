@@ -102,6 +102,10 @@ In the following sections, you will find various walk-throughs and notes in the 
 * [Tracing](section-tracing)
 * [Workflows](section-workflows)
 
+
+> [!NOTE]
+> Pick and choose the demos and order for your particular customer. You do not need to show all of these items.
+
 Supporting slides (where available) can be found [here](https://docs.google.com/presentation/d/11lkZIvLNwWR8Tm6edCsPTIImypjKiylzwhOAa8527EM/edit?usp=drive_link) .
 
 
@@ -463,9 +467,6 @@ FROM logs-*
 
 Metrics
 ===
-
-> [!NOTE]
-> Pick and choose the demos and order for your particular customer. You do not need to show all of these items.
 
 # Metrics Discovery
 
