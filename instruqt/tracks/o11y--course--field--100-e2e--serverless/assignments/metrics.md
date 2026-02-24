@@ -59,7 +59,7 @@ http_requests_total
 
 ### Create Alert Rule
 
-We can easily turn a Discovery query into an actionable alert rule.
+We can easily turn a metric visualization into an actionable alert rule.
 
 1. From the dashboard, click the three dots in the upper-right of the `http_requests_total` graph
 2. Select `Create alert rule`
@@ -89,7 +89,7 @@ The goal of this demo is to show how teams using Grafana and PROMQL can feel at 
 ```
 sum by (region) (rate(http_requests_total[5m]))
 ```
-5. Click `Run query`
+5. Click `Run query` (circular arrows)
 
 ## PROMQL in Kibana
 
@@ -138,7 +138,7 @@ ES|QL is a powerful language for performing metric analytics. Let's say you are 
 
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Applications` > `Service map`
-3. Note that `router` is dividing transactions between a Java/PostgreSQL stack and a go/mySQL stack.
+3. Note that `router` is dividing transactions between a Java/PostgreSQL stack (`recorder-java` > `postgresql`) and a go/mySQL stack (`recorder-go` > `mysql`)
 4. Click on the `router` service and select `Service Details`
 5. Scroll down to the bottom and observe `Dependencies` and note the differences in average latency
 
@@ -166,51 +166,53 @@ FROM traces-*
 | KEEP avg_t_latency, avg_db_latency, avg_http_latency, service.name
 ```
 5. Click on the pencil icon to the right of the resulting graph
-6. Select `Unstacked`
+6. Select `Unstacked` under `Visualization parameters`
 7. Click `Apply and close`
 
-This lets us nicely examine the overall difference in latency between the 2 paths along with a comparitive breakdown of the individual components which contribute to the overall latency.
+This lets us nicely examine the overall difference in latency between the 2 paths along with a comparative breakdown of the individual components which contribute to the overall latency.
 
-## AI Agent
+## AI Agent Assist
 
 The goal of this demo is to demonstrate how you can use an AI Agent to interrogate metrics and cross-correlate with other signals through natural language.
 
 ### Trigger Errors
 
-> [!NOTE]
-> Don't need to show this setup step to customers
-
+First, let's create a database problem:
 1. Open the [button label="Trader"](tab-2) Instruqt tab
 2. Navigate to `ERROR`
 3. Open `DB`, select `Generate errors` and click `SUBMIT`
-
-> [!NOTE]
-> There isn't a need to wait for the alert to fire; just head right to the next step
 
 ### Observing the problem
 
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Dashboards` > `[Metrics PostgreSQL OTel] Database Overview`
-3. Scroll down to `Transactions Committed vs Rolled Back`
-4. Wait for `rolled back` series to go to non-zero
+3. Change the time picker to be `Last 15 minutes`
+4. Scroll down to `Transactions Committed vs Rolled Back`
+5. Wait for `rolled back` series to be non-zero for a minute
 
 ### AI-Agent Assist
 
+> [!WARN]
+> Ensure you are issuing questions against the `Observability Agent`
+
+
 1. Click the `AI Agent` button in the upper-right corner of the dashboard
 2. Select `Observability Agent` (important)
-3. Ask
+3. Execute the following question:
 ```
 are the rolled back transactions causing trace failures?
 ```
+4. You can open the reasoning step to see the steps the AI Agent is taking to answer your query
 
-Note that Elastic automatically queried APM metric sources with correlating information from this dashboard (e.g, timestamp).
+> [!NOTE]
+> Note that Elastic automatically queried APM metric sources with correlating information from this dashboard (e.g, timestamp).
 
-4. Ask
+4. Execute the following question:
 ```
 did the rolled back transactions cause a spike in log rate?
 ```
 
-5. Ask
+5. Execute the following question:
 ```
 were there any logs which explain the change in rolled back transactions?
 ```
@@ -218,14 +220,6 @@ were there any logs which explain the change in rolled back transactions?
 # Custom Metrics
 
 We are generating a variety of OTel custom metrics from our `trader` application. The goal of this demo is to create a custom dashboard and agent which leverages those metrics to monitor the health of our trading operations.
-
-## [optional] How does this work?
-
-1. Open the [button label="Code"](tab-3) Instruqt tab
-2. Navigate to `trader/app.py`
-3. Note the code which initializes the OTel metrics (line 58) and the code which sets the metrics (around line 152)
-
-Note that `shares_traded_per_customer` is a "high-cardinality" metric (one series per user).
 
 ## Dashboarding
 
@@ -243,7 +237,7 @@ TS metrics.trader
 shares_traded_per_customer
 ```
 6. Click `Explore` in the upper-right corner of the `shares_traded_per_customer` graph
-7. Edit and execute the ES|QL query:
+7. Edit and execute the ES|QL query (to properly name the vertical axis and breakdown by symbol):
 ```
 TS metrics.trader
   | STATS avg_shares_traded = AVG(metrics.shares_traded_per_customer) BY BUCKET(@timestamp, 100, ?_tstart, ?_tend), symbol
@@ -266,13 +260,16 @@ Now let's use Lens to add another graph to our dashboard:
 5. Find the field `@timestamp` and drag it to `Horizontal axis`
 6. Set the visualization type to `Line`
 7. Click `Save and return`
-8. Click `Save in the upper-right
+8. Click `Save in the upper-right of the dashboard
 9. Set `Title` to `Trading Operations`
 10. Click `Save`
 
 ## Machine Learning
 
 Let's create a ML job to look for suspicious trade activity.
+
+> [!NOTE]
+> A prepopulated ML job has already been created for you. This step is simply to show the customer how relatively easy it is to create ML jobs on custom data.
 
 1. Open the [button label="Elasticsearch"](tab-0) tab
 2. Navigate to `Machine Learning` > `Overview`
@@ -282,14 +279,13 @@ Let's create a ML job to look for suspicious trade activity.
 6. Click `Population`
 7. Click `Use full data`
 8. Click `Next`
-9. For `Population field`, select `attributes.customer_id`
+9. For `Population field`, select `customer_id`
 10. Under `Add metric`, select `Mean(shares_traded_per_customer)`
-11. Under `Split data`, select `attributes.symbol`
-12. Set `Bucket span` to `1m`
-13. Click `Next`
-14. Under `Job ID`, name the job `example_shares_traded_anomalies`
-15. Click `Next`
-16. Click `Create job`
+11. Under `Split data`, select `symbol`
+12. Click `Next`
+13. Under `Job ID`, name the job `example_shares_traded_anomalies`
+14. Click `Next`
+15. Click `Create job`
 
 ### Generate anomalous trading behavior
 

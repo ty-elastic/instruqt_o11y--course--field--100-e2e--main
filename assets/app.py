@@ -260,6 +260,25 @@ def load_synthetics(kibana_server, kibana_auth, namespaces):
  
 
 
+def load_dataviews(kibana_server, kibana_auth):
+
+    directory_path = "data_views"
+    target_extension = ".json"
+
+    for root, dirs, files in os.walk(directory_path):
+        for file in files:
+            if file.endswith(target_extension):
+                full_path = os.path.join(root, file)
+                with open(full_path, 'r') as fileo:
+
+                    dataview = json.load(fileo)
+                    #print(alias)
+                    resp = requests.post(f"{kibana_server}/api/data_views/data_view",
+                                        json=dataview,
+                                        headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+                    print(resp.json())     
+
+
 def load_aliases(es_host, kibana_auth):
 
     directory_path = "aliases"
@@ -549,6 +568,7 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, 
         print('done')
     elif action == 'load_aliases':
         load_aliases(es_host, auth)
+        load_dataviews(kibana_host, auth)
         print('done')
     elif action == 'load_ml':
         load_ml(es_host, auth)
@@ -559,10 +579,10 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, 
         load_agent_tools(kibana_host, auth)
         load_agents(kibana_host, auth)
 
-
         run_workflow(kibana_host, auth, 'setup')
         load_synthetics(kibana_host, auth, namespaces_split)
         load_aliases(es_host, auth)
+        load_dataviews(kibana_host, auth)
         load_ml(es_host, auth)
         load_rules(kibana_host, auth, es_host, connect_alerts)
         print('done')

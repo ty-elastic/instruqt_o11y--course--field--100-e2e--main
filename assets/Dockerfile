@@ -14,6 +14,7 @@ COPY synthetics synthetics
 COPY agents agents
 COPY tools tools
 COPY aliases aliases
+COPY data_views data_views
 COPY ml ml
 
 ENV PYTHONUNBUFFERED=1
