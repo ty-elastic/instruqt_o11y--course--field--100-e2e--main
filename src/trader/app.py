@@ -122,11 +122,6 @@ def decode_common_args():
     error_db = params.get('error_db', False)
     error_db_service = params.get('error_db_service', None)
     
-    if error_db:
-        set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.frontend_version", "0.1")
-    else:
-        set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.frontend_version", os.environ['SERVICE_VERSION']) 
-
     skew_market_factor = params.get('skew_market_factor', 0)
 
     return trade_id, customer_id, day_of_week, symbol, latency_amount, latency_action, error_model, error_db, error_db_service, skew_market_factor, data_source, classification, flags

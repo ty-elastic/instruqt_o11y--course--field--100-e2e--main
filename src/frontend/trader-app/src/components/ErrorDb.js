@@ -21,7 +21,7 @@ class ErrorDb extends React.Component {
         super(props);
         this.state = {
             err_db_on: false,
-            err_db_service: 'recorder-java'
+            err_db_service: 'all'
         };
 
         this.monkeyState = new MonkeyState(this, 'db_error');
@@ -47,7 +47,7 @@ class ErrorDb extends React.Component {
             if (this.state.err_db_on === false) {
                 await axios.delete(`/monkey/err/db`);
             } else {
-                await axios.post(`/monkey/err/db/100`,
+                await axios.post(`/monkey/err/db/75`,
                     null,
                     {
                         params: {

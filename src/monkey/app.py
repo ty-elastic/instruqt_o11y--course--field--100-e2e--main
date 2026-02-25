@@ -2,6 +2,7 @@ from flask import Flask, request
 import logging
 import requests
 import random
+import uuid
 import time
 import os
 from threading import Thread
@@ -13,7 +14,7 @@ from ua_generator.options import Options
 from ua_generator.data.version import VersionRange
 from faker import Faker
 
-from opentelemetry import trace
+from opentelemetry import trace, baggage, context
 
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
@@ -29,6 +30,14 @@ def init_otel():
     tracer = trace.get_tracer(__name__)
     return tracer
 tracer = init_otel()
+
+def set_attribute_and_baggage(key, value, set_in_attribute=True, set_in_baggage=True):
+    # always set it on the current span
+    if set_in_attribute:
+        trace.get_current_span().set_attribute(key, value)
+    if set_in_baggage:
+        # and attach it to baggage
+        context.attach(baggage.set_baggage(key, value))
 
 TRADE_TIMEOUT = 5
 S_PER_DAY = 60
@@ -107,6 +116,13 @@ def generate_ipaddress_per_user():
             IP_ADDRESS_PER_USER[customer] = random.choice(ip_list)
 generate_ipaddress_per_user()
 
+SESSION_ID_PER_USER = {}
+def generate_sessionid_per_user():
+    for region in CUSTOMERS_PER_REGION.keys():
+        for customer in CUSTOMERS_PER_REGION[region]:
+            SESSION_ID_PER_USER[customer] = str(uuid.uuid4())
+generate_sessionid_per_user()
+
 latency_per_action_per_region = {}
 high_tput_per_customer = {}
 high_tput_per_symbol = {}
@@ -148,6 +164,14 @@ def conform_request_bool(value):
 
 @tracer.start_as_current_span("generate_trade_request")
 def generate_trade_request(*, subscription, customer_id, symbol, day_of_week, region, latency_amount, latency_action, error_model, error_db, error_db_service, error_request, skew_market_factor, classification=None, flags, data_source):
+    
+    set_attribute_and_baggage('session.id', SESSION_ID_PER_USER[customer_id])
+    set_attribute_and_baggage('frontend.name', "trader-app-web", set_in_attribute=False)
+    if error_db:
+        set_attribute_and_baggage('frontend.version', "0.9", set_in_attribute=False)
+    else:
+        set_attribute_and_baggage('frontend.version', "1.0", set_in_attribute=False)
+
     try:
         params={'symbol': symbol, 
                 'day_of_week': day_of_week,
@@ -469,7 +493,7 @@ def version_delete(version):
 def err_db_customer(customer, amount):
     global db_error_per_customer
     err_db_service = request.args.get('err_db_service', default=None, type=str)
-    err_db_oneshot = request.args.get('err_db_oneshot', default=True, type=conform_request_bool)
+    err_db_oneshot = request.args.get('err_db_oneshot', default=False, type=conform_request_bool)
     db_error_per_customer[customer] = {'service': err_db_service, 'amount': int(amount), 'start': time.time(), 'oneshot': err_db_oneshot}
     if err_db_oneshot:
         high_tput_per_customer[customer] = HIGH_TPUT_PCT
