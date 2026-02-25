@@ -27,7 +27,6 @@
         ]
       }
     },
-    "frequency": "60s",
     "indices": [
       "metrics.trader"
     ],
@@ -38,11 +37,11 @@
   },
   "description": "",
   "analysis_config": {
-    "bucket_span": "2m",
+    "bucket_span": "1m",
     "detectors": [
       {
-        "detector_description": "mean(\"metrics.shares_traded_per_customer\") by \"attributes.symbol\" over \"attributes.customer_id\"",
-        "function": "mean",
+        "detector_description": "max(\"metrics.shares_traded_per_customer\") by \"attributes.symbol\" over \"attributes.customer_id\"",
+        "function": "max",
         "field_name": "metrics.shares_traded_per_customer",
         "by_field_name": "attributes.symbol",
         "over_field_name": "attributes.customer_id",
