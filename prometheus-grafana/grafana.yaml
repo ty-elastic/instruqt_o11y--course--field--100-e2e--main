@@ -59,6 +59,8 @@ spec:
               value: "Admin"
             - name: GF_AUTH_ANONYMOUS_ORG_NAME
               value: "Main Org."
+            - name: GF_USERS_DEFAULT_THEME
+              value: "light"
 
           image: grafana/grafana
           name: grafana
