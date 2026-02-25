@@ -99,23 +99,23 @@ steps:
                 {% if steps.get_ai_coversation_id.output != "not_available" %},"conversation_id": "{{ steps.get_ai_coversation_id.output }}"{% endif %}
               }
 
-        - name: foreach_steps
-          type: foreach
-          foreach: '{{ steps.rca.output.steps }}'
-          steps:
-          - name: if_reasoning
-            type: if
-            condition: 'foreach.item.type: "reasoning"'
-            steps:
-            - name: add_reasoning_to_existing_case
-              type: kibana.request
-              with:
-                method: POST
-                path: /api/cases/{{ steps.foreach_case.item.id }}/comments
-                body:
-                  type: user
-                  owner: observability
-                  comment: 🤔 {{ foreach.item.reasoning }}
+        # - name: foreach_steps
+        #   type: foreach
+        #   foreach: '{{ steps.rca.output.steps }}'
+        #   steps:
+        #   - name: if_reasoning
+        #     type: if
+        #     condition: 'foreach.item.type: "reasoning"'
+        #     steps:
+        #     - name: add_reasoning_to_existing_case
+        #       type: kibana.request
+        #       with:
+        #         method: POST
+        #         path: /api/cases/{{ steps.foreach_case.item.id }}/comments
+        #         body:
+        #           type: user
+        #           owner: observability
+        #           comment: 🤔 {{ foreach.item.reasoning }}
 
         - name: get_case_refresh
           type: kibana.request
