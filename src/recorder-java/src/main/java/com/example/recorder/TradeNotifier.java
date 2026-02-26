@@ -29,7 +29,6 @@ public class TradeNotifier {
             notifierEndpoint = "http://notifier:5000/notify";
     }
 
-    @Async
     public HttpResponse<String> notify (Trade trade) {
         try {
             String body = mapper.writeValueAsString(trade);
@@ -50,8 +49,7 @@ public class TradeNotifier {
         }
         catch (Exception e) {
             log.warn("unable to notify: " + e.toString());
-            Throwable failureReason = new RuntimeException("unable to notify");
-            return CompletableFuture.failedFuture(failureReason);
+            return null;
         }
     }
 }

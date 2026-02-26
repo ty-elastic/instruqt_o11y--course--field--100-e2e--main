@@ -843,7 +843,6 @@ example_ml_job
 3. Open `Force Trade`
 4. `Customer ID` to `q.bert`
 5. Set `Shares` to `10000`
-6. Set `Symbol` to `JUNK`
 7. Click `SUBMIT` 10 (or so) times
 
 ### Add our swim lane graph to our dashboard

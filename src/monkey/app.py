@@ -19,6 +19,8 @@ from opentelemetry import trace, baggage, context
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
 
+ATTRIBUTE_PREFIX = "com.example"
+
 def init_otel(): 
     if 'OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED' in os.environ:
         print("enable otel logging")      
@@ -169,11 +171,11 @@ def conform_request_bool(value):
 def generate_trade_request(*, subscription, customer_id, symbol, day_of_week, region, latency_amount, latency_action, error_model, error_db, error_db_service, error_request, skew_market_factor, classification=None, flags, data_source):
     
     set_attribute_and_baggage('session.id', SESSION_ID_PER_USER[customer_id])
-    set_attribute_and_baggage('frontend.name', "trader-app-web", set_in_attribute=False)
+    set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.frontend_name", "trader-app-web", set_in_attribute=False)
     if error_db:
-        set_attribute_and_baggage('frontend.version', "0.9", set_in_attribute=False)
+        set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.frontend_version", "0.9", set_in_attribute=False)
     else:
-        set_attribute_and_baggage('frontend.version', "1.0", set_in_attribute=False)
+        set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.frontend_version", "1.0", set_in_attribute=False)
 
     try:
         params={'symbol': symbol, 

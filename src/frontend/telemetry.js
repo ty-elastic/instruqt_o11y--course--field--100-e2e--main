@@ -82,7 +82,7 @@ function initOpenTelemetry(config) {
   sessionManager.addObserver({
     onSessionStarted: (newSession, previousSession) => {
       console.log('Session started', newSession, previousSession);
-      axios.defaults.headers.common['baggage'] = `session.id=${newSession.id},frontend.name=${SERVICE_NAME},frontend.version=${SERVICE_VERSION}`;
+      axios.defaults.headers.common['baggage'] = `session.id=${newSession.id},com.example.frontend_name=${SERVICE_NAME},com.example.frontend_version=${SERVICE_VERSION}`;
     },
     onSessionEnded: (session) => {
       console.log('Session ended', session);
