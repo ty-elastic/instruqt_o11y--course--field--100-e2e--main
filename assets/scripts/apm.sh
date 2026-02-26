@@ -86,6 +86,10 @@ config_rum() {
     http_response=$(echo "$output" | sed '$d')
     if [ "$http_code" != "200" ]; then
         printf "$FUNCNAME...ERROR $http_code: $http_response\n"
+        if [[ "$http_response" == *"out-of-date"* ]]; then
+            printf "$FUNCNAME...ERROR $http_code: retrying with dynamic version lookup\n"
+            unset RUM_PACKAGE_NAME
+        fi
         return 1
     fi
 
