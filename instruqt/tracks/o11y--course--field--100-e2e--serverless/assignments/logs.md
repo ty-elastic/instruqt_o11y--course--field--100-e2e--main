@@ -72,3 +72,38 @@ FROM logs-*
 | WHERE service.name == "router"
 ```
 4. Open a record to examine it
+
+# Streams
+
+## Partioning
+
+1. Open the [button label="Elasticsearch"](tab-0) tab
+2. Navigate to `Streams`
+3. Open the `logs` Wired stream
+4. Select `Paritioning` tab
+5. Click `Suggest paritions`
+6. Click `Accept` for all of the recognized partitions
+
+## ES|QL Query Time Parsing
+
+1. Open the [button label="Elasticsearch"](tab-0) tab
+2. Navigate to `Discover` > `ES|QL`
+3. Execute:
+```
+FROM logs.proxy
+| GROK body.text "%{IPORHOST:client_ip} %{USER:ident} %{USER:auth} \\[%{HTTPDATE:timestamp}\\] \"%{WORD:http_method} %{NOTSPACE:request_path} HTTP/%{NUMBER:http_version}\" %{NUMBER:status_code} %{NUMBER:body_bytes_sent:int} %{NUMBER:request_duration:float} \"%{DATA:referrer}\" \"%{DATA:user_agent}\""
+| WHERE status_code IS NOT NULL
+| EVAL @timestamp = DATE_PARSE("dd/MMM/yyyy:HH:mm:ss Z", timestamp)
+| STATS status_count = COUNT() BY status_code, minute = BUCKET(@timestamp, "1 min")
+```
+4. Click on the pencil icon in the upper-right of the graph
+5. Drag `status_code` to `Breakdown`
+6. Drag `minute` to `Horizontal axis`
+7. Drag` `status_count` to `Vertical axis`
+8. Click on the disk icon in the upper-right of the graph
+9. Click `New` in the `Save Lens visualization` dialog
+10. Click `Save and go to Dashboard`
+11. Click `Save in the upper-right
+12. Set `Title` to: `Proxy Status`
+
+## Streams Parsing

@@ -44,7 +44,7 @@ config_apm_dv() {
 
 # hardcode for setup speed, but need to update regularly
 RUM_PACKAGE_NAME=otel_rum_dashboards
-RUM_PACKAGE_VERSION=0.0.1
+RUM_PACKAGE_VERSION=0.0.2
 
 config_rum() {
     printf "$FUNCNAME...\n"
