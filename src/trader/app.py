@@ -55,14 +55,17 @@ def init_otel():
     metrics_provider = MeterProvider(metric_readers=[PeriodicExportingMetricReader(OTLPMetricExporter(), export_interval_millis=5000)])  # Export every 5 seconds
     meter = metrics_provider.get_meter("trader")
 
-    trading_revenue_metric = meter.create_counter("trading_revenue", "dollars")
-    shares_traded_per_customer_metric = meter.create_gauge("shares_traded_per_customer", unit='shares', description='shares_traded_per_customer')
-    share_price_metric = meter.create_gauge("share_price", unit='dollars', description='share_price')
+    trading_revenue_counter = meter.create_counter("trading_revenue", "dollars")
+    shares_traded_per_customer_gauge = meter.create_gauge("shares_traded_per_customer", unit='shares', description='shares_traded_per_customer')
+    share_price_gauge = meter.create_gauge("share_price", unit='dollars', description='share_price')
+
+    shares_traded_per_customer_histogram = meter.create_histogram(
+        name="shares_traded_per_customer_histogram", unit='shares', description='shares_traded_per_customer')
 
     app.logger.info('metrics created')
-    return tracer, trading_revenue_metric, shares_traded_per_customer_metric, share_price_metric
+    return tracer, trading_revenue_counter, shares_traded_per_customer_gauge, share_price_gauge, shares_traded_per_customer_histogram
 
-tracer, trading_revenue_metric, shares_traded_per_customer_metric, share_price_metric = init_otel()
+tracer, trading_revenue_counter, shares_traded_per_customer_gauge, share_price_gauge, shares_traded_per_customer_histogram = init_otel()
 
 def set_attribute_and_baggage(key, value):
     # always set it on the current span
@@ -136,7 +139,7 @@ def trade(*, trade_id, customer_id, symbol, day_of_week, shares, share_price, ac
     trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.share_price", share_price)
     if action == 'buy' or action == 'sell':
         trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.value", shares * share_price)
-        trading_revenue_metric.add(math.ceil(share_price * shares * .001))
+        trading_revenue_counter.add(math.ceil(share_price * shares * .001))
     else:
         trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.value", 0)
 
@@ -144,12 +147,15 @@ def trade(*, trade_id, customer_id, symbol, day_of_week, shares, share_price, ac
         "customer_id": customer_id,
         "symbol": symbol
     }
-    shares_traded_per_customer_metric.set(shares, attributes)
+    # just for show, since you would randomly get the last value set
+    shares_traded_per_customer_gauge.set(shares, attributes)
+    # the real value
+    shares_traded_per_customer_histogram.record(shares, attributes)
 
     attributes = {
         "symbol": symbol
     }
-    share_price_metric.set(share_price, attributes)
+    share_price_gauge.set(share_price, attributes)
 
     if flags is not None and "HASHNEWALG" in flags:
         app.logger.info(f"hashing with scrypt")

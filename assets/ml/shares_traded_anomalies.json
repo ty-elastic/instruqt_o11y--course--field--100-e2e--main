@@ -1,8 +1,5 @@
 {
   "job_id": "shares_traded_anomalies",
-  "custom_settings": {
-    "created_by": "population-wizard"
-  },
   "datafeed_config": {
     "datafeed_id": "datafeed-shares_traded_anomalies",
     "job_id": "shares_traded_anomalies",
@@ -22,11 +19,49 @@
       "bool": {
         "must": [
           {
-            "match_all": {}
+            "exists": {
+              "field": "shares_traded_per_customer_histogram"
+            }
+          },
+          {
+            "term": {
+              "service.namespace": {
+                "value": "trading-na"
+              }
+            }
           }
         ]
       }
     },
+    "aggregations": {
+      "buckets": {
+        "date_histogram": {
+          "field": "@timestamp",
+          "fixed_interval": "60s"
+        },
+        "aggregations": {
+          "@timestamp": {
+            "max": {
+              "field": "@timestamp"
+            }
+          },
+          "customer_id": {
+            "terms": {
+              "field": "customer_id",
+              "size": 15
+            },
+            "aggregations": {
+              "shares_traded_per_customer_histogram": {
+                "max": {
+                  "field": "shares_traded_per_customer_histogram"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "frequency": "60s",
     "indices": [
       "metrics.trader"
     ],
@@ -37,20 +72,19 @@
   },
   "description": "",
   "analysis_config": {
+    "summary_count_field_name": "doc_count",
     "bucket_span": "1m",
     "detectors": [
       {
-        "detector_description": "max(\"metrics.shares_traded_per_customer\") by \"attributes.symbol\" over \"attributes.customer_id\"",
+        "detector_description": "max(\"shares_traded_per_customer_histogram\") over \"customer_id\"",
         "function": "max",
-        "field_name": "metrics.shares_traded_per_customer",
-        "by_field_name": "attributes.symbol",
-        "over_field_name": "attributes.customer_id",
+        "field_name": "shares_traded_per_customer_histogram",
+        "over_field_name": "customer_id",
         "detector_index": 0
       }
     ],
     "influencers": [
-      "attributes.customer_id",
-      "attributes.symbol"
+      "customer_id"
     ],
     "model_prune_window": "30d"
   },
@@ -59,8 +93,7 @@
     "categorization_examples_limit": 4
   },
   "data_description": {
-    "time_field": "@timestamp",
-    "time_format": "epoch_ms"
+    "time_field": "@timestamp"
   },
   "model_plot_config": {
     "enabled": false,
