@@ -479,9 +479,11 @@ FROM logs-*
 3. Open the `logs` Wired stream
 4. Select `Paritioning` tab
 5. Click `Suggest paritions`
-6. Click `Accept` for all of the recognized partitions
+6. Click `Accept` for `logs.proxy`
+7. Click `Create stream` in the `Confirm stream creation` dialog
+8. Click `View in Discover`
 
-## ES|QL Query Time Parsing
+## ES|QL Query-Time Parsing
 
 1. Open the [button label="Elasticsearch"](tab-0) tab
 2. Navigate to `Discover` > `ES|QL`
@@ -494,8 +496,8 @@ FROM logs.proxy
 | STATS status_count = COUNT() BY status_code, minute = BUCKET(@timestamp, "1 min")
 ```
 4. Click on the pencil icon in the upper-right of the graph
-5. Drag `status_code` to `Breakdown`
-6. Drag `minute` to `Horizontal axis`
+5. Drag `status_code` to `Breakdown` (if needed)
+6. Drag `minute` to `Horizontal axis` (if needed)
 7. Drag` `status_count` to `Vertical axis`
 8. Click on the disk icon in the upper-right of the graph
 9. Click `New` in the `Save Lens visualization` dialog
@@ -503,8 +505,17 @@ FROM logs.proxy
 11. Click `Save in the upper-right
 12. Set `Title` to: `Proxy Status`
 
-## Streams Parsing
+## Streams Index-Time Parsing
 
+1. Open the [button label="Elasticsearch"](tab-0) tab
+2. Navigate to `Streams`
+3. Open the `logs.proxy` Wired stream
+4. Select `Processing` tab
+5. Click `Suggest a pipeline`
+6. Click `Accept`
+7. Click `Save changes`
+8. Click `Confirm changes` in the `Confirm changes` dialog
+9. Click `View in Discover`
 ___
 
 
@@ -984,9 +995,7 @@ Do this before you begin the demo.
 ## Dashboard
 
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
-2. Navigate to `Infrastructure` > `Hosts`
-3. Select host `k3s`
-4. Select `Dashboards` tab
+2. Navigate to `Dashboards` > `Profilingmetrics`
 
 ## How does this work?
 

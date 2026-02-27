@@ -23,7 +23,9 @@ class TradeForce extends React.Component {
             customer_id: "q.bert",
             shares: 93,
             share_price: 107.10,
-            action: 'buy'
+            action: 'buy',
+            loading: false,
+            result: null
         };
 
         this.handleInputChange = this.handleInputChange.bind(this);
@@ -43,8 +45,10 @@ class TradeForce extends React.Component {
     async handleSubmit(event) {
         event.preventDefault();
 
+        this.setState({['loading']: true});
+        this.setState({['error']: null});        
         try {
-            await axios.post("/trader/trade/force", {
+            const response = await axios.post("/trader/trade/force", {
                     'symbol': this.state.symbol,
                     'day_of_week': this.state.day_of_week,
                     'customer_id': this.state.customer_id,
@@ -53,8 +57,17 @@ class TradeForce extends React.Component {
                     'share_price': this.state.share_price,
                     'data_source': 'customer'
             });
+            if (response.status != 200) {
+                throw new Error(response.status);
+            } else{
+                this.setState({['result']: "successfully completed trade request"});
+            }
         } catch (err) {
             console.log(err.message)
+            this.setState({['result']: `unable to complete trade request! status: ${err.message}`});
+        }
+        finally {
+            this.setState({['loading']: false});
         }
     }
 
@@ -137,7 +150,16 @@ class TradeForce extends React.Component {
                         <MenuItem value="hold">Hold</MenuItem>
                         </Select>
                     </FormControl>
-                    <Box width="100%"><Button variant="contained" data-transaction-name="TradeForce" type="submit">Submit</Button></Box>
+
+                    <div>
+                        {this.state.loading ? (
+                        <CircularProgress />
+                        ) : (
+                        <Box width="100%"><Button variant="contained" data-transaction-name="TradeForce" type="submit">Submit</Button></Box>
+                        )}
+                        {this.state.result ? (<p>Result: {this.state.result}</p>) : (<p></p>)}
+                    </div>
+
                 </Grid>
             </form>
         );
