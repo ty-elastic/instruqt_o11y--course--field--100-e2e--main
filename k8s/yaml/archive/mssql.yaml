@@ -232,7 +232,7 @@ spec:
             - id: es_index
               type: add
               field: attributes["elasticsearch.index"]
-              value: logs
+              value: logs.otel
     spec:
       containers:
         - name: collector
