@@ -70,25 +70,15 @@ spec:
 
             - name: POSTGRESQL_HOST
               value: $POSTGRESQL_HOST
+            - name: POSTGRESQL_PORT
+              value: "$POSTGRESQL_PORT"          
             - name: POSTGRESQL_PASSWORD
               value: $POSTGRESQL_PASSWORD
             - name: POSTGRESQL_USER
               value: $POSTGRESQL_USER
             - name: POSTGRESQL_DBNAME
               value: $POSTGRESQL_DBNAME
-            - name: POSTGRESQL_PROTOCOL
-              value: $POSTGRESQL_PROTOCOL
-            - name: POSTGRESQL_SETUP
-              value: $POSTGRESQL_SETUP
-            - name: POSTGRESQL_OPTIONS
-              value: $POSTGRESQL_OPTIONS
-            - name: POSTGRESQL_PORT
-              value: "$POSTGRESQL_PORT"
-            - name: POSTGRESQL_DIALECT
-              value: $POSTGRESQL_DIALECT
 
-            - name: NOTIFIER_ENDPOINT
-              value: $NOTIFIER_ENDPOINT
           image: $REPO/recorder-java:$COURSE
           imagePullPolicy: Always
           ports:

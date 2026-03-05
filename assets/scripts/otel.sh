@@ -46,8 +46,13 @@ deploy_otel() {
         --version '0.12.4'
     cd ../..
 
+    cd agents/tbs
+    kubectl apply -f tbs.yaml
+    cd ../..
+
     if [ "$force" = "true" ]; then
         kubectl -n opentelemetry-operator-system rollout restart deployment
+        kubectl -n opentelemetry-operator-system rollout restart statefulset
     fi
 }
 

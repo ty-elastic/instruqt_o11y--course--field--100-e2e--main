@@ -41,8 +41,6 @@ join_by() {
   echo "$*"
 }
 
-notifier_endpoint=""
-
 arch=linux/amd64
 course=latest
 service=all
@@ -120,14 +118,10 @@ export MYSQL_DBNAME=main
 export MYSQL_PORT=3306
 
 export POSTGRESQL_HOST=postgresql
+export POSTGRESQL_PORT=5432
 export POSTGRESQL_USER=postgres
 export POSTGRESQL_PASSWORD=postgres
 export POSTGRESQL_DBNAME=postgres
-export POSTGRESQL_PROTOCOL=postgresql
-export POSTGRESQL_SETUP=none
-export POSTGRESQL_OPTIONS="/postgres?sslmode=disable"
-export POSTGRESQL_PORT=5432
-export POSTGRESQL_DIALECT=PostgreSQLDialect
 
 # Save the original IFS to restore it later
 OIFS="$IFS"
@@ -203,12 +197,11 @@ for current_region in "${regions[@]}"; do
 
     if [[ "$deploy_service" == "true" || "$deploy_service" == "delete" || "$deploy_service" == "force" ]]; then
         export SERVICE_VERSION=$service_version
-        export NOTIFIER_ENDPOINT=$notifier_endpoint
 
         export JOB_ID=$(( $RANDOM ))
         #echo $JOB_ID
 
-        envsubst < k8s/yaml/_namespace.yaml | kubectl apply -f -
+        envsubst '$MYSQL_HOST,$MYSQL_USER,$MYSQL_PASSWORD,$MYSQL_DBNAME,$MYSQL_PORT,$POSTGRESQL_HOST,$POSTGRESQL_PORT,$POSTGRESQL_DBNAME,$POSTGRESQL_USER,$POSTGRESQL_PASSWORD,$JOB_ID,$SERVICE_VERSION,$COURSE,$REPO,$NAMESPACE,$REGION' < k8s/yaml/_namespace.yaml | kubectl apply -f -
 
         if [ "$service" != "none" ]; then
             for file in k8s/yaml/*.yaml; do
@@ -219,7 +212,7 @@ for current_region in "${regions[@]}"; do
 
                     if [[ "$current_service" == "recorder-go-zero" && $deploy_ebpf_services == "false" ]]; then
                         printf "deleting $current_service from region $REGION\n"
-                        envsubst < k8s/yaml/$current_service.yaml | kubectl delete -f -
+                        envsubst '$MYSQL_HOST,$MYSQL_USER,$MYSQL_PASSWORD,$MYSQL_DBNAME,$MYSQL_PORT,$POSTGRESQL_HOST,$POSTGRESQL_PORT,$POSTGRESQL_DBNAME,$POSTGRESQL_USER,$POSTGRESQL_PASSWORD,$JOB_ID,$SERVICE_VERSION,$COURSE,$REPO,$NAMESPACE,$REGION' < k8s/yaml/$current_service.yaml | kubectl delete -f -
                         printf "skipping recorder-go-zero deployment...\n"
                         continue
                     fi
@@ -227,16 +220,16 @@ for current_region in "${regions[@]}"; do
 
                     if [ "$deploy_service" = "delete" ]; then
                         printf "deleting $current_service from region $REGION\n"
-                        envsubst < k8s/yaml/$current_service.yaml | kubectl delete -f -
+                        envsubst '$MYSQL_HOST,$MYSQL_USER,$MYSQL_PASSWORD,$MYSQL_DBNAME,$MYSQL_PORT,$POSTGRESQL_HOST,$POSTGRESQL_PORT,$POSTGRESQL_DBNAME,$POSTGRESQL_USER,$POSTGRESQL_PASSWORD,$JOB_ID,$SERVICE_VERSION,$COURSE,$REPO,$NAMESPACE,$REGION' < k8s/yaml/$current_service.yaml | kubectl delete -f -
                     else
 
                         printf "deploying $current_service to region $REGION\n"
                         #echo $PROXY_PORT
-                        #envsubst < k8s/yaml/$current_service.yaml | yq '.spec.ports[].port |= to_number'
+                        #envsubst '$MYSQL_HOST,$MYSQL_USER,$MYSQL_PASSWORD,$MYSQL_DBNAME,$MYSQL_PORT,$POSTGRESQL_HOST,$POSTGRESQL_PORT,$POSTGRESQL_DBNAME,$POSTGRESQL_USER,$POSTGRESQL_PASSWORD,$JOB_ID,$SERVICE_VERSION,$COURSE,$REPO,$NAMESPACE,$REGION' < k8s/yaml/$current_service.yaml | yq '.spec.ports[].port |= to_number'
 
                         cat k8s/yaml/$current_service.yaml > tmp.yaml
                         sed "s/{PROXY_PORT}/$PROXY_PORT/g" tmp.yaml > tmp2.yaml
-                        envsubst < tmp2.yaml | kubectl apply -f -
+                        envsubst '$MYSQL_HOST,$MYSQL_USER,$MYSQL_PASSWORD,$MYSQL_DBNAME,$MYSQL_PORT,$POSTGRESQL_HOST,$POSTGRESQL_PORT,$POSTGRESQL_DBNAME,$POSTGRESQL_USER,$POSTGRESQL_PASSWORD,$JOB_ID,$SERVICE_VERSION,$COURSE,$REPO,$NAMESPACE,$REGION' < tmp2.yaml | kubectl apply -f -
                         rm tmp.yaml
                         rm tmp2.yaml
 
@@ -287,7 +280,7 @@ if [ "$remote_endpoint" != "na" ]; then
         ./build.sh -r $repo -c $course -a $arch
     fi
 
-    envsubst < remote.yaml | kubectl apply -f -
+    envsubst '$MYSQL_HOST,$MYSQL_USER,$MYSQL_PASSWORD,$MYSQL_DBNAME,$MYSQL_PORT,$POSTGRESQL_HOST,$POSTGRESQL_PORT,$POSTGRESQL_DBNAME,$POSTGRESQL_USER,$POSTGRESQL_PASSWORD,$JOB_ID,$SERVICE_VERSION,$COURSE,$REPO,$NAMESPACE,$REGION' < remote.yaml | kubectl apply -f -
     cd ../..
 
     if [ "$remote_endpoint" = "cluster" ]; then
@@ -312,7 +305,7 @@ if [ "$assets" = "true" ]; then
     export remote_endpoint=$remote_endpoint
     export namespaces=$namespaces
 
-    envsubst < assets.yaml | kubectl apply -f -
+    envsubst '$MYSQL_HOST,$MYSQL_USER,$MYSQL_PASSWORD,$MYSQL_DBNAME,$MYSQL_PORT,$POSTGRESQL_HOST,$POSTGRESQL_PORT,$POSTGRESQL_DBNAME,$POSTGRESQL_USER,$POSTGRESQL_PASSWORD,$JOB_ID,$SERVICE_VERSION,$COURSE,$REPO,$NAMESPACE,$REGION' < assets.yaml | kubectl apply -f -
     cd ..
 
     retry_command_lin check_assets $JOB_ID
@@ -330,7 +323,7 @@ fi
 
 if [ "$grafana" = "true" ]; then
     cd prometheus-grafana
-    envsubst < grafana.yaml | kubectl apply -f -
+    envsubst '$MYSQL_HOST,$MYSQL_USER,$MYSQL_PASSWORD,$MYSQL_DBNAME,$MYSQL_PORT,$POSTGRESQL_HOST,$POSTGRESQL_PORT,$POSTGRESQL_DBNAME,$POSTGRESQL_USER,$POSTGRESQL_PASSWORD,$JOB_ID,$SERVICE_VERSION,$COURSE,$REPO,$NAMESPACE,$REGION' < grafana.yaml | kubectl apply -f -
     cd ..
 fi
 
