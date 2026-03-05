@@ -1,0 +1,226 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tbs-lb-collector-config
+  namespace: opentelemetry-operator-system
+data:
+  config.yaml: |-
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+       
+    exporters:
+      debug: {}
+      loadbalancing:
+        routing_key: traceID
+        protocol:
+          otlp:
+            tls:
+              insecure: true
+        resolver:
+          dns:
+            hostname: "tbs-sample-collector-headless.opentelemetry-operator-system.svc.cluster.local"
+            interval: "5s"
+
+    service:
+      pipelines:
+        traces:
+          receivers:
+            - otlp
+          processors: []
+          exporters:
+            - debug
+            - loadbalancing
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tbs-sample-collector-config
+  namespace: opentelemetry-operator-system
+data:
+  config.yaml: |-
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+
+    connectors:
+      elasticapm: {}
+      forward: {}
+
+    exporters:
+      debug: {}
+      elasticsearch/otel:
+        endpoints:
+          - ${ELASTIC_ENDPOINT} # Will be populated from environment variable
+        api_key: ${ELASTIC_API_KEY} # Will be populated from environment variable
+        mapping:
+          mode: otel
+        sending_queue:
+          enabled: true
+          sizer: bytes
+          queue_size: 50000000 # 50MB uncompressed
+          block_on_overflow: true
+          batch:
+            flush_timeout: 1s
+            min_size: 1_000_000 # 1MB uncompressed
+            max_size: 4_000_000 # 4MB uncompressed
+        timeout: 15s
+  
+    processors:
+      batch:
+        send_batch_size: 1000
+        timeout: 1s
+        send_batch_max_size: 1500
+ 
+      elasticapm: {} # Elastic APM Processor
+
+      tail_sampling:
+        decision_wait: 10s
+        num_traces: 100
+        expected_new_traces_per_sec: 100
+
+        policies:
+          # 1. Keep all traces that have an error
+          - name: keep-errors
+            type: status_code
+            status_code:
+              status_codes: [ERROR]
+          # 2. Keep 25% of the remaining (successful) traces
+          - name: keep-sample-percentage
+            type: probabilistic
+            probabilistic:
+              sampling_percentage: 25
+
+    service:
+      pipelines:
+        traces/1-process-elastic:
+          receivers: [ otlp ]
+          processors: [ batch, elasticapm ]
+          exporters: [ debug, elasticapm, forward ]
+
+        traces/2-process-tbs:
+          receivers: [ forward ]
+          processors: [ tail_sampling ]
+          exporters: [ debug, elasticsearch/otel ]
+
+        metrics/aggregated-otel-metrics:
+          receivers:
+            - elasticapm
+          processors: []
+          exporters:
+            - debug
+            - elasticsearch/otel
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tbs-lb-collector
+  namespace: opentelemetry-operator-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tbs-lb-collector
+  template:
+    metadata:
+      labels:
+        app: tbs-lb-collector
+    spec:
+      containers:
+        - name: collector
+          image: docker.elastic.co/elastic-agent/elastic-agent:9.4.0-SNAPSHOT
+          command:
+            - "elastic-agent"
+            - "otel"
+            - "--config=/etc/otelcol/config.yaml"
+          volumeMounts:
+            - mountPath: /etc/otelcol/config.yaml
+              name: data
+              subPath: config.yaml
+              readOnly: true
+          env:
+            - name: ELASTIC_AGENT_OTEL
+              value: '"true"'
+      restartPolicy: Always
+      volumes:
+        - name: data
+          configMap:
+            name: tbs-lb-collector-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tbs-lb-collector-headless
+  namespace: opentelemetry-operator-system
+spec:
+  clusterIP: None  # This defines the Headless Service
+  selector:
+    app: tbs-lb-collector
+  ports:
+    - protocol: TCP
+      port: 4317
+      targetPort: 4317
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tbs-sample-collector
+  namespace: opentelemetry-operator-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tbs-sample-collector
+  template:
+    metadata:
+      labels:
+        app: tbs-sample-collector
+    spec:
+      containers:
+        - name: collector
+          image: docker.elastic.co/elastic-agent/elastic-agent:9.4.0-SNAPSHOT
+          command:
+            - "elastic-agent"
+            - "otel"
+            - "--config=/etc/otelcol/config.yaml"
+          volumeMounts:
+            - mountPath: /etc/otelcol/config.yaml
+              name: data
+              subPath: config.yaml
+              readOnly: true
+          env:
+            - name: ELASTIC_AGENT_OTEL
+              value: '"true"'
+            - name: ELASTIC_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: elastic-secret-otel
+                  key: elastic_endpoint
+            - name: ELASTIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: elastic-secret-otel
+                  key: elastic_api_key
+      restartPolicy: Always
+      volumes:
+        - name: data
+          configMap:
+            name: tbs-sample-collector-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tbs-sample-collector-headless
+  namespace: opentelemetry-operator-system
+spec:
+  clusterIP: None  # This defines the Headless Service
+  selector:
+    app: tbs-sample-collector
+  ports:
+    - protocol: TCP
+      port: 4317
+      targetPort: 4317

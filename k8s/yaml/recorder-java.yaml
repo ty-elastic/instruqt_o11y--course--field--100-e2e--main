@@ -30,6 +30,7 @@ spec:
         instrumentation.opentelemetry.io/inject-java: "opentelemetry-operator-system/elastic-instrumentation"
         io.opentelemetry.discovery.logs/enabled: "false"
         resource.opentelemetry.io/service.version: "$SERVICE_VERSION"
+        resource.opentelemetry.io/tail_sampling: "true"
       labels:
         app: trading
         service: recorder-java

@@ -363,6 +363,7 @@ collectors:
             - sources:
                 - from: connection
           extract:
+            otel_annotations: true
             metadata:
               - "k8s.namespace.name"
               - "k8s.deployment.name"
@@ -586,7 +587,7 @@ collectors:
             receivers:
               - otlp
             processors:
-              - batch
+              #- batch
               - resource/hostname
               - resource/environment
             exporters:
@@ -631,6 +632,15 @@ collectors:
               endpoint: ${env:OTEL_K8S_POD_IP}:4317
             http:
               endpoint: ${env:OTEL_K8S_POD_IP}:4318
+
+      connectors:
+        routing/tbs:
+          default_pipelines: [traces/no_tbs]
+          table:
+            - context: resource
+              condition: attributes["tail_sampling"] == "true"
+              pipelines: [traces/tbs]
+
       processors:
         transform/ua:
           trace_statements:
@@ -646,6 +656,10 @@ collectors:
                 - set(resource.attributes["browser.platform"], resource.attributes["browser.os.name"])
       exporters:
         debug: {}
+        otlp/tbs:
+          endpoint: "tbs-lb-collector-headless.opentelemetry-operator-system.svc.cluster.local:4317"
+          tls:
+            insecure: true        
         otlp/ingest_logs:
           endpoint: ${env:ELASTIC_OTLP_ENDPOINT}
           headers:
@@ -687,6 +701,14 @@ collectors:
           traces:
             receivers: [otlp]
             processors: [transform/ua]
+            exporters: [routing/tbs]
+          traces/tbs:
+            receivers: [routing/tbs]
+            processors: []
+            exporters: [debug, otlp/tbs]
+          traces/no_tbs:
+            receivers: [routing/tbs]
+            processors: []
             exporters: [debug, otlp/ingest_metrics_traces]
 # For more details on OpenTelemetry's zero-code instrumentation, see:
 # https://opentelemetry.io/docs/concepts/instrumentation/zero-code/
