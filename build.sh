@@ -305,7 +305,7 @@ if [ "$assets" = "true" ]; then
     export remote_endpoint=$remote_endpoint
     export namespaces=$namespaces
 
-    envsubst '$MYSQL_HOST,$MYSQL_USER,$MYSQL_PASSWORD,$MYSQL_DBNAME,$MYSQL_PORT,$POSTGRESQL_HOST,$POSTGRESQL_PORT,$POSTGRESQL_DBNAME,$POSTGRESQL_USER,$POSTGRESQL_PASSWORD,$JOB_ID,$SERVICE_VERSION,$COURSE,$REPO,$NAMESPACE,$REGION' < assets.yaml | kubectl apply -f -
+    envsubst '$JOB_ID,$COURSE,$REPO,$elasticsearch_kibana_endpoint,$elasticsearch_es_endpoint,$elasticsearch_api_key,$remote_endpoint,$namespaces' < assets.yaml | kubectl apply -f -
     cd ..
 
     retry_command_lin check_assets $JOB_ID
