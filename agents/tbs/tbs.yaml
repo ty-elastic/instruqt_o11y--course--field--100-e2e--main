@@ -96,7 +96,7 @@ data:
             type: status_code
             status_code:
               status_codes: [ERROR]
-          # keep 25% of the recroder-java path
+          # keep 25% of the recorder-java path
           - name: keep-sample-percentage
             type: probabilistic
             probabilistic:
