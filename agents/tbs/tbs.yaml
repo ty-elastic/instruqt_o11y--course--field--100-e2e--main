@@ -84,12 +84,19 @@ data:
         expected_new_traces_per_sec: 100
 
         policies:
-          # 1. Keep all traces that have an error
+          # keep recorder-go path
+          - name: keep-recorder-go
+            type: string_attribute
+            string_attribute:
+              key: service.name
+              values:
+                - recorder-go
+          # keep any trace that has an error
           - name: keep-errors
             type: status_code
             status_code:
               status_codes: [ERROR]
-          # 2. Keep 25% of the remaining (successful) traces
+          # keep 25% of the recroder-java path
           - name: keep-sample-percentage
             type: probabilistic
             probabilistic:

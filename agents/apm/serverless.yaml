@@ -634,14 +634,6 @@ collectors:
             http:
               endpoint: ${env:OTEL_K8S_POD_IP}:4318
 
-      connectors:
-        routing/tbs:
-          default_pipelines: [traces/no_tbs]
-          table:
-            - context: resource
-              condition: attributes["tail_sampling"] == "true"
-              pipelines: [traces/tbs]
-
       processors:
         transform/ua:
           trace_statements:
@@ -702,15 +694,7 @@ collectors:
           traces:
             receivers: [otlp]
             processors: [transform/ua]
-            exporters: [routing/tbs]
-          traces/tbs:
-            receivers: [routing/tbs]
-            processors: []
-            exporters: [debug, otlp/tbs]
-          traces/no_tbs:
-            receivers: [routing/tbs]
-            processors: []
-            exporters: [debug, otlp/ingest_metrics_traces]
+            exporters: [otlp/tbs]
 # For more details on OpenTelemetry's zero-code instrumentation, see:
 # https://opentelemetry.io/docs/concepts/instrumentation/zero-code/
 instrumentation:
