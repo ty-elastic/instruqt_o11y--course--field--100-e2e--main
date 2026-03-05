@@ -201,7 +201,7 @@ for current_region in "${regions[@]}"; do
         export JOB_ID=$(( $RANDOM ))
         #echo $JOB_ID
 
-        envsubst '$MYSQL_HOST,$MYSQL_USER,$MYSQL_PASSWORD,$MYSQL_DBNAME,$MYSQL_PORT,$POSTGRESQL_HOST,$POSTGRESQL_PORT,$POSTGRESQL_DBNAME,$POSTGRESQL_USER,$POSTGRESQL_PASSWORD,$JOB_ID,$SERVICE_VERSION,$COURSE,$REPO,$NAMESPACE,$REGION' < k8s/yaml/_namespace.yaml | kubectl apply -f -
+        envsubst '$NAMESPACE' < k8s/yaml/_namespace.yaml | kubectl apply -f -
 
         if [ "$service" != "none" ]; then
             for file in k8s/yaml/*.yaml; do
@@ -280,7 +280,7 @@ if [ "$remote_endpoint" != "na" ]; then
         ./build.sh -r $repo -c $course -a $arch
     fi
 
-    envsubst '$MYSQL_HOST,$MYSQL_USER,$MYSQL_PASSWORD,$MYSQL_DBNAME,$MYSQL_PORT,$POSTGRESQL_HOST,$POSTGRESQL_PORT,$POSTGRESQL_DBNAME,$POSTGRESQL_USER,$POSTGRESQL_PASSWORD,$JOB_ID,$SERVICE_VERSION,$COURSE,$REPO,$NAMESPACE,$REGION' < remote.yaml | kubectl apply -f -
+    envsubst '$COURSE,$REPO' < remote.yaml | kubectl apply -f -
     cd ../..
 
     if [ "$remote_endpoint" = "cluster" ]; then
@@ -323,7 +323,7 @@ fi
 
 if [ "$grafana" = "true" ]; then
     cd prometheus-grafana
-    envsubst '$MYSQL_HOST,$MYSQL_USER,$MYSQL_PASSWORD,$MYSQL_DBNAME,$MYSQL_PORT,$POSTGRESQL_HOST,$POSTGRESQL_PORT,$POSTGRESQL_DBNAME,$POSTGRESQL_USER,$POSTGRESQL_PASSWORD,$JOB_ID,$SERVICE_VERSION,$COURSE,$REPO,$NAMESPACE,$REGION' < grafana.yaml | kubectl apply -f -
+    kubectl apply -f grafana.yaml
     cd ..
 fi
 
