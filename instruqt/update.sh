@@ -82,9 +82,11 @@ for script in track_scripts.tmpl/*.tmpl; do
   sed "s/{{COURSE}}/$course/g" $script > track_scripts/$script_base
 done
 
-sed "s/{{TRACK_SLUG}}/$track_slug/g" track.yml.tmpl > track.yml.tmp
-sed "s/{{TRACK_ID}}/$track_id/g" track.yml.tmp > track.yml
-rm track.yml.tmp
+sed "s/{{TRACK_SLUG}}/$track_slug/g" track.yml.tmpl > track.yml.1
+sed "s/{{TRACK_ID}}/$track_id/g" track.yml.1 > track.yml.2
+sed "s/{{BRANCH}}/$branch/g" track.yml.2 > track.yml
+rm track.yml.1
+rm track.yml.2
 
 for diag in diagrams/*.mmd; do
   diag_base=$(basename "$diag")

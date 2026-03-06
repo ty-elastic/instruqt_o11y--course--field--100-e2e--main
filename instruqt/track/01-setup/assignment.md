@@ -1,10 +1,10 @@
 ---
 slug: setup
-id: vwozeobqdky3
+id: x6ybpvkupwdi
 type: challenge
 title: Setup
 tabs:
-- id: vka55gqy7j7c
+- id: 30sfsev9u4tn
   title: Elastic
   type: service
   hostname: es3-api
@@ -20,7 +20,7 @@ tabs:
     value: 'script-src ''self'' https://kibana.estccdn.com; worker-src blob: ''self'';
       style-src ''unsafe-inline'' ''self'' https://kibana.estccdn.com; style-src-elem
       ''unsafe-inline'' ''self'' https://kibana.estccdn.com'
-- id: 4uxnf5y56xjo
+- id: 9ncb6x7pp1af
   title: Elastic-Breakout
   type: service
   hostname: es3-api
@@ -32,49 +32,49 @@ tabs:
     value: 'script-src ''self'' https://kibana.estccdn.com; worker-src blob: ''self'';
       style-src ''unsafe-inline'' ''self'' https://kibana.estccdn.com; style-src-elem
       ''unsafe-inline'' ''self'' https://kibana.estccdn.com'
-- id: ohxdxd9x5lru
+- id: xdhebe0j1k32
   title: Trader (NA)
   type: service
   hostname: k3s
   path: /
   port: 8082
-- id: 6edroqqj6xjw
+- id: gs7qple23oel
   title: Code
   type: code
   hostname: k3s
   path: /workspace/workshop/src
-- id: jazotrkrmghk
+- id: ppng432dup3n
   title: K8s YAML
   type: code
   hostname: k3s
   path: /workspace/workshop/k8s/yaml
-- id: 0lmlisx7gca0
+- id: tlshb9tdxbnl
   title: OTel Operator YAML
   type: code
   hostname: k3s
   path: /workspace/workshop/agents
-- id: blc4ajhlmgjl
+- id: 2hojslv7ro1o
   title: Services Host
   type: terminal
   hostname: k3s
-- id: y7jlb42cabb1
+- id: m7ad4gtm81hz
   title: GitHub Issues
   type: website
   url: https://github.com/ty-elastic/instruqt_o11y--course--field--100-e2e--main/issues
   new_window: true
-- id: kleo0nqz76ia
+- id: y1yhe9g7sec4
   title: Slides
   type: website
   url: https://docs.google.com/presentation/d/11lkZIvLNwWR8Tm6edCsPTIImypjKiylzwhOAa8527EM/edit?usp=drive_link
   new_window: true
-- id: gduq2bwmrzyw
+- id: wumrx3hkq9o8
   title: Grafana
   type: service
   hostname: k3s
   path: /
   port: 3000
   new_window: true
-- id: 4awvekoe5iiq
+- id: 5w0vqkjzjmak
   title: ES Host
   type: terminal
   hostname: es3-api
