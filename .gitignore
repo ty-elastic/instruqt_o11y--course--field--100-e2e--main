@@ -6,6 +6,8 @@ logs
 bin
 out
 
+instruqt/bundle
+
 target
 .vscode
 build

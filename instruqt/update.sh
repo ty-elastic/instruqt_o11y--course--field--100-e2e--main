@@ -23,6 +23,15 @@ else
   exit 1
 fi
 
+if [ -n "$(git status --porcelain)" ]; then
+  echo "🔴 There are modified or untracked files."
+  # Optional: list the modified files
+  git status --porcelain
+  exit 1
+else
+  echo "🟢 The working directory is clean."
+fi
+
 track_id=$(yq '.tracks[] | select(.branch == "'$branch'") | .id' tracks.yaml)
 track_slug=$(yq '.tracks[] | select(.branch == "'$branch'") | .slug' tracks.yaml)
 track_slug=$(yq '.tracks[] | select(.branch == "'$branch'") | .slug' tracks.yaml)
