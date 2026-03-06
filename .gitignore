@@ -10,6 +10,7 @@ instruqt/bundle
 instruqt/track/track_scripts
 instruqt/track/track.yml
 instruqt/track/01-setup/assignment.md
+instruqt/track/assets/script.pdf
 
 target
 .vscode
