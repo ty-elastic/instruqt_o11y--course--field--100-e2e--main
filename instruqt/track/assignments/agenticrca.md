@@ -52,7 +52,7 @@ Our database implements SQL data constraints which validate certain parameters, 
 2. Navigate to `postgresql.yaml`
 3. Note that `CREATE TABLE` (line 78) assigns constraints to specific fields
 
-We are intentionally introducing errors into the system whereby all of the trades coming from the `EU` region will be trying to trade a negative number of shares and violate the database constraints.
+We are intentionally introducing errors into the system whereby all of the trades coming from the `na` region will be trying to trade a negative number of shares and violate the database constraints.
 
 ### Manual Debugging
 

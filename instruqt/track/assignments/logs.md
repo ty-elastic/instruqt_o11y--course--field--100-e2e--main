@@ -79,9 +79,9 @@ FROM logs-*
 
 1. Open the [button label="Elasticsearch"](tab-0) tab
 2. Navigate to `Streams`
-3. Open the `logs` Wired stream
-4. Select `Paritioning` tab
-5. Click `Suggest paritions`
+3. Open the `logs.otel` Wired stream
+4. Select `Partitioning` tab
+5. Click `Suggest partitions`
 6. Click `Accept` for `logs.proxy`
 7. Click `Create stream` in the `Confirm stream creation` dialog
 8. Click `View in Discover`
