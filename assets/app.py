@@ -297,7 +297,24 @@ def load_aliases(es_host, kibana_auth):
                                         headers={f"Authorization": kibana_auth, "Content-Type": "application/json"})
                     print(resp.json())     
 
+def load_objects(kibana_server, kibana_auth):
 
+    directory_path = "objects"
+    target_extension = ".ndjson"
+    
+    for root, dirs, files in os.walk(directory_path):
+        for file in files:
+            if file.endswith(target_extension):
+                full_path = os.path.join(root, file)
+                with open(full_path, 'rb') as f:
+                    # The 'files' parameter handles multipart/form-data encoding
+                    # The tuple format is ('filename', file_object)
+                    files = {'file': (full_path, f)}
+
+                    resp = requests.post(f"{kibana_server}/api/saved_objects/_import?overwrite=true",
+                                        files=files,
+                                        headers={f"Authorization": kibana_auth, "kbn-xsrf": "true"})
+                    print(resp.json())  
 
 def load_ml(es_host, kibana_auth):
 
@@ -516,6 +533,7 @@ def run_workflow(kibana_server, kibana_auth, workflow_name):
 @click.option('--namespaces', default="trading-na,trading-emea", help='namespaces')
 @click.argument('action')
 def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, remote_host, namespaces):
+    
 
     namespaces_split = namespaces.split(',')
     print(namespaces_split)
@@ -535,7 +553,7 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, 
         auth = f"Basic {es_authbasic}"
     else:
         auth = f"ApiKey {es_apikey}"
-    
+
     if action == 'load_workflows':
         print("LOADING WORKFLOWS")
         load_workflows(kibana_host, auth, es_host)
@@ -583,6 +601,8 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, 
         load_dataviews(kibana_host, auth)
         load_ml(es_host, auth)
         load_rules(kibana_host, auth, es_host, connect_alerts)
+
+        load_objects(kibana_host, auth)
         print('done')
 
     elif action == 'backup':
