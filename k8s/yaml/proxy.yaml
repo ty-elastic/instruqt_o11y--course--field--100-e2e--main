@@ -147,6 +147,8 @@ data:
 
         # react app
         location / {
+            otel_trace on;
+            
             include cors.conf;
 
             root   /usr/share/nginx/html;
