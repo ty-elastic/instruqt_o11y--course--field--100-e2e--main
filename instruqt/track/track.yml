@@ -1,5 +1,5 @@
-slug: o11y--course--field--100-e2e--serverless
-id: egwjhbc7jxch
+slug: {{TRACK_SLUG}}
+id: {{TRACK_ID}}
 title: SuperDemo
 description: This is a fully-featured OTel + Elasticsearch Observability Environment
   intended for you to show off the latest in Elastic observability technology.

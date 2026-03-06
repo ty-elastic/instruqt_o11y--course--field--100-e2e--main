@@ -21,7 +21,7 @@ config_o11y_ai_assistant() {
       -H 'x-elastic-internal-origin: Kibana' \
       -H "Authorization: ApiKey ${elasticsearch_api_key}" \
       -H 'Content-Type: application/json' \
-      -d '{"changes":{"aiAssistant:preferredChatExperience": "agent", "agentBuilder:dashboardTools": true, "agentBuilder:experimentalFeatures": true, "genAiSettings:defaultAIConnector": "Anthropic-Claude-Sonnet-4-5"}}')
+      -d '{"changes":{"aiAssistant:preferredChatExperience": "agent", "agentBuilder:dashboardTools": true, "agentBuilder:experimentalFeatures": true, "genAiSettings:defaultAIConnector": "Anthropic-Claude-Sonnet-4-6"}}')
 
    # Extract HTTP status code
    http_code=$(echo "$output" | tail -n1)

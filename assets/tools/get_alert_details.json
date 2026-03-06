@@ -1,7 +1,7 @@
 {
     "id": "get_alert_details",
     "type": "workflow",
-    "description": "Get details for a given alert",
+    "description": "for a given alert ID (`alert_id` and `index`), get the details of the alert.",
     "tags": [
         "rca"
     ],

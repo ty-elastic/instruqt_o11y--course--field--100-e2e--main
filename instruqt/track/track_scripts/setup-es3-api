@@ -21,7 +21,7 @@ cd /workspace/workshop
 
 curl -X GET \
      -o $COURSE.tgz \
-     "https://artifactregistry.googleapis.com/download/v1/projects/$ARTIFACTS_REPO/files/$COURSE%3A$ARTIFACT_VERSION%3A$COURSE.tgz:download?alt=media"
+     "https://artifactregistry.googleapis.com/download/v1/projects/$ARTIFACTS_REPO/files/$COURSE-{{BRANCH}}%3A$ARTIFACT_VERSION%3A$COURSE-{{BRANCH}}.tgz:download?alt=media"
 tar -xzf $COURSE.tgz
 
 # ----------------------------------------- SETUP SERVERLESS
