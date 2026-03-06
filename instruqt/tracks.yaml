@@ -1,7 +1,9 @@
 tracks:
   - branch: main
+    course: o11y--course--field--100-e2e--serverless
     slug: o11y--course--field--100-e2e--serverless
     id: egwjhbc7jxch
   - branch: test
+    course: o11y--course--field--100-e2e--test
     slug: o11y--course--field--100-e2e--test
     id: 8lrlcifasoal

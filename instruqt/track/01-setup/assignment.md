@@ -1,10 +1,10 @@
 ---
 slug: setup
-id: xmql1z1hdt2c
+id: vwozeobqdky3
 type: challenge
 title: Setup
 tabs:
-- id: zvxdesnpamie
+- id: vka55gqy7j7c
   title: Elastic
   type: service
   hostname: es3-api
@@ -20,7 +20,7 @@ tabs:
     value: 'script-src ''self'' https://kibana.estccdn.com; worker-src blob: ''self'';
       style-src ''unsafe-inline'' ''self'' https://kibana.estccdn.com; style-src-elem
       ''unsafe-inline'' ''self'' https://kibana.estccdn.com'
-- id: od0txjt2rf8q
+- id: 4uxnf5y56xjo
   title: Elastic-Breakout
   type: service
   hostname: es3-api
@@ -32,49 +32,49 @@ tabs:
     value: 'script-src ''self'' https://kibana.estccdn.com; worker-src blob: ''self'';
       style-src ''unsafe-inline'' ''self'' https://kibana.estccdn.com; style-src-elem
       ''unsafe-inline'' ''self'' https://kibana.estccdn.com'
-- id: 9falvisnya86
+- id: ohxdxd9x5lru
   title: Trader (NA)
   type: service
   hostname: k3s
   path: /
   port: 8082
-- id: uxmg2e791nft
+- id: 6edroqqj6xjw
   title: Code
   type: code
   hostname: k3s
   path: /workspace/workshop/src
-- id: egfjlbcitmki
+- id: jazotrkrmghk
   title: K8s YAML
   type: code
   hostname: k3s
   path: /workspace/workshop/k8s/yaml
-- id: 0hvtwlczt4y6
+- id: 0lmlisx7gca0
   title: OTel Operator YAML
   type: code
   hostname: k3s
   path: /workspace/workshop/agents
-- id: hdp9opgzqab3
+- id: blc4ajhlmgjl
   title: Services Host
   type: terminal
   hostname: k3s
-- id: ajbo9kz0lxtx
+- id: y7jlb42cabb1
   title: GitHub Issues
   type: website
   url: https://github.com/ty-elastic/instruqt_o11y--course--field--100-e2e--main/issues
   new_window: true
-- id: mvodj4cdjhua
+- id: kleo0nqz76ia
   title: Slides
   type: website
   url: https://docs.google.com/presentation/d/11lkZIvLNwWR8Tm6edCsPTIImypjKiylzwhOAa8527EM/edit?usp=drive_link
   new_window: true
-- id: ppfqqvaqdevp
+- id: gduq2bwmrzyw
   title: Grafana
   type: service
   hostname: k3s
   path: /
   port: 3000
   new_window: true
-- id: oae9yx2izef4
+- id: 4awvekoe5iiq
   title: ES Host
   type: terminal
   hostname: es3-api
@@ -577,7 +577,7 @@ http_requests_total
 9. Click `New` in the `Save Lens visualization` dialog
 10. Click `Save and go to Dashboard`
 11. Click `Save in the upper-right
-12. Set `Title` to: 
+12. Set `Title` to:
 ```
 node.js Monitor
 ```
@@ -673,7 +673,7 @@ But what if we want to break down and compare the individual latency components?
 3. Enter `ES|QL` mode (if Discover is not yet in `ES|QL` mode)
 4. Execute the following ES|QL:
 ```
-FROM traces-* 
+FROM traces-*
 | WHERE service.name == "recorder-java" OR service.name == "recorder-go"
 | FORK
   (WHERE transaction.name == "POST /record"

@@ -1,6 +1,5 @@
 arch=linux/amd64
 build=true
-course=o11y--course--field--100-e2e
 
 branch=test
 
@@ -9,10 +8,21 @@ do
    case "$opt" in
       a ) arch="$OPTARG" ;;
       b ) build="$OPTARG" ;;
-      c ) course="$OPTARG" ;;
       r ) branch="$OPTARG" ;;
    esac
 done
+
+# prep track sub
+
+echo $branch
+
+track_id=$(yq '.tracks[] | select(.branch == "'$branch'") | .id' tracks.yaml)
+track_slug=$(yq '.tracks[] | select(.branch == "'$branch'") | .slug' tracks.yaml)
+track_slug=$(yq '.tracks[] | select(.branch == "'$branch'") | .slug' tracks.yaml)
+course=$(yq '.tracks[] | select(.branch == "'$branch'") | .course' tracks.yaml)
+echo $track_slug
+echo $track_id
+echo $course
 
 cd tools/pandoc
 docker build --platform linux/amd64 -t pandoc-inter-custom .
@@ -21,19 +31,19 @@ cd ../..
 upload_bundle() {
   mkdir -p bundle
   cd ..
-  git archive --format=tgz $branch -o instruqt/bundle/$course-$branch.tgz
+  git archive --format=tgz $branch -o instruqt/bundle/$course.tgz
 
   ARTIFACT_VERSION=1.0
 
   gcloud artifacts versions delete $ARTIFACT_VERSION \
       --quiet \
-      --package=$course-$branch \
+      --package=$course \
       --location=us-central1 \
       --repository=tbekiares-instruqt
 
   gcloud artifacts generic upload \
-      --source=instruqt/bundle/$course-$branch.tgz \
-      --package=$course-$branch \
+      --source=instruqt/bundle/$course.tgz \
+      --package=$course \
       --version=$ARTIFACT_VERSION \
       --location=us-central1 \
       --repository=tbekiares-instruqt
@@ -61,16 +71,20 @@ if [ "$build" = "true" ]; then
   cd instruqt
 fi
 
-# prep track sub
-
-track_slug = $(yq ('.tracks[] | select(.branch == "$branch")') | .slug tracks.yaml)
-track_id = $(yq ('.tracks[] | select(.branch == "$branch")') | .id tracks.yaml)
-echo $track_slug
-echo $track_id
-
-return
-
 cd track
+
+for script in track_scripts.tmpl/*.tmpl; do
+  echo $script
+  script_no_ext="${script%.*}"
+  echo $script_no_ext
+  script_base=$(basename "$script_no_ext")
+  echo $script_base
+  sed "s/{{COURSE}}/$course/g" $script > track_scripts/$script_base
+done
+
+sed "s/{{TRACK_SLUG}}/$track_slug/g" track.yml.tmpl > track.yml.tmp
+sed "s/{{TRACK_ID}}/$track_id/g" track.yml.tmp > track.yml
+rm track.yml.tmp
 
 for diag in diagrams/*.mmd; do
   diag_base=$(basename "$diag")
