@@ -14,7 +14,14 @@ done
 
 # prep track sub
 
-echo $branch
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+if [[ "$CURRENT_BRANCH" == "$branch" ]]; then
+  echo "Current branch is correct: $CURRENT_BRANCH"
+else
+  echo "Error: Current branch is \"$CURRENT_BRANCH\", but expected \"$EXPECTED_BRANCH\"."
+  exit 1
+fi
 
 track_id=$(yq '.tracks[] | select(.branch == "'$branch'") | .id' tracks.yaml)
 track_slug=$(yq '.tracks[] | select(.branch == "'$branch'") | .slug' tracks.yaml)
