@@ -89,6 +89,7 @@ fi
 
 cd track
 
+mkdir -p track_scripts
 for script in track_scripts.tmpl/*.tmpl; do
   echo $script
   script_no_ext="${script%.*}"
