@@ -1,6 +1,6 @@
-slug: o11y--course--field--100-e2e--serverless
-id: egwjhbc7jxch
-title: SuperDemo (main)
+slug: o11y--course--field--100-e2e--test
+id: 8lrlcifasoal
+title: SuperDemo (test)
 description: This is a fully-featured OTel + Elasticsearch Observability Environment
   intended for you to show off the latest in Elastic observability technology.
 icon: ""
@@ -18,5 +18,5 @@ lab_config:
   loadingMessages:
   - Setting up your Elastic experience...
   hideStopButton: false
-checksum: "617528027830652525"
+checksum: "10634663139701584073"
 enhanced_loading: false

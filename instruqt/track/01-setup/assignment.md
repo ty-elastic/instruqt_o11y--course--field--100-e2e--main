@@ -577,7 +577,7 @@ http_requests_total
 9. Click `New` in the `Save Lens visualization` dialog
 10. Click `Save and go to Dashboard`
 11. Click `Save in the upper-right
-12. Set `Title` to:
+12. Set `Title` to: 
 ```
 node.js Monitor
 ```
@@ -673,7 +673,7 @@ But what if we want to break down and compare the individual latency components?
 3. Enter `ES|QL` mode (if Discover is not yet in `ES|QL` mode)
 4. Execute the following ES|QL:
 ```
-FROM traces-*
+FROM traces-* 
 | WHERE service.name == "recorder-java" OR service.name == "recorder-go"
 | FORK
   (WHERE transaction.name == "POST /record"
