@@ -6,7 +6,7 @@ opentelemetry-operator:
   manager:
     extraArgs:
       - --enable-go-instrumentation
-      #- --enable-nginx-instrumentation
+      - --enable-nginx-instrumentation
   admissionWebhooks:
     certManager:
       enabled: false # For production environments, it is [recommended to use cert-manager for better security and scalability](https://github.com/open-telemetry/opentelemetry-helm-charts/tree/main/charts/opentelemetry-operator#tls-certificate-requirement).
@@ -719,3 +719,9 @@ instrumentation:
     image: docker.elastic.co/observability/elastic-otel-python:1.10.0
   go:
     image: ghcr.io/open-telemetry/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.23.0
+
+  nginx:
+    image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/autoinstrumentation-apache-httpd:1.1.0
+    attrs:
+      - name: NginxModuleOtelExporterEndpoint
+        value: "http://opentelemetry-kube-stack-daemon-collector.opentelemetry-operator-system.svc.cluster.local:4317"
