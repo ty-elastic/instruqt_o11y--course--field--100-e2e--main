@@ -16,6 +16,7 @@ COPY tools tools
 COPY aliases aliases
 COPY data_views data_views
 COPY ml ml
+COPY objects objects
 
 ENV PYTHONUNBUFFERED=1
 
