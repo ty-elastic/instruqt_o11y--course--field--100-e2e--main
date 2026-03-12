@@ -33,7 +33,7 @@ func NewTradeService() (*TradeService, error) {
 	// spring.datasource.url=jdbc:${DB_PROTOCOL}://${POSTGRESQL_HOST}:${DB_PORT}${DB_OPTIONS}
 
 	//connString := fmt.Sprintf("%s://%s:%s@%s:%s/trades?Trusted_Connection=false&Encrypt=false&TrustServerCertificate=true", os.Getenv("MYSQL_PROTOCOL"), os.Getenv("MYSQL_USER"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_HOST"), os.Getenv("MYSQL_PORT"))
-	connString := fmt.Sprintf("%s:%s@tcp(%s:%s)/main?tls=false", os.Getenv("MYSQL_USER"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_HOST"), os.Getenv("MYSQL_PORT"))
+	connString := fmt.Sprintf("%s:%s@tcp(%s:%s)/main?tls=false&interpolateParams=true", os.Getenv("MYSQL_USER"), os.Getenv("MYSQL_PASSWORD"), os.Getenv("MYSQL_HOST"), os.Getenv("MYSQL_PORT"))
 	logger.Warn(connString)
 
 	port, err := strconv.ParseInt(os.Getenv("MYSQL_PORT"), 10, 64)
