@@ -6,6 +6,8 @@ logs
 bin
 out
 
+redpanda/
+
 instruqt/bundle
 instruqt/track/track_scripts
 instruqt/track/track.yml
