@@ -19,6 +19,74 @@ spec:
         io.opentelemetry.discovery.logs/enabled: "true"
         instrumentation.opentelemetry.io/inject-sdk: "opentelemetry-operator-system/elastic-instrumentation"
         resource.opentelemetry.io/service.version: "$SERVICE_VERSION"
+
+        io.opentelemetry.discovery.logs/config: |
+          operators:
+          - type: container
+          - type: json_parser
+            on_error: send_quiet
+            parse_from: body
+            timestamp:
+              parse_from: attributes.timestamp
+              on_error: send_quiet
+              layout_type: strptime
+              layout: '%Y-%m-%d %H:%M:%S.%L %Z'
+            trace:
+              trace_id:
+                parse_from: attributes.trace_id
+                on_error: send_quiet
+              span_id:
+                parse_from: attributes.span_id
+                on_error: send_quiet
+              trace_flags:
+                parse_from: attributes.trace_flags
+                on_error: send_quiet
+            severity:
+              parse_from: attributes.level
+              on_error: send_quiet
+              mapping:
+                warn: 
+                  - WARNING
+                  - NOTICE
+                error:
+                  - ERROR
+                info: 
+                  - LOG
+                  - INFO
+                  - STATEMENT
+                debug1:
+                  - DEBUG1
+                debug2:
+                  - DEBUG2
+                debug3:
+                  - DEBUG3
+                debug4:
+                  - DEBUG4
+                debug5:
+                  - DEBUG5
+                fatal:
+                  - FATAL
+                  - PANIC
+          - type: move
+            on_error: send_quiet
+            from: attributes.message
+            to: body
+          - type: remove
+            on_error: send_quiet
+            field: attributes.timestamp
+          - type: remove
+            on_error: send_quiet
+            field: attributes.level
+          - type: remove
+            on_error: send_quiet
+            field: attributes.trace_id
+          - type: remove
+            on_error: send_quiet
+            field: attributes.span_id
+          - type: remove
+            on_error: send_quiet
+            field: attributes.trace_flags
+
       labels:
         app: trading
         service: recorder-go

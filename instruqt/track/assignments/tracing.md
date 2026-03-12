@@ -2,6 +2,15 @@
 Tracing
 ===
 
+# Tail-Based Sampling (TBS)
+
+All traces are currently flowing through a set of Collectors configured for TBS. Architecturally, traces flow from the k8s cluster gateway collector to a set of Load Balancing Collectors to a set of Sampling Collectors. The Load Balancing Collectors route all spans related to the same trace to the same Sampling Collector.
+
+## How does this work?
+
+1. Open the [button label="OTel YAML"](tab-5) Instruqt tab
+2. Navigate to `tbs/tbs.yaml`
+
 # OTel Profiling
 
 ## Setup

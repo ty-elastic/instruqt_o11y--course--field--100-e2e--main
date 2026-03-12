@@ -16,3 +16,4 @@
 * DONE: get current version of integrations!!!!
 * DONE: result for force trade
 * DONE: check linear graphs if they should be RATE? postgres, mysql
+

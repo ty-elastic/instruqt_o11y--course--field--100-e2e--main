@@ -216,7 +216,7 @@ collectors:
       exporters:
         # [Debug exporter](https://github.com/open-telemetry/opentelemetry-collector/blob/main/exporter/debugexporter/README.md)
         debug:
-          verbosity: detailed
+          verbosity: basic
         otlp/gateway:
           endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4317"
           tls:
@@ -647,6 +647,7 @@ collectors:
                 - delete_key(resource.attributes, "tmp")
                 - set(resource.attributes["browser.name"], resource.attributes["browser.user_agent.name"])
                 - set(resource.attributes["browser.platform"], resource.attributes["browser.os.name"])
+
       exporters:
         debug: {}
         otlp/tbs:
@@ -682,6 +683,14 @@ collectors:
               max_size: 4_000_000 # 4MB uncompressed
           timeout: 15s
       service:
+        telemetry:
+          metrics:
+            readers:
+              - periodic:
+                  exporter:
+                    otlp:
+                      endpoint: http://${env:OTEL_K8S_POD_IP}:4318
+                      protocol: http/protobuf
         pipelines:
           metrics:
             receivers: [otlp]

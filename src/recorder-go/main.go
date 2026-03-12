@@ -40,7 +40,6 @@ func (l customLogger) Format(entry *log.Entry) ([]byte, error) {
 		if span.SpanContext().TraceID().IsValid() {
 			entry.Data["trace_id"] = span.SpanContext().TraceID().String()
 			entry.Data["span_id"] = span.SpanContext().SpanID().String()
-			entry.Data["service_name"] = os.Getenv("OTEL_SERVICE_NAME")
 
 			traceBaggage := baggage.FromContext(entry.Context)
 			for _, member := range traceBaggage.Members() {
