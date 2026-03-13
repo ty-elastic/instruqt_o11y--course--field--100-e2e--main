@@ -44,7 +44,7 @@ config_logsources() {
       -H 'x-elastic-internal-origin: Kibana' \
       -H "Authorization: ApiKey ${elasticsearch_api_key}" \
       -H 'Content-Type: application/json' \
-      -d '{"changes":{"observability:logSources":["logs", "logs.*", "logs-*-*", "logs-*", "filebeat-*"]}}')
+      -d '{"changes":{"observability:logSources":["logs.*", "logs-*-*", "logs-*", "filebeat-*"]}}')
 
    # Extract HTTP status code
    http_code=$(echo "$output" | tail -n1)
