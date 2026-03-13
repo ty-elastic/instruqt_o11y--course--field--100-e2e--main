@@ -648,13 +648,14 @@ collectors:
                 - set(resource.attributes["browser.name"], resource.attributes["browser.user_agent.name"])
                 - set(resource.attributes["browser.platform"], resource.attributes["browser.os.name"])
 
+        transform/servertoclient:
+          trace_statements:
             - context: span
               conditions:
-                - resource.attributes["service.name"] == "proxy" and span.attributes["forward"] == "false"
+                - span.attributes["kind"] == "client"
               statements:
-                - set(span.kind, 2)
-                - set(span.attributes["type"], "external")
-                - set(span.attributes["subtype"], "http")             
+                - set(span.kind, SPAN_KIND_CLIENT)
+                - delete_key(span.attributes, "kind")
 
       exporters:
         debug: {}
@@ -710,7 +711,7 @@ collectors:
             exporters: [debug, otlp/ingest_logs]
           traces:
             receivers: [otlp]
-            processors: [transform/ua]
+            processors: [transform/ua, transform/servertoclient]
             exporters: [otlp/tbs]
 # For more details on OpenTelemetry's zero-code instrumentation, see:
 # https://opentelemetry.io/docs/concepts/instrumentation/zero-code/
