@@ -648,6 +648,14 @@ collectors:
                 - set(resource.attributes["browser.name"], resource.attributes["browser.user_agent.name"])
                 - set(resource.attributes["browser.platform"], resource.attributes["browser.os.name"])
 
+            - context: span
+              conditions:
+                - resource.attributes["service.name"] == "proxy" and span.attributes["forward"] == "false"
+              statements:
+                - set(span.kind, 2)
+                - set(span.attributes["type"], "external")
+                - set(span.attributes["subtype"], "http")             
+
       exporters:
         debug: {}
         otlp/tbs:
