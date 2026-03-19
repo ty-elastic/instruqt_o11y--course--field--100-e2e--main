@@ -3,7 +3,7 @@
     {
       "add": {
         "index": "metrics-generic.otel-*",
-        "alias": "metrics.trader",
+        "alias": "metrics-trader",
         "filter": {
           "bool": {
             "filter": [

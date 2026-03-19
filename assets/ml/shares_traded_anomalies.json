@@ -63,7 +63,7 @@
     },
     "frequency": "60s",
     "indices": [
-      "metrics.trader"
+      "metrics-trader"
     ],
     "scroll_size": 1000,
     "delayed_data_check_config": {
