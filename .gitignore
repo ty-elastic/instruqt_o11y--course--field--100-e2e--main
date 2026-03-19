@@ -7,7 +7,7 @@ bin
 out
 
 redpanda/
-src/hostmetrics-sim
+src/hostmetrics-sim/
 
 instruqt/bundle
 instruqt/track/track_scripts
