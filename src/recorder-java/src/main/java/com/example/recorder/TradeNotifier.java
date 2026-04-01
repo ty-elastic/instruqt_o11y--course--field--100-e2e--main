@@ -34,7 +34,7 @@ public class TradeNotifier {
             String body = mapper.writeValueAsString(trade);
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(new URI(notifierEndpoint))
+                    .uri(new URI(notifierEndpoint + "?trade_id=" + trade.tradeId + "&database=postgresql"))
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(body))
                     .build();

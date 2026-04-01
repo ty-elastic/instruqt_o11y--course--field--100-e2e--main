@@ -112,7 +112,7 @@ config_synthetics_private_location() {
       "lon": 0
     },
     "spaces": [
-      "*"
+      "default"
     ]
 }')
 

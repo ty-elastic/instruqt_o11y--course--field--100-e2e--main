@@ -120,6 +120,7 @@ data:
   postgresql.conf: |
     shared_preload_libraries = 'pg_stat_statements'
     pg_stat_statements.track = all
+    max_connections = 200
 ---
 apiVersion: apps/v1
 kind: Deployment

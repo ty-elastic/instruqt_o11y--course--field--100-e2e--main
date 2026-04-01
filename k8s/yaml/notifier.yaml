@@ -17,6 +17,7 @@ spec:
     metadata:
       annotations:
         instrumentation.opentelemetry.io/inject-dotnet: "opentelemetry-operator-system/elastic-instrumentation"
+        #instrumentation.opentelemetry.io/inject-sdk: "opentelemetry-operator-system/elastic-instrumentation"
         io.opentelemetry.discovery.logs/enabled: "false"
         resource.opentelemetry.io/service.version: "$SERVICE_VERSION"
       labels:
@@ -30,6 +31,21 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
+          env:
+            - name: POSTGRESQL_HOST
+              value: $POSTGRESQL_HOST
+            - name: POSTGRESQL_PORT
+              value: "$POSTGRESQL_PORT"          
+            - name: POSTGRESQL_PASSWORD
+              value: $POSTGRESQL_PASSWORD
+            - name: POSTGRESQL_USER
+              value: $POSTGRESQL_USER
+            - name: POSTGRESQL_DBNAME
+              value: $POSTGRESQL_DBNAME
+            - name: OTEL_DOTNET_AUTO_TRACES_NPGSQL_INSTRUMENTATION_ENABLED
+              value: "true"
+            # - name: OTEL_DOTNET_AUTO_INSTRUMENTATIONS
+            #   value: "npgsql,aspnetcore,http"
       restartPolicy: Always
 ---
 apiVersion: v1

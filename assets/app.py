@@ -90,14 +90,7 @@ def load_new_knowledge(es_host, es_auth):
 
 def backup_workflows(kibana_server, kibana_auth):
     
-    body = {
-        "limit": 50,
-        "page": 1,
-        "query": ""
-    }
-    
-    resp = requests.post(f"{kibana_server}/api/workflows/search",
-                        json=body,
+    resp = requests.get(f"{kibana_server}/api/workflows?size=50&page=1",
                         headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
     #print(resp.json())
     
@@ -141,15 +134,8 @@ def backup_workflows(kibana_server, kibana_auth):
   
 def delete_existing_workflow(kibana_server, kibana_auth, es_host, workflow_name):
     
-    body = {
-        "limit": 50,
-        "page": 1,
-        "query": ""
-    }
-    
     print("search workflows...")
-    resp = requests.post(f"{kibana_server}/api/workflows/search",
-                        json=body,
+    resp = requests.get(f"{kibana_server}/api/workflows?size=50&page=1",
                         headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
     #print(resp.json())
     print("done")
@@ -218,7 +204,11 @@ def load_workflows(kibana_server, kibana_auth, es_host, remote_host = None):
                     #yaml.dump(parsed)
                     out = yaml.dump(parsed)
                     body = {
-                        "yaml": out
+                        "workflows": [
+                            {
+                                "yaml": out
+                            }
+                        ]
                     }
                     #print(out)
                     
@@ -344,14 +334,7 @@ def load_ml(es_host, kibana_auth):
 
 def load_rules(kibana_server, kibana_auth, es_host, connect_alerts=False):
 
-    body = {
-        "limit": 50,
-        "page": 1,
-        "query": ""
-    }
-    
-    resp = requests.post(f"{kibana_server}/api/workflows/search",
-                        json=body,
+    resp = requests.get(f"{kibana_server}/api/workflows?size=50&page=1",
                         headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
     #print(resp.json())
     
@@ -395,13 +378,8 @@ def delete_existing_agent_tool(kibana_server, kibana_auth, tool_id):
                
 
 def load_agent_tools(kibana_server, kibana_auth):
-    body = {
-        "limit": 50,
-        "page": 1,
-        "query": ""
-    }
-    workflows_resp = requests.post(f"{kibana_server}/api/workflows/search",
-                        json=body,
+
+    workflows_resp = requests.get(f"{kibana_server}/api/workflows?size=50&page=1",
                         headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
 
 
@@ -501,16 +479,8 @@ def backup_agents(kibana_server, kibana_auth):
             json.dump(agent, json_file)
 
 def run_workflow(kibana_server, kibana_auth, workflow_name):
-    
-      
-    body = {
-        "limit": 50,
-        "page": 1,
-        "query": ""
-    }
-    
-    resp = requests.post(f"{kibana_server}/api/workflows/search",
-                        json=body,
+
+    resp = requests.get(f"{kibana_server}/api/workflows?size=50&page=1",
                         headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
     #print(resp.json())
     
