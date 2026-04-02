@@ -1,12 +1,7 @@
 using Npgsql;
 using Microsoft.AspNetCore.Mvc;
 
-var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddLogging();
-
-var app = builder.Build();
-
-NpgsqlDataSource SetupPostgresql() {
+string ConnectionString() {
     string postgresql_host = Environment.GetEnvironmentVariable("POSTGRESQL_HOST");
     string postgresql_port = Environment.GetEnvironmentVariable("POSTGRESQL_PORT");
     string postgresql_dbname = Environment.GetEnvironmentVariable("POSTGRESQL_DBNAME");
@@ -16,42 +11,45 @@ NpgsqlDataSource SetupPostgresql() {
     var connString = "Host=" + postgresql_host + ":" + postgresql_port + ";";
     connString += "Username=" + postgresql_user + ";Password=" + postgresql_password + ";";
     connString += "Database=" + postgresql_dbname + ";";
-    connString += "Maximum Pool Size=25;Timeout=1;Pooling=False";
+    connString += "Maximum Pool Size=25;Timeout=1;Pooling=True;";
 
     app.Logger.LogInformation("connString=" + connString);
 
-    var dataSource = NpgsqlDataSource.Create(connString);
-    return dataSource;
+    return connString;
 }
-NpgsqlDataSource ds = SetupPostgresql();
+
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddLogging();
+builder.Services.AddNpgsqlDataSource(ConnectionString());
+
+var app = builder.Build();
 
 string HealthHandler(ILogger<Program> logger)
 {
     return "KERNEL OK";
 }
 
-void QueryPostgresql(string trade_id, ILogger<Program> logger)
+void QueryPostgresql(string trade_id, NpgsqlDataSource ds, ILogger<Program> logger)
 {
     var sqlQuery = "SELECT * FROM trades WHERE trade_id = '" + trade_id + "';";
 
-    var cmd = ds.CreateCommand(sqlQuery);
-
-    // 5. Execute the command and get a data reader
-    var reader = cmd.ExecuteReader();
+    using (var cmd = ds.CreateCommand(sqlQuery))
     {
-        // 6. Read the data row by row
-        while (reader.Read())
+        using (var reader = cmd.ExecuteReader())
         {
-            logger.LogInformation("found " + reader["trade_id"].ToString());
+            while (reader.Read())
+            {
+                logger.LogInformation("found " + reader["trade_id"].ToString());
+            }
         }
     }
 }
 
-string NotifyHandler([FromQuery] string? database, [FromQuery] string? trade_id, ILogger<Program> logger)
+string NotifyHandler([FromQuery] string? database, [FromQuery] string? trade_id, NpgsqlDataSource ds, ILogger<Program> logger)
 {
     if (!string.IsNullOrEmpty(database) && database == "postgresql") {
         try {
-            QueryPostgresql(trade_id, logger);
+            QueryPostgresql(trade_id, ds, logger);
         }
         catch (Exception e) {
             logger.LogWarning("no conn avail");
