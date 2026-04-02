@@ -15,7 +15,8 @@ NpgsqlDataSource SetupPostgresql() {
 
     var connString = "Host=" + postgresql_host + ":" + postgresql_port + ";";
     connString += "Username=" + postgresql_user + ";Password=" + postgresql_password + ";";
-    connString += "Database=" + postgresql_dbname;
+    connString += "Database=" + postgresql_dbname + ";";
+    connString += "Maximum Pool Size=25;Timeout=1;Pooling=False";
 
     app.Logger.LogInformation("connString=" + connString);
 
@@ -31,22 +32,17 @@ string HealthHandler(ILogger<Program> logger)
 
 void QueryPostgresql(string trade_id, ILogger<Program> logger)
 {
-    using (var conn = ds.OpenConnection())
-    {
-        var sqlQuery = "SELECT * FROM trades WHERE trade_id = '" + trade_id + "';";
+    var sqlQuery = "SELECT * FROM trades WHERE trade_id = '" + trade_id + "';";
 
-        // 4. Create a command object
-        var cmd = new NpgsqlCommand(sqlQuery, conn);
+    var cmd = ds.CreateCommand(sqlQuery);
+
+    // 5. Execute the command and get a data reader
+    var reader = cmd.ExecuteReader();
+    {
+        // 6. Read the data row by row
+        while (reader.Read())
         {
-            // 5. Execute the command and get a data reader
-            var reader = cmd.ExecuteReader();
-            {
-                // 6. Read the data row by row
-                while (reader.Read())
-                {
-                    logger.LogInformation(reader["trade_id"].ToString());
-                }
-            }
+            logger.LogInformation("found " + reader["trade_id"].ToString());
         }
     }
 }
@@ -54,8 +50,13 @@ void QueryPostgresql(string trade_id, ILogger<Program> logger)
 string NotifyHandler([FromQuery] string? database, [FromQuery] string? trade_id, ILogger<Program> logger)
 {
     if (!string.IsNullOrEmpty(database) && database == "postgresql") {
-        QueryPostgresql(trade_id, logger);
-        logger.LogInformation("notified+ " + database + trade_id);
+        try {
+            QueryPostgresql(trade_id, logger);
+        }
+        catch (Exception e) {
+            logger.LogWarning("no conn avail");
+        }
+        //logger.LogInformation("notified+ " + database + trade_id);
     }
 
     logger.LogInformation("notified");

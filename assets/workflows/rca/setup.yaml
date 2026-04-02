@@ -98,14 +98,10 @@ steps:
 - name: get_workflows
   type: kibana.request
   with:
-    method: POST
-    path: /api/workflows/search
+    method: GET
+    path: /api/workflows?size=50&page=1
     headers:
       x-elastic-internal-origin: kibana
-    body:
-      limit: 20
-      page: 1
-      query: ''
   timeout: 30s
 
 - name: foreach_workflow
