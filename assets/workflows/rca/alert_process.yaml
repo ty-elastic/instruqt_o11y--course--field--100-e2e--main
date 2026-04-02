@@ -28,7 +28,7 @@ steps:
   type: kibana.request
   with:
     method: GET
-    path: /api/workflowExecutions?workflowId={{ steps.get_this_workflow_id.output }}
+    path: /api/workflows/workflow/{{ steps.get_this_workflow_id.output }}/executions
     headers:
       x-elastic-internal-origin: kibana
 - name: is_workflow_running
