@@ -117,7 +117,7 @@ steps:
       type: kibana.request
       with:
         method: POST
-        path: /api/workflows/{{ foreach.item.id }}/run
+        path: /api/workflows/workflow/{{ foreach.item.id }}/run
         body:
           inputs:
             event: ''

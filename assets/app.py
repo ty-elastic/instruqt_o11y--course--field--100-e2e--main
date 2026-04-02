@@ -486,7 +486,7 @@ def run_workflow(kibana_server, kibana_auth, workflow_name):
     
     for workflow in resp.json()['results']:
         if workflow['name'] == workflow_name:
-            resp2 = requests.post(f"{kibana_server}/api/workflows/{workflow['id']}/run",
+            resp2 = requests.post(f"{kibana_server}/api/workflows/workflow/{workflow['id']}/run",
                             json={"inputs":{}},
                             headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
             print(resp2.json())

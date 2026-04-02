@@ -162,7 +162,7 @@ steps:
       type: kibana.request
       with:
         method: POST
-        path: /api/workflows/{{ steps.get_case_workflow_id.output }}/run
+        path: /api/workflows/workflow/{{ steps.get_case_workflow_id.output }}/run
         body:
           inputs:
             event: ''
