@@ -39,7 +39,7 @@ public class TradeController {
 				Utilities.thrashGarbageCollector();
 			}
 
-			Trade resp = tradeService.processTrade(trade);
+			Trade resp = tradeService.processTrade(trade, flags);
 
 			return ResponseEntity.ok().body(resp);
     }

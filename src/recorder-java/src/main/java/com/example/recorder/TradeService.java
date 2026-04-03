@@ -18,10 +18,10 @@ public class TradeService {
 	private final TradeNotifier tradeNotifier;
 	private final TradeRecorder tradeRecorder;
 
-    public Trade processTrade (Trade trade){
+    public Trade processTrade (Trade trade, String flags){
         Trade resp = tradeRecorder.recordTrade(trade);
 
-        tradeNotifier.notify(trade);
+        tradeNotifier.notify(trade, flags);
 
         return resp;
     }

@@ -8,6 +8,7 @@ import ErrorDb from './ErrorDb'
 import ErrorReset from './ErrorReset'
 import ErrorLocal from './ErrorLocal'
 import ErrorGc from './ErrorGc'
+import ErrorSlowQuery from './ErrorSlowQuery'
 
 const sections = [
   { label: 'Reset', desc: 'Reset error conditions', element: ErrorReset }, 
@@ -15,7 +16,8 @@ const sections = [
   { label: 'Model', desc: 'Model error', element: ErrorModel },
   { label: 'DB', desc: 'Database error', element: ErrorDb },
   { label: 'Latency', desc: 'Latency', element: ErrorLatency },
-  { label: 'GC', desc: 'Garbage Collector', element: ErrorGc }
+  { label: 'GC', desc: 'Garbage Collector', element: ErrorGc },
+  { label: 'SlowQuery', desc: 'Slow Query', element: ErrorSlowQuery }
 ];
 
 class Error extends React.Component {

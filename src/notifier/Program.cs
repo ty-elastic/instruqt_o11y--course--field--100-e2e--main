@@ -13,7 +13,7 @@ string ConnectionString() {
     connString += "Database=" + postgresql_dbname + ";";
     connString += "Maximum Pool Size=25;Timeout=1;Pooling=True;";
 
-    app.Logger.LogInformation("connString=" + connString);
+    //app.Logger.LogInformation("connString=" + connString);
 
     return connString;
 }
@@ -29,27 +29,30 @@ string HealthHandler(ILogger<Program> logger)
     return "KERNEL OK";
 }
 
-void QueryPostgresql(string trade_id, NpgsqlDataSource ds, ILogger<Program> logger)
+void QueryPostgresql(string trade_id, string flags, NpgsqlDataSource ds, ILogger<Program> logger)
 {
-    var sqlQuery = "SELECT * FROM trades WHERE trade_id = '" + trade_id + "';";
-
+    var sqlQuery = "SELECT trade_id FROM trades WHERE trade_id = '" + trade_id + "';";
+    if (flags.Contains("SLOWQUERY"))
+        sqlQuery = "SELECT * FROM trades;";
+    
     using (var cmd = ds.CreateCommand(sqlQuery))
     {
         using (var reader = cmd.ExecuteReader())
         {
             while (reader.Read())
             {
-                logger.LogInformation("found " + reader["trade_id"].ToString());
+                if (reader["trade_id"].ToString() == trade_id)
+                    logger.LogInformation("found " + reader["trade_id"].ToString());
             }
         }
     }
 }
 
-string NotifyHandler([FromQuery] string? database, [FromQuery] string? trade_id, NpgsqlDataSource ds, ILogger<Program> logger)
+string NotifyHandler([FromQuery] string? database, [FromQuery] string? trade_id, [FromQuery] string? flags, NpgsqlDataSource ds, ILogger<Program> logger)
 {
     if (!string.IsNullOrEmpty(database) && database == "postgresql") {
         try {
-            QueryPostgresql(trade_id, ds, logger);
+            QueryPostgresql(trade_id, flags, ds, logger);
         }
         catch (Exception e) {
             logger.LogWarning("no conn avail");

@@ -29,12 +29,12 @@ public class TradeNotifier {
             notifierEndpoint = "http://notifier:5000/notify";
     }
 
-    public HttpResponse<String> notify (Trade trade) {
+    public HttpResponse<String> notify (Trade trade, String flags) {
         try {
             String body = mapper.writeValueAsString(trade);
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(new URI(notifierEndpoint + "?trade_id=" + trade.tradeId + "&database=postgresql"))
+                    .uri(new URI(notifierEndpoint + "?trade_id=" + trade.tradeId + "&database=postgresql&flags=" + flags))
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(body))
                     .build();
