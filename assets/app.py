@@ -370,7 +370,7 @@ def load_rules(kibana_server, kibana_auth, es_host, connect_alerts=False):
 def delete_existing_agent_tool(kibana_server, kibana_auth, tool_id):
 
     try:
-        resp = requests.delete(f"{kibana_server}/api/agent_builder/tools/{tool_id}",
+        resp = requests.delete(f"{kibana_server}/api/agent_builder/tools/{tool_id}?force=true",
                             headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
         print(resp.json())
     except Exception as e:
@@ -438,7 +438,39 @@ def delete_existing_agent(kibana_server, kibana_auth, agent_id):
         print(resp.json())
     except Exception as e:
         print(e)        
-               
+
+def delete_existing_skill(kibana_server, kibana_auth, skill_id):
+
+    try:
+        resp = requests.delete(f"{kibana_server}/api/agent_builder/skills/{skill_id}",
+                            headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+        print(resp.json())
+    except Exception as e:
+        print(e)  
+
+def load_skills(kibana_server, kibana_auth):
+    
+    directory_path = "skills"
+    target_extension = ".json"
+    
+    for root, dirs, files in os.walk(directory_path):
+        for file in files:
+            if file.endswith(target_extension):
+                full_path = os.path.join(root, file)
+                with open(full_path, 'r') as fileo:
+                    #content = file.read()
+                    skill = json.load(fileo)
+                    del skill['readonly']
+                    del skill['experimental']
+
+                    delete_existing_skill(kibana_server, kibana_auth, skill['id'])
+
+                    #print(agent)
+                    resp = requests.post(f"{kibana_server}/api/agent_builder/skills",
+                                        json=skill,
+                                        headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+                    print(resp.json())     
+ 
 
 def load_agents(kibana_server, kibana_auth):
     
@@ -558,6 +590,9 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, 
         print('done')
     elif action == 'load_ml':
         load_ml(es_host, auth)
+        print('done')
+    elif action == 'load_skills':
+        load_skills(kibana_host, auth)
         print('done')
     elif action == 'load':
         load_workflows(kibana_host, auth, es_host, remote_host)

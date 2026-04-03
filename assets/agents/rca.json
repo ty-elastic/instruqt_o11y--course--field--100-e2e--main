@@ -32,6 +32,10 @@
                     "search_knowledgebase"
                 ]
             }
+        ],
+        "skill_ids": [
+            "rca-alert_correlation",
+            "rca-topology_builder"
         ]
     },
     "readonly": false

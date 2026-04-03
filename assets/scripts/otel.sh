@@ -30,6 +30,11 @@ deploy_otel() {
 
     helm repo add open-telemetry 'https://open-telemetry.github.io/opentelemetry-helm-charts' --force-update
 
+    EXISTING=false
+    if kubectl get namespace opentelemetry-operator-system >/dev/null 2>&1; then
+        EXISTING=true
+    fi
+
     kubectl create namespace opentelemetry-operator-system
 
     kubectl --namespace opentelemetry-operator-system delete secret generic elastic-secret-otel
@@ -50,7 +55,7 @@ deploy_otel() {
     kubectl apply -f tbs.yaml
     cd ../..
 
-    if [ "$force" = "true" ]; then
+    if [ "$EXISTING" = "true" ]; then
         kubectl -n opentelemetry-operator-system rollout restart deployment
         kubectl -n opentelemetry-operator-system rollout restart statefulset
     fi

@@ -75,7 +75,7 @@ steps:
         headers:
           kbn-xsrf: 'true'
         body:
-          agent_id: alert_correlation
+          agent_id: rca
           input: |
             Try to correlate this alert: 
             ```json
