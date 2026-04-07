@@ -102,7 +102,7 @@ steps:
         message: |
           Try to correlate this alert to a case: 
           ```json
-          {{ foreach.item._source | json }}
+          {{ foreach.item._source | json: 2 }}
           ```
     - name: new_or_update_case
       type: if

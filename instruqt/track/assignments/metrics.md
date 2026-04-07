@@ -252,10 +252,10 @@ First, let's create a database problem:
 ## Assisted RCA
 
 > [!WARNING]
-> Ensure you are issuing questions against the `Observability Agent (Extended)`
+> Ensure you are issuing questions against the `Observability Agent`
 
 1. Click the `AI Agent` button in the upper-right corner of the dashboard
-2. Select `Observability Agent (Extended)`
+2. Select `Observability Agent`
 3. Execute the following question:
 ```
 are the rolled back transactions causing trace failures?
@@ -276,10 +276,6 @@ were there any logs which explain the change in rolled back transactions?
 6. Execute the following question:
 ```
 can you create a graph of that log rate spike?
-```
-7. Execute the following question:
-```
-can you create a case to capture this issue including a summary of this conversation?
 ```
 
 # Custom Metrics
