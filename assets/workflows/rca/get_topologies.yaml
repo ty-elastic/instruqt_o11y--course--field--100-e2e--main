@@ -10,6 +10,7 @@ inputs:
 - name: search_end_time
   description: the end of the time window (Format as `%Y-%m-%dT%H:%M:%SZ`)
   type: string
+  default: now
 - name: system_environment
   description: System Environment
   required: false

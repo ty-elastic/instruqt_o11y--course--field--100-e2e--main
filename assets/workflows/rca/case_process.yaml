@@ -15,6 +15,10 @@ inputs:
   default: false
   required: false
   type: boolean
+- name: force_update
+  default: false
+  required: false
+  type: boolean
 
 steps:
 - name: get_workflows
@@ -59,7 +63,7 @@ steps:
     steps:
     - name: is_case_ready
       type: if
-      condition: "inputs.alerts_ready : true OR foreach.item.updated_at < now-{{ consts.case_stable }}"
+      condition: 'inputs.alerts_ready : true OR foreach.item.updated_at < now-{{ consts.case_stable }}'
       steps:
       - name: get_alerts
         type: kibana.request
@@ -74,7 +78,7 @@ steps:
 
       - name: if_needs_update
         type: if
-        condition: "not steps.get_processed_alerts.output : {{ steps.get_alerts.output.size | prepend: ''}}"
+        condition: "inputs.force_update : true or not steps.get_processed_alerts.output : {{ steps.get_alerts.output.size | prepend: ''}}"
         steps:
         - name: get_ai_coversation_id
           type: console
@@ -82,18 +86,12 @@ steps:
             message: "{% for field in foreach.item.customFields %}{%- if field.key == 'ai_conversation_id' -%}{{ field.value }}{% break %}{%- endif -%}{% endfor %}"
 
         - name: rca
-          type: kibana.request
+          type: ai.agent
+          create-conversation: true
+          agent-id: rca
           with:
-            method: POST
-            path: /api/agent_builder/converse
-            headers:
-              kbn-xsrf: 'true'
-            body: |
-              {
-                "agent_id": "rca",
-                "input": "perform RCA on case id: {{ foreach.item.id }}"
-                {% if steps.get_ai_coversation_id.output != "not_available" %},"conversation_id": "{{ steps.get_ai_coversation_id.output }}"{% endif %}
-              }
+            conversation_id: '{% if steps.get_ai_coversation_id.output != "not_available" %}{{ steps.get_ai_coversation_id.output }}{% endif %}'
+            message: 'perform RCA on case id: {{ foreach.item.id }}'
 
         # - name: foreach_steps
         #   type: foreach
@@ -154,7 +152,7 @@ steps:
             body:
               type: user
               owner: observability
-              comment: '{{ steps.rca.output.response.message }}'
+              comment: '{{ steps.rca.output.message }}'
 
         - name: add_conversation_to_existing_case
           type: kibana.request

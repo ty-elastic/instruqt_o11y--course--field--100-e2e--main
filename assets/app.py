@@ -97,7 +97,7 @@ def backup_workflows(kibana_server, kibana_auth):
     for workflow in resp.json()['results']:
         # with open(f"workflows/{workflow['definition']['name']}.json", "w") as json_file:
         #     json.dump(workflow['definition'], json_file, indent=2)
-        with open(f"workflows/{workflow['definition']['name']}.yaml", "w") as yaml_file:
+        with open(f"backup/workflows/{workflow['definition']['name']}.yaml", "w") as yaml_file:
             #yaml_file.write(workflow['yaml'])
             #yaml.dump(workflow['definition'], yaml_file, default_flow_style=False)
   
@@ -416,6 +416,27 @@ def load_agent_tools(kibana_server, kibana_auth):
                                         headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
                     print(resp.json())     
 
+
+def backup_agent_skills(kibana_server, kibana_auth):
+    
+    resp = requests.get(f"{kibana_server}/api/agent_builder/skills", 
+                         json={},
+                        headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+    #print(resp.json())
+    
+    for skill in resp.json()['results']:
+        #print(tool)
+        #if 'rca' in tool['tags']:
+
+        resp2 = requests.get(f"{kibana_server}/api/agent_builder/skills/{skill['id']}", 
+                        json={},
+                    headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+
+            
+        with open(f"backup/skills/{skill['id']}.json", "w") as json_file:
+            json.dump(resp2.json(), json_file)
+
+
 def backup_agent_tools(kibana_server, kibana_auth):
     
     resp = requests.get(f"{kibana_server}/api/agent_builder/tools", 
@@ -427,7 +448,7 @@ def backup_agent_tools(kibana_server, kibana_auth):
         #print(tool)
         #if 'rca' in tool['tags']:
             
-        with open(f"tools/{tool['id']}.json", "w") as json_file:
+        with open(f"backup/tools/{tool['id']}.json", "w") as json_file:
             json.dump(tool, json_file)
 
 def delete_existing_agent(kibana_server, kibana_auth, agent_id):
@@ -486,6 +507,8 @@ def load_agents(kibana_server, kibana_auth):
                     agent = json.load(fileo)
                     del agent['readonly']
                     del agent['type']
+                    if 'created_by' in agent:
+                        del agent['created_by']
 
                     delete_existing_agent(kibana_server, kibana_auth, agent['id'])
 
@@ -507,7 +530,7 @@ def backup_agents(kibana_server, kibana_auth):
         #print(agent)
         #if 'labels' in agent and 'rca' in agent['labels']:
             
-        with open(f"agents/{agent['id']}.json", "w") as json_file:
+        with open(f"backup/agents/{agent['id']}.json", "w") as json_file:
             json.dump(agent, json_file)
 
 def run_workflow(kibana_server, kibana_auth, workflow_name):
@@ -614,6 +637,7 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, 
         backup_agents(kibana_host, auth)
         backup_agent_tools(kibana_host, auth)
         backup_workflows(kibana_host, auth)
+        backup_agent_skills(kibana_host, auth)
         print('done')
     elif action == 'run_setup':
         run_workflow(kibana_host, auth, 'setup')

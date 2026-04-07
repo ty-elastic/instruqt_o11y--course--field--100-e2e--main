@@ -1,9 +1,9 @@
 version: '1'
-name: create_case
-description: Create new case
+name: rca.update_cases
+description: Create a new case or add a comment to an existing case
 enabled: true
 tags:
-- demo
+- rca
 triggers:
 - type: manual
 settings:
@@ -22,7 +22,24 @@ inputs:
   required: true
   default: low
   type: string
+- name: mode
+  description: mode=create to create a new case, mode=comment to add a comment to an existing case
+  required: true
+  default: create
+  type: string
+- name: comment
+  description: if mode=comment, the comment to add a comment to an existing case
+  required: false
+  type: string
+- name: case_id
+  description: if mode=comment, the case id to modify
+  required: false
+  type: string
 steps:
+- name: mode_check
+  type: if
+  condition: 'inputs.mode: "create"'
+  steps:
   - name: get_case_settings
     type: kibana.request
     with:
@@ -44,3 +61,15 @@ steps:
       tags:
       - trading
       title: '{{ inputs.title }}'
+  else:
+  - name: add_comment_to_existing_case
+    type: kibana.request
+    with:
+      method: POST
+      path: /api/cases/{{ inputs.case_id }}/comments
+      body:
+        type: user
+        owner: observability
+        comment: '{{inputs.comment}}'
+    on-failure:
+      continue: true

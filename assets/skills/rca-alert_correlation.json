@@ -2,13 +2,12 @@
   "id": "rca-alert_correlation",
   "name": "Alert Correlation",
   "description": "This skill knows how to correlate Alerts to Cases",
-  "content": "Decide if a provided alert is directly related to any existing open case.\n\n## First, gather information:\n1. Use your tools to query for open cases and their attached alerts; for each attached alert, get its details\n2. Use your tools to query for system topologies\n\n## Second, determine if the new alert is related (correlated) to an existing case:\n1. Consider the existing alerts attached to each case\n2. Consider the relevant system topology to understand dependencies. In general, if a downstream service is failing and generating alerts, it will likely cause any upstream services (which are dependent on the downstream service) to also alert. This is particularly true if the time range of the alerts are also correlated.\n\n## Third, provide output:\nIf the alert is related to an existing case:\n- output a field 'case_id' with the value of the related case \n- output a field 'relation' with a summary of how it is related\n\nIf the alert is not related to any open case:\n- output a field 'case_id' with a value of 'NONE'\n- output a field 'relation' explaining briefly why this alert is not related to an existing case\n- if, from the topologies, you can identify a system_environment associated with this alert, output a field 'system_environment' with a value of the name of the system\n- output a field called 'title' that summarizes the attached alert in a few words\n- output a field called 'trigger' that provides a detailed summary of the alert\n- output a field called 'severity' with a value of 'low', 'medium', 'high', or 'critical' based on an initial analysis of the alert\n\n# Output format:\n- respond only in valid JSON format with no newlines, no extra spaces, and no prefixes or postfixes",
+  "content": "Decide if a provided alert is directly related to any existing open case.\n\n## First, gather information:\n1. Use the `platform.core.cases` tool in search mode to query for all open cases. For each case, use the `platform.core.cases` in search mode with a specific case id and `includeComments: true` to obtain existing alerts and comments associated to a given case.\n\n2. Use the `get_topologies` tool to query for system topologies.\n\n## Second, determine if the new alert is related (correlated) to an existing case:\n1. Consider the existing alerts attached to each case.\n2. Consider the relevant system topology to understand dependencies. In general, if a downstream service is failing and generating alerts, it will likely cause any upstream services (which are dependent on the downstream service) to also alert. This is particularly true if the time range of the alerts are also correlated.\n",
   "referenced_content": [],
   "tool_ids": [
     "platform.core.cases",
     "get_topologies",
-    "get_case_alerts",
-    "get_alert_details"
+    "platform.core.get_document_by_id"
   ],
   "readonly": false,
   "experimental": false

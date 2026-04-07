@@ -68,27 +68,45 @@ steps:
     foreach: '{{ steps.get_active_alerts.output.hits.hits }}'
     steps:
     - name: correlate
-      type: kibana.request
+      type: ai.agent
+      create-conversation: true
+      agent-id: rca
       with:
-        method: POST
-        path: /api/agent_builder/converse
-        headers:
-          kbn-xsrf: 'true'
-        body:
-          agent_id: rca
-          input: |
-            Try to correlate this alert: 
-            ```json
-            {{ foreach.item._source | json }}
-            ```
-            Respond only in valid JSON format with no newlines, no extra spaces, and with no prefixes or postfixes (DO NOT USE ```json prefix and ``` postfix) in your response!'
-    - name: correlate_parse
-      type: console
-      with:
-        message: ${{ steps.correlate.output.response.message | json_parse }}
+        schema:
+          items:
+            title: CorrelateAlert
+            type: object
+            additionalProperties: false
+            required: [case_id, relation]
+            properties:
+              case_id:
+                type: string
+                description: if this alert is related to an existing case, the ID of the related case, otherwise `NONE`
+                examples: [a194a64e-d555-46b8-9e50-9b93c3739f76, NONE]
+              relation:
+                type: string
+                description: if this alert is related to an existing case, briefly explain how this alert relates to the identified case, otherwise briefly explain why it isn't related to existing cases
+              title:
+                type: string
+                description: if this alert is not related to an existing case, briefly summarize the attached alert in a few words
+              trigger:
+                type: string
+                description: if this alert is not related to an existing case, a detailed summary of the attached alert
+              severity:
+                type: string
+                description: if this alert is not related to an existing case, a value of `low`, `medium`, `high`, or `critical` based on an initial analysis of the alert
+                examples: [low, medium, high, critical]
+              system_environment:
+                type: string
+                description: if, from the topologies, you can identify a system_environment associated with this alert, a value of the name of the associated system
+        message: |
+          Try to correlate this alert to a case: 
+          ```json
+          {{ foreach.item._source | json }}
+          ```
     - name: new_or_update_case
       type: if
-      condition: 'steps.correlate_parse.output.case_id : NONE'
+      condition: 'steps.correlate.output.structured_output[0].case_id : NONE'
       steps:
       - name: get_case_settings
         type: kibana.request
@@ -106,19 +124,19 @@ steps:
           customFields:
           - key: system_environment
             type: text
-            value: '{{ steps.correlate_parse.output.system_environment}}'
-          description: '{{ steps.correlate_parse.output.trigger }}'
+            value: '{{ steps.correlate.output.structured_output[0].system_environment}}'
+          description: '{{ steps.correlate.output.structured_output[0].trigger }}'
           owner: observability
           settings:
             syncAlerts: true
-          severity: '{{ steps.correlate_parse.output.severity }}'
+          severity: '{{ steps.correlate.output.structured_output[0].severity }}'
           tags:
           - rca
-          title: '{{ steps.correlate_parse.output.title }}'
+          title: '{{ steps.correlate.output.structured_output[0].title }}'
     - name: case_id
       type: console
       with:
-        message: "{% if steps.correlate_parse.output.case_id == 'NONE' %}{{ steps.create_new_case.output.id }}{% else %}{{ steps.correlate_parse.output.case_id }}{%endif%}"
+        message: "{% if steps.correlate.output.structured_output[0].case_id == 'NONE' %}{{ steps.create_new_case.output.id }}{% else %}{{ steps.correlate.output.structured_output[0].case_id }}{%endif%}"
     - name: add_alert_to_case
       type: kibana.request
       with:
@@ -148,11 +166,11 @@ steps:
             # Related Alert
             * Summary: {{ foreach.item._source["kibana.alert.reason"] }}
             * [Conversation](/app/agent_builder/conversations/{{ steps.correlate.output.conversation_id }})
-            * Relationship to Case: {{ steps.correlate_parse.output.relation }}
+            * Relationship to Case: {{ steps.correlate.output.structured_output[0].relation }}
 
   - name: if_new_alerts
     type: if
-    condition: "steps.get_active_alerts.output.hits.total.value > 0"
+    condition: steps.get_active_alerts.output.hits.total.value > 0
     steps:
     - name: get_case_workflow_id
       type: console

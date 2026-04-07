@@ -25,13 +25,12 @@
           "platform.core.index_explorer",
           "platform.core.cases",
           
-          "add_comment_to_case",
-          "get_case_alerts",
-          "get_alert_details",
-          "search_knowledgebase",
-          "create_case"
+          "rca.update_case"
         ]
       }
+    ],
+    "skill_ids": [
+        "rca-search-knowledge"
     ]
   },
   "readonly": false

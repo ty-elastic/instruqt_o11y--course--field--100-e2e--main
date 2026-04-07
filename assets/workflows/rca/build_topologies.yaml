@@ -14,24 +14,62 @@ triggers:
 steps:
 
 - name: get_topologies
-  type: kibana.request
+  type: ai.agent
+  create-conversation: true
+  agent-id: rca
   with:
-    method: POST
-    path: /api/agent_builder/converse
-    headers:
-      kbn-xsrf: 'true'
-    body:
-      agent_id: rca
-      input: "Get system topologies from {{ 'now' | date: '%s' | minus: 3600 | date: '%Y-%m-%dT%H:%M:%SZ' }} to {{ 'now' | date: '%Y-%m-%dT%H:%M:%SZ' }}. Respond only in valid JSON format with no newlines, no extra spaces, and with no prefixes or postfixes (DO NOT USE ```json prefix and ``` postfix) in your response!'"
+    schema:
+      items:
+        title: Topologies
+        type: object
+        additionalProperties: false
+        properties:
+          system_environment:
+            type: string
+            description: the system environment
+          topology:
+            type: object
+            properties:
+              edges:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    source:
+                      type: string
+                      description: the source service.name
+                    target:
+                      type: string
+                      description: the destination service.name
+              nodes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    service.name:
+                      type: string
+                      description: the name/id of the node
+                    host.name:
+                      type: string
+                      description: hostname of the VM or Kubernetes node or machine on which the service is running
+                    entity.type:
+                      type: string
+                      description: the type of entity that this node represents (you can get this from the `identify_entity_by_service_name` tool)
+                    entity.function:
+                      type: string
+                      description: one of `service` or `database` or 'proxy'
+                    k8s.namespace.name:
+                      type: string
+                      description: the Kubernetes namespace on which the service is running
+                    language:
+                      type: string
+                      description: the language the service is programmed in, if known
+    message: "Get system topologies from {{ 'now' | date: '%s' | minus: 3600 | date: '%Y-%m-%dT%H:%M:%SZ' }} to {{ 'now' | date: '%Y-%m-%dT%H:%M:%SZ' }}."
 
-- name: get_topologies_parsed
-  type: console
-  with:
-    message: ${{steps.get_topologies.output.response.message | json_parse}}
 
 - name: foreach_topology
   type: foreach
-  foreach: '{{ steps.get_topologies_parsed.output.topologies }}'
+  foreach: '{{ steps.get_topologies.output.structured_output }}'
   steps:
   - name: debug
     type: console
