@@ -15,7 +15,7 @@ steps:
 
 - name: get_topologies
   type: ai.agent
-  create-conversation: true
+  create-conversation: false
   agent-id: rca
   with:
     schema:
