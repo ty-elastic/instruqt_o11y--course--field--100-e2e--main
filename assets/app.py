@@ -416,6 +416,56 @@ def load_agent_tools(kibana_server, kibana_auth):
                                         headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
                     print(resp.json())     
 
+def delete_existing_slo(kibana_server, kibana_auth, slo_name):
+
+    resp = requests.get(f"{kibana_server}/api/observability/slos",
+                        headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+    #print(resp.json())  
+
+    for slo in resp.json()['results']:
+        if slo['name'] == slo_name:
+            try:
+                print(slo['id'])
+                resp = requests.delete(f"{kibana_server}/api/observability/slos/{slo['id']}",
+                                    headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "x-elastic-internal-origin": "Kibana"})
+                #print(resp.json())
+                print("deleted")
+            except Exception as e:
+                print(e)  
+
+def load_slos(kibana_server, kibana_auth, services):
+
+    directory_path = "slos"
+    target_extension = ".json"
+
+    for service in services:
+        
+        for root, dirs, files in os.walk(directory_path):
+            for file in files:
+                if file.endswith(target_extension):
+                    full_path = os.path.join(root, file)
+
+                    if '_archive' in full_path:
+                        continue
+
+                    with open(full_path, 'r') as fileo:
+                        #content = file.read()
+                        slo = json.load(fileo)
+
+
+                        slo['name'] = slo['name'].replace('$SERVICE_NAME', service)
+                        slo['indicator']['params']['service'] = slo['indicator']['params']['service'].replace('$SERVICE_NAME', service)      
+
+                        print(f"loading slo {slo['name']}")
+
+                        delete_existing_slo(kibana_server, kibana_auth, slo['name'])
+
+                        #print(tool)
+                        resp = requests.post(f"{kibana_server}/api/observability/slos",
+                                            json=slo,
+                                            headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+                        print(resp.json())  
+
 
 def backup_agent_skills(kibana_server, kibana_auth):
     
@@ -556,13 +606,18 @@ def run_workflow(kibana_server, kibana_auth, workflow_name):
 @click.option('--connect_alerts', default=False, help='connect alerts to workflow')
 @click.option('--remote_host', default=None, help='remote host url')
 @click.option('--namespaces', default="trading-na,trading-emea", help='namespaces')
+@click.option('--services', default="trader,router,recorder-java,recorder-go", help='services')
 @click.argument('action')
-def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, remote_host, namespaces):
+def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, remote_host, namespaces, services):
     
 
     namespaces_split = namespaces.split(',')
     print(namespaces_split)
-    
+
+    services_split = services.split(',')
+    print(services_split)
+
+
     config = dotenv_values()
     for key, value in config.items():
         print(f"{key}: {value}")
@@ -617,6 +672,10 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, 
     elif action == 'load_skills':
         load_skills(kibana_host, auth)
         print('done')
+    elif action == 'load_slos':
+        load_slos(kibana_host, auth, services_split)
+        print('done')
+
     elif action == 'load':
         load_workflows(kibana_host, auth, es_host, remote_host)
         load_new_knowledge(es_host, auth)
@@ -632,6 +691,8 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, 
         load_rules(kibana_host, auth, es_host, connect_alerts)
 
         load_objects(kibana_host, auth)
+
+        load_slos(kibana_host, auth, services_split)
         print('done')
 
     elif action == 'backup':
