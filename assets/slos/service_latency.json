@@ -1,0 +1,37 @@
+{
+  "name": "Service Latency",
+  "description": "",
+  "indicator": {
+    "type": "sli.apm.transactionDuration",
+    "params": {
+      "service": "*",
+      "environment": "*",
+      "transactionType": "*",
+      "transactionName": "*",
+      "threshold": 250,
+      "filter": "",
+      "index": "metrics-apm*,apm-*,metrics-*.otel-*"
+    }
+  },
+  "budgetingMethod": "occurrences",
+  "timeWindow": {
+    "duration": "30d",
+    "type": "rolling"
+  },
+  "objective": {
+    "target": 0.99
+  },
+  "tags": [],
+  "groupBy": [
+    "service.name"
+  ],
+  "settings": {
+    "preventInitialBackfill": false,
+    "syncDelay": "1m",
+    "frequency": "1m",
+    "syncField": null
+  },
+  "artifacts": {
+    "dashboards": []
+  }
+}
