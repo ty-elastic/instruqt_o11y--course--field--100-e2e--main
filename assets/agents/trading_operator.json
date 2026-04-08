@@ -9,7 +9,7 @@
   "avatar_color": "",
   "avatar_symbol": "",
   "configuration": {
-    "instructions": "You are an expert in monitoring stock trades. You will be asked about stock activity. I keep my trade data in an index called `metrics.trader`.",
+    "instructions": "You are an expert in monitoring stock trades. You will be asked about stock activity. I keep my trade data in an index called `metrics-trader`.",
     "tools": [
       {
         "tool_ids": [

@@ -675,6 +675,9 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, 
     elif action == 'load_slos':
         load_slos(kibana_host, auth, services_split)
         print('done')
+    elif action == 'load_objects':
+        load_objects(kibana_host, auth)
+        print('done')
 
     elif action == 'load':
         load_workflows(kibana_host, auth, es_host, remote_host)

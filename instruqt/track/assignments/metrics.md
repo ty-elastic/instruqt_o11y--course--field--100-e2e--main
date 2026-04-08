@@ -37,7 +37,7 @@ node.js Monitor
 3. Enter `ES|QL` mode (if Discover is not yet in `ES|QL` mode)
 4. Execute the following ES|QL:
 ```
-TS metrics-* | WHERE data_stream.dataset == "prometheusreceiver.otel"
+TS metrics-prometheusreceiver.otel-default | WHERE data_stream.dataset == "prometheusreceiver.otel"
 ```
 
 > [!NOTE]
@@ -291,7 +291,7 @@ Let's create a few visualizations. First, let's create a visualization with lens
 3. Enter `ES|QL` mode (if Discover is not yet in `ES|QL` mode)
 4. Execute the following ES|QL:
 ```
-TS metrics.trader
+TS metrics-trader
 ```
 5. Click the search (magnifying glass) icon in the upper-right of the graph area and enter the following in the `Search metric` field:
 ```
@@ -300,7 +300,7 @@ shares_traded_per_customer
 6. Click `Explore` in the upper-right corner of the `shares_traded_per_customer` graph
 7. Edit and execute the ES|QL query (to properly name the vertical axis and breakdown by symbol):
 ```
-TS metrics.trader
+TS metrics-trader
   | STATS avg_shares_traded = AVG(metrics.shares_traded_per_customer) BY BUCKET(@timestamp, 100, ?_tstart, ?_tend), symbol
 ```
 8. Click on the pencil icon in the upper-right of the graph and select the `Line` graph (if not already selected)
@@ -315,7 +315,7 @@ Shares Traded Per Symbol
 Now let's use Lens to add another graph to our dashboard:
 
 1. Click `Add` in the upper-right and select `Visualization`
-2. Set the `Data view` to `metrics.trader`
+2. Set the `Data view` to `metrics-trader`
 3. Find the field `share_price` and drag it to the `Vertical axis`
 4. Find the field `symbol` and drag it to `Breakdown`
 5. Find the field `@timestamp` and drag it to `Horizontal axis`
@@ -324,7 +324,7 @@ Now let's use Lens to add another graph to our dashboard:
 8. Click `Save` in the upper-right of the dashboard
 9. Set `Title` to:
 ```
-Trading Operations
+Trading
 ```
 10. Click `Save`
 
@@ -339,7 +339,7 @@ Let's create a ML job to look for suspicious trade activity.
 2. Navigate to `Machine Learning` > `Overview`
 3. Click `Manage jobs`
 4. Click `Create job`
-5. In `Select data view`, select `metrics.trader`
+5. In `Select data view`, select `metrics-trader`
 6. Click `Population`
 7. Click `Use full data`
 8. Click `Next`
@@ -365,12 +365,12 @@ example_ml_job
 3. Open `Force Trade`
 4. `Customer ID` to `q.bert`
 5. Set `Shares` to `10000`
-7. Click `SUBMIT` 10 (or so) times
+7. Click `SUBMIT` 5 (or so) times
 
 ### Add our swim lane graph to our dashboard
 
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
-2. Navigate to `Dashboards` > `Trading Operation`
+2. Navigate to `Dashboards` > `Trading`
 3. Click `Add` in the upper-right and select `+ New panel`
 4. Select `Anomaly Swim Lane`
 5. Select `shares_traded_anomalies` (this is the job we pre-created which has been running for awhile)
@@ -396,7 +396,7 @@ Note the active alert for `q.bert`.
 ## Using a Custom Agent to interrogate our data
 
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
-2. Navigate to `Dashboards` > `Trading Operation`
+2. Navigate to `Dashboards` > `Trading`
 3. Click `AI Agent` in the upper-right
 4. Click the `+` button in the upper-left of the AI Agent fly-out to start a new conversation
 5. Select the `Trading Operator` Agent
