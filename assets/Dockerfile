@@ -18,6 +18,7 @@ COPY data_views data_views
 COPY ml ml
 COPY objects objects
 COPY skills skills
+COPY slos slos
 
 ENV PYTHONUNBUFFERED=1
 
