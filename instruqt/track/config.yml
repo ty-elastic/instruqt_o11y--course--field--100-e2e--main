@@ -1,7 +1,7 @@
 version: "3"
 virtualmachines:
 - name: es3-api
-  image: elastic-pmm/es3-api-v3
+  image: elastic/debian12nginx128
   shell: /bin/bash
   environment:
     PRODUCT_TIER: complete
@@ -13,7 +13,7 @@ virtualmachines:
   allow_external_ingress:
   - high-ports 
 - name: k3s
-  image: elastic/worker-k3s
+  image: instruqt/k3s-v1-35-2
   shell: /bin/bash
   memory: 16384
   cpus: 4

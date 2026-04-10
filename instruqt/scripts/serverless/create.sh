@@ -4,13 +4,14 @@ create_serverless_prj() {
   printf "$FUNCNAME...\n"
   printf "$PROJECT_TYPE in $REGIONS\n"
 
+  export ES3_API_PY=/workspace/workshop/instruqt/scripts/serverless/es3-api.py
   export JSON_FILE='/tmp/project_results.json'
 
   case "$PROJECT_TYPE" in
       "observability")
         PRODUCT_TIER="${PRODUCT_TIER:-complete}"
         printf "Project Tier: $PRODUCT_TIER\n"
-        python3 ~/bin/es3-api.py \
+        python3 ES3_API_PY \
           --operation create \
           --project-type $PROJECT_TYPE \
           --product-tier $PRODUCT_TIER \
@@ -22,7 +23,7 @@ create_serverless_prj() {
       "elasticsearch")
         OPTIMIZED_FOR="${OPTIMIZED_FOR:-general_purpose}"
         printf "Optimized for: $OPTIMIZED_FOR\n"
-        python3 ~/bin/es3-api.py \
+        python3 ES3_API_PY \
           --operation create \
           --project-type $PROJECT_TYPE \
           --optimized-for $OPTIMIZED_FOR \
@@ -32,7 +33,7 @@ create_serverless_prj() {
           --wait-for-ready
           ;;
       "security")
-        python3 ~/bin/es3-api.py \
+        python3 ES3_API_PY \
           --operation create \
           --project-type $PROJECT_TYPE \
           --regions $REGIONS \
@@ -223,13 +224,13 @@ server {
 }
 
 server {
-  #listen 9100 ssl;
-  # server_name kibana.$HOSTNAME.$_SANDBOX_ID.instruqt.io;
-  # ssl_certificate     /etc/ssl/certs/sandbox.crt;
-  # ssl_certificate_key /etc/ssl/private/sandbox.key;
+  # listen 9100 default_server;
+  # server_name kibana;
 
-  listen 9100 default_server;
-  server_name kibana;
+  listen 9100 ssl;
+  server_name kibana.$HOSTNAME.$_SANDBOX_ID.instruqt.io;
+  ssl_certificate     /etc/ssl/certs/sandbox.crt;
+  ssl_certificate_key /etc/ssl/private/sandbox.key;
 
   location / {
     proxy_set_header Host $KIBANA_URL_WITHOUT_PROTOCOL;
@@ -269,21 +270,6 @@ server {
 EOF
 
   systemctl restart nginx
-  # systemctl stop nginx
-
-  # apt-get -y update
-  # apt-get -y install podman
-
-  # podman run -d --rm \
-  #   --name nginx \
-  #   -p 9000:9000 \
-  #   -p 9100:9100 \
-  #   -p 9200:9200 \
-  #   -v /etc/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf \
-  #   -v /etc/ssl/certs/sandbox.crt:/etc/ssl/certs/sandbox.crt \
-  #   -v /etc/ssl/private/sandbox.key:/etc/ssl/private/sandbox.key \
-  #   docker.io/library/nginx:latest
-
-  # printf "$FUNCNAME...SUCCESS\n"
+  printf "$FUNCNAME...SUCCESS\n"
 }
 configure_nginx_proxy
