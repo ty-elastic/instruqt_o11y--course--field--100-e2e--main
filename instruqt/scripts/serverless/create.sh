@@ -223,10 +223,13 @@ server {
 }
 
 server {
-  listen 9100 ssl;
-  server_name kibana.$HOSTNAME.$_SANDBOX_ID.instruqt.io;
-  ssl_certificate     /etc/ssl/certs/sandbox.crt;
-  ssl_certificate_key /etc/ssl/private/sandbox.key;
+  #listen 9100 ssl;
+  # server_name kibana.$HOSTNAME.$_SANDBOX_ID.instruqt.io;
+  # ssl_certificate     /etc/ssl/certs/sandbox.crt;
+  # ssl_certificate_key /etc/ssl/private/sandbox.key;
+
+  listen 9100 default_server;
+  server_name kibana;
 
   location / {
     proxy_set_header Host $KIBANA_URL_WITHOUT_PROTOCOL;
