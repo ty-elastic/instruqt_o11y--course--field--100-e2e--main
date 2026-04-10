@@ -232,7 +232,7 @@ server {
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains;";
 
     proxy_redirect off;
-    proxy_http_version 1.1;
+    #proxy_http_version 1.1;
 
     client_max_body_size 20M;
 
@@ -257,7 +257,19 @@ server {
 }
 EOF
 
-  systemctl restart nginx
+  #systemctl restart nginx
+  systemctl stop nginx
+
+  apt-get -y update
+  apt-get -y install podman
+
+  podman run -d \
+    --name nginx \
+    -p 9000:9000 \
+    -p 9100:9100 \
+    -p 9200:9200 \
+    -v /etc/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf \
+    nginx:latest
 
   printf "$FUNCNAME...SUCCESS\n"
 }
