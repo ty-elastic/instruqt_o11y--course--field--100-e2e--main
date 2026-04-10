@@ -265,22 +265,22 @@ server {
 }
 EOF
 
-  #systemctl restart nginx
-  systemctl stop nginx
+  systemctl restart nginx
+  # systemctl stop nginx
 
-  apt-get -y update
-  apt-get -y install podman
+  # apt-get -y update
+  # apt-get -y install podman
 
-  podman run -d \
-    --name nginx \
-    -p 9000:9000 \
-    -p 9100:9100 \
-    -p 9200:9200 \
-    -v /etc/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf \
-    -v /etc/ssl/certs/sandbox.crt:/etc/ssl/certs/sandbox.crt \
-    -v /etc/ssl/private/sandbox.key:/etc/ssl/private/sandbox.key \
-    docker.io/library/nginx:latest
+  # podman run -d --rm \
+  #   --name nginx \
+  #   -p 9000:9000 \
+  #   -p 9100:9100 \
+  #   -p 9200:9200 \
+  #   -v /etc/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf \
+  #   -v /etc/ssl/certs/sandbox.crt:/etc/ssl/certs/sandbox.crt \
+  #   -v /etc/ssl/private/sandbox.key:/etc/ssl/private/sandbox.key \
+  #   docker.io/library/nginx:latest
 
-  printf "$FUNCNAME...SUCCESS\n"
+  # printf "$FUNCNAME...SUCCESS\n"
 }
 configure_nginx_proxy
