@@ -4,7 +4,6 @@ create_serverless_prj() {
   printf "$FUNCNAME...\n"
   printf "$PROJECT_TYPE in $REGIONS\n"
 
-  ls /workspace/workshop/instruqt/scripts/serverless
   export ES3_API_PY=/workspace/workshop/instruqt/scripts/serverless/es3-api.py
   export JSON_FILE='/tmp/project_results.json'
 
