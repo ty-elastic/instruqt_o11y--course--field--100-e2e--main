@@ -36,10 +36,9 @@ tabs:
 - id: od0txjt2rf8s
   title: Elastic-Test
   type: website
-  url: http://es3-api.${_SANDBOX_ID}.instruqt.io:9100
-  path: /app/dashboards#/list?_g=(filters:!(),refreshInterval:(pause:!f,value:30000),time:(from:now-30m,to:now))
-  port: 9100
-  new_window: true
+  url: https://kibana.es3-api.${_SANDBOX_ID}.instruqt.io:9100
+  path: /app/dashboards#/list?_g=(filters:!(),refreshInterval:(pause:!f,value:30000),time:(from:now-30m,to:now))å
+  new_window: false
   custom_response_headers:
   - key: Content-Security-Policy
     value: 'script-src ''self'' https://kibana.estccdn.com; worker-src blob: ''self'';

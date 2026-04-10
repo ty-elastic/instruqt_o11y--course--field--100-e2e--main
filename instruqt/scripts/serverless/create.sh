@@ -196,6 +196,12 @@ create_env_file
 
 # ---------------------------------------------------------- NGINX
 
+curl -s -o /etc/ssl/certs/sandbox.crt -H "Metadata-Flavor: Google" \
+    "http://metadata.google.internal/computeMetadata/v1/instance/attributes/ssl-certificate"
+
+curl -s -o /etc/ssl/private/sandbox.key -H "Metadata-Flavor: Google" \
+    "http://metadata.google.internal/computeMetadata/v1/instance/attributes/ssl-certificate-key"
+
 configure_nginx_proxy() {
   printf "$FUNCNAME...\n"
 
@@ -217,8 +223,10 @@ server {
 }
 
 server {
-  listen 9100 default_server;
-  server_name kibana;
+  listen 9100 ssl;
+  server_name kibana.$HOSTNAME.$_SANDBOX_ID.instruqt.io;
+  ssl_certificate     /etc/ssl/certs/sandbox.crt;
+  ssl_certificate_key /etc/ssl/private/sandbox.key;
 
   location / {
     proxy_set_header Host $KIBANA_URL_WITHOUT_PROTOCOL;
@@ -269,6 +277,8 @@ EOF
     -p 9100:9100 \
     -p 9200:9200 \
     -v /etc/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf \
+    -v /etc/ssl/certs/sandbox.crt:/etc/ssl/certs/sandbox.crt \
+    -v /etc/ssl/private/sandbox.key:/etc/ssl/private/sandbox.key \
     nginx:latest
 
   printf "$FUNCNAME...SUCCESS\n"
