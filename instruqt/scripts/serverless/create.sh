@@ -279,7 +279,7 @@ EOF
     -v /etc/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf \
     -v /etc/ssl/certs/sandbox.crt:/etc/ssl/certs/sandbox.crt \
     -v /etc/ssl/private/sandbox.key:/etc/ssl/private/sandbox.key \
-    nginx:latest
+    docker.io/library/nginx:latest
 
   printf "$FUNCNAME...SUCCESS\n"
 }
