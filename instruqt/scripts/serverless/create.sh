@@ -11,7 +11,7 @@ create_serverless_prj() {
       "observability")
         PRODUCT_TIER="${PRODUCT_TIER:-complete}"
         printf "Project Tier: $PRODUCT_TIER\n"
-        python3 ES3_API_PY \
+        python3 $ES3_API_PY \
           --operation create \
           --project-type $PROJECT_TYPE \
           --product-tier $PRODUCT_TIER \
@@ -23,7 +23,7 @@ create_serverless_prj() {
       "elasticsearch")
         OPTIMIZED_FOR="${OPTIMIZED_FOR:-general_purpose}"
         printf "Optimized for: $OPTIMIZED_FOR\n"
-        python3 ES3_API_PY \
+        python3 $ES3_API_PY \
           --operation create \
           --project-type $PROJECT_TYPE \
           --optimized-for $OPTIMIZED_FOR \
@@ -33,7 +33,7 @@ create_serverless_prj() {
           --wait-for-ready
           ;;
       "security")
-        python3 ES3_API_PY \
+        python3 $ES3_API_PY \
           --operation create \
           --project-type $PROJECT_TYPE \
           --regions $REGIONS \
