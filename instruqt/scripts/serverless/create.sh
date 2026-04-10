@@ -227,7 +227,7 @@ server {
   # listen 9100 default_server;
   # server_name kibana;
 
-  listen 9100 ssl;
+  listen 443 ssl;
   server_name kibana.$HOSTNAME.$_SANDBOX_ID.instruqt.io;
   ssl_certificate     /etc/ssl/certs/sandbox.crt;
   ssl_certificate_key /etc/ssl/private/sandbox.key;

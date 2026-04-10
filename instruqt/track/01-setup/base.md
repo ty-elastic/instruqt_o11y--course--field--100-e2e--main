@@ -36,7 +36,7 @@ tabs:
 - id: od0txjt2rf8s
   title: Elastic-Test
   type: website
-  url: https://kibana.es3-api.${_SANDBOX_ID}.instruqt.io:9100
+  url: https://kibana.es3-api.${_SANDBOX_ID}.instruqt.io:443/
   path: /app/dashboards#/list?_g=(filters:!(),refreshInterval:(pause:!f,value:30000),time:(from:now-30m,to:now))å
   new_window: false
   custom_response_headers:
