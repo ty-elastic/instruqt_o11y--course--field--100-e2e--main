@@ -240,6 +240,7 @@ server {
     proxy_http_version 1.1;
 
     proxy_hide_header Content-Security-Policy;
+    proxy_hide_header X-Frame-Options;
   }
 }
 
