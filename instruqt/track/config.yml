@@ -11,7 +11,7 @@ virtualmachines:
   cpus: 1
   provision_ssl_certificate: true
   allow_external_ingress:
-  - high-ports 
+  - https
 - name: k3s
   image: instruqt/k3s-v1-35-2
   shell: /bin/bash
