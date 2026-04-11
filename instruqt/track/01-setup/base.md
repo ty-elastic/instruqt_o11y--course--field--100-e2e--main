@@ -6,46 +6,16 @@ title: Setup
 tabs:
 - id: zvxdesnpamie
   title: Elastic
-  type: service
-  hostname: es3-api
-  path: /app/dashboards#/list?_g=(filters:!(),refreshInterval:(pause:!f,value:30000),time:(from:now-30m,to:now))
-  port: 9100
-  custom_request_headers:
-  - key: Content-Security-Policy
-    value: 'script-src ''self'' https://kibana.estccdn.com; worker-src blob: ''self'';
-      style-src ''unsafe-inline'' ''self'' https://kibana.estccdn.com; style-src-elem
-      ''unsafe-inline'' ''self'' https://kibana.estccdn.com'
-  custom_response_headers:
-  - key: Content-Security-Policy
-    value: 'script-src ''self'' https://kibana.estccdn.com; worker-src blob: ''self'';
-      style-src ''unsafe-inline'' ''self'' https://kibana.estccdn.com; style-src-elem
-      ''unsafe-inline'' ''self'' https://kibana.estccdn.com'
-- id: od0txjt2rf8q
-  title: Elastic-Breakout
-  type: service
-  hostname: es3-api
-  path: /app/dashboards#/list?_g=(filters:!(),refreshInterval:(pause:!f,value:30000),time:(from:now-30m,to:now))
-  port: 9100
-  new_window: true
-  custom_response_headers:
-  - key: Content-Security-Policy
-    value: 'script-src ''self'' https://kibana.estccdn.com; worker-src blob: ''self'';
-      style-src ''unsafe-inline'' ''self'' https://kibana.estccdn.com; style-src-elem
-      ''unsafe-inline'' ''self'' https://kibana.estccdn.com'
-
-- id: od0txjt2rf8s
-  title: Elastic-Test
   type: website
   url: https://kibana.es3-api.${_SANDBOX_ID}.instruqt.io:443/
   path: /app/dashboards#/list?_g=(filters:!(),refreshInterval:(pause:!f,value:30000),time:(from:now-30m,to:now))å
   new_window: false
-  custom_response_headers:
-  - key: Content-Security-Policy
-    value: 'script-src ''self'' https://kibana.estccdn.com; worker-src blob: ''self'';
-      style-src ''unsafe-inline'' ''self'' https://kibana.estccdn.com; style-src-elem
-      ''unsafe-inline'' ''self'' https://kibana.estccdn.com'
-
-
+- id: od0txjt2rf8q
+  title: Elastic-Breakout
+  type: website
+  url: https://kibana.es3-api.${_SANDBOX_ID}.instruqt.io:443/
+  path: /app/dashboards#/list?_g=(filters:!(),refreshInterval:(pause:!f,value:30000),time:(from:now-30m,to:now))å
+  new_window: true
 - id: 9falvisnya86
   title: Trader (NA)
   type: service
