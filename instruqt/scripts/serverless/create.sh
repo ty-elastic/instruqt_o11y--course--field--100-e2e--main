@@ -224,13 +224,29 @@ server {
 }
 
 server {
-  # listen 9100 default_server;
-  # server_name kibana;
-
   listen 443 ssl;
   server_name kibana.$HOSTNAME.$_SANDBOX_ID.instruqt.io;
   ssl_certificate     /etc/ssl/certs/sandbox.crt;
   ssl_certificate_key /etc/ssl/private/sandbox.key;
+
+  location / {
+    proxy_set_header Host $KIBANA_URL_WITHOUT_PROTOCOL;
+    proxy_pass $KIBANA_URL;
+
+    proxy_set_header Upgrade \$http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host \$host;
+    proxy_cache_bypass \$http_upgrade;
+
+    add_header Content-Security-Policy "frame-ancestors 'self' https://*.instruqt.io";
+
+    proxy_set_header Authorization "Basic $ELASTICSEARCH_AUTH_BASE64";
+  }
+}
+
+server {
+  listen 9100 default_server;
+  server_name kibana;
 
   location / {
     proxy_set_header Host $KIBANA_URL_WITHOUT_PROTOCOL;
