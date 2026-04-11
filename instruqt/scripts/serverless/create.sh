@@ -230,14 +230,14 @@ server {
   ssl_certificate_key /etc/ssl/private/sandbox.key;
 
   location / {
-    proxy_set_header Host $KIBANA_URL_WITHOUT_PROTOCOL;
     proxy_pass $KIBANA_URL;
+    proxy_cache off;
 
-    proxy_set_header Upgrade \$http_upgrade;
-    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $KIBANA_URL_WITHOUT_PROTOCOL;
     proxy_set_header Authorization "Basic $ELASTICSEARCH_AUTH_BASE64";
 
-    proxy_cache off;
+    proxy_set_header Connection "";
+    proxy_http_version 1.1;
 
     proxy_hide_header Content-Security-Policy;
   }
@@ -259,7 +259,7 @@ server {
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains;";
 
     proxy_redirect off;
-    #proxy_http_version 1.1;
+    proxy_http_version 1.1;
 
     client_max_body_size 20M;
 
