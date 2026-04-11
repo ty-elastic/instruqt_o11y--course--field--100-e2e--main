@@ -237,10 +237,9 @@ server {
     proxy_set_header Connection 'upgrade';
     proxy_set_header Host \$host;
     proxy_cache_bypass \$http_upgrade;
-
-    add_header Content-Security-Policy "frame-ancestors 'self' https://*.instruqt.io";
-
     proxy_set_header Authorization "Basic $ELASTICSEARCH_AUTH_BASE64";
+
+    proxy_hide_header Content-Security-Policy;
   }
 }
 
