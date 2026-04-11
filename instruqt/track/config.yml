@@ -13,7 +13,7 @@ virtualmachines:
   allow_external_ingress:
   - https
 - name: k3s
-  image: instruqt/k3s-v1-33-9
+  image: elastic/k3s-v1-33-4
   shell: /bin/bash
   memory: 16384
   cpus: 4
