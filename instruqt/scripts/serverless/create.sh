@@ -235,9 +235,9 @@ server {
 
     proxy_set_header Upgrade \$http_upgrade;
     proxy_set_header Connection 'upgrade';
-    proxy_set_header Host \$host;
-    proxy_cache_bypass \$http_upgrade;
     proxy_set_header Authorization "Basic $ELASTICSEARCH_AUTH_BASE64";
+
+    proxy_cache off;
 
     proxy_hide_header Content-Security-Policy;
   }
