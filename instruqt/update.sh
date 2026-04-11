@@ -40,9 +40,11 @@ echo $track_slug
 echo $track_id
 echo $course
 
-cd tools/pandoc
-docker build --platform linux/amd64 -t pandoc-inter-custom .
-cd ../..
+if [ "$build" = "true" ]; then
+  cd tools/pandoc
+  docker build --platform linux/amd64 -t pandoc-inter-custom .
+  cd ../..
+fi
 
 upload_bundle() {
   mkdir -p bundle
@@ -99,6 +101,7 @@ for script in track_scripts.tmpl/*.tmpl; do
   sed "s/{{COURSE}}/$course/g" $script > track_scripts/$script_base
 done
 
+echo "creating track.yml"
 sed "s/{{TRACK_SLUG}}/$track_slug/g" track.yml.tmpl > track.yml.1
 sed "s/{{TRACK_ID}}/$track_id/g" track.yml.1 > track.yml.2
 sed "s/{{BRANCH}}/$branch/g" track.yml.2 > track.yml
@@ -119,34 +122,36 @@ for assignment in assignments/*.md; do
   cat $assignment >> '01-setup/assignment.md'
 done
 
-#docs
-title=$(yq .title track.yml)
-echo "![](./header.png)" > input.md
-echo "" >> input.md
-echo "# $title" >> input.md
-echo "" >> input.md
-for challenge in */; do
-  echo $challenge
-  if [ -f "$challenge/assignment.md" ]; then
-    #echo "here"
+if [ "$build" = "true" ]; then
+  #docs
+  title=$(yq .title track.yml)
+  echo "![](./header.png)" > input.md
+  echo "" >> input.md
+  echo "# $title" >> input.md
+  echo "" >> input.md
+  for challenge in */; do
+    echo $challenge
+    if [ -f "$challenge/assignment.md" ]; then
+      #echo "here"
 
-    sed -n '/---/,/---/p' "$challenge/assignment.md" > input.yaml
-    ch_title=$(yq .title input.yaml)
-    ch_title=$(echo $ch_title | sed -e "s/--- null$//")
-    echo $ch_title
-    rm input.yaml
+      sed -n '/---/,/---/p' "$challenge/assignment.md" > input.yaml
+      ch_title=$(yq .title input.yaml)
+      ch_title=$(echo $ch_title | sed -e "s/--- null$//")
+      echo $ch_title
+      rm input.yaml
 
-    echo "# $ch_title" >> input.md
-    sed -e '/---/,/---/d' "$challenge/assignment.md" >> input.md
-    echo "" >> input.md
-    echo "___" >> input.md
-    echo "" >> input.md
-  fi
-done
-docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc-inter-custom --pdf-engine xelatex --include-in-header /pandoc/pandoc.tex -V geometry:margin=0.25in -f markdown-implicit_figures --highlight-style=breezedark --resource-path=/assets --output=/assets/script.pdf /data/input.md
-rm -rf input.md
-docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc-inter-custom --pdf-engine xelatex --include-in-header /pandoc/pandoc.tex -V geometry:margin=0.25in -f markdown-implicit_figures --highlight-style=breezedark --resource-path=/assets --output=/assets/brief.pdf /data/docs/brief.md
-docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc-inter-custom --pdf-engine xelatex --include-in-header /pandoc/pandoc.tex -V geometry:margin=0.25in -f markdown-implicit_figures --highlight-style=breezedark --resource-path=/assets --output=/assets/notes.pdf /data/docs/notes.md
+      echo "# $ch_title" >> input.md
+      sed -e '/---/,/---/d' "$challenge/assignment.md" >> input.md
+      echo "" >> input.md
+      echo "___" >> input.md
+      echo "" >> input.md
+    fi
+  done
+  docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc-inter-custom --pdf-engine xelatex --include-in-header /pandoc/pandoc.tex -V geometry:margin=0.25in -f markdown-implicit_figures --highlight-style=breezedark --resource-path=/assets --output=/assets/script.pdf /data/input.md
+  rm -rf input.md
+  docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc-inter-custom --pdf-engine xelatex --include-in-header /pandoc/pandoc.tex -V geometry:margin=0.25in -f markdown-implicit_figures --highlight-style=breezedark --resource-path=/assets --output=/assets/brief.pdf /data/docs/brief.md
+  docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc-inter-custom --pdf-engine xelatex --include-in-header /pandoc/pandoc.tex -V geometry:margin=0.25in -f markdown-implicit_figures --highlight-style=breezedark --resource-path=/assets --output=/assets/notes.pdf /data/docs/notes.md
+fi
 
 instruqt track push --force
 

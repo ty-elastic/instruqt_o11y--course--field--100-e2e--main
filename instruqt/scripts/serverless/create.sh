@@ -4,13 +4,14 @@ create_serverless_prj() {
   printf "$FUNCNAME...\n"
   printf "$PROJECT_TYPE in $REGIONS\n"
 
+  export ES3_API_PY=/workspace/workshop/instruqt/scripts/serverless/es3-api.py
   export JSON_FILE='/tmp/project_results.json'
 
   case "$PROJECT_TYPE" in
       "observability")
         PRODUCT_TIER="${PRODUCT_TIER:-complete}"
         printf "Project Tier: $PRODUCT_TIER\n"
-        python3 ~/bin/es3-api.py \
+        python3 $ES3_API_PY \
           --operation create \
           --project-type $PROJECT_TYPE \
           --product-tier $PRODUCT_TIER \
@@ -22,7 +23,7 @@ create_serverless_prj() {
       "elasticsearch")
         OPTIMIZED_FOR="${OPTIMIZED_FOR:-general_purpose}"
         printf "Optimized for: $OPTIMIZED_FOR\n"
-        python3 ~/bin/es3-api.py \
+        python3 $ES3_API_PY \
           --operation create \
           --project-type $PROJECT_TYPE \
           --optimized-for $OPTIMIZED_FOR \
@@ -32,7 +33,7 @@ create_serverless_prj() {
           --wait-for-ready
           ;;
       "security")
-        python3 ~/bin/es3-api.py \
+        python3 $ES3_API_PY \
           --operation create \
           --project-type $PROJECT_TYPE \
           --regions $REGIONS \
@@ -196,6 +197,12 @@ create_env_file
 
 # ---------------------------------------------------------- NGINX
 
+curl -s -o /etc/ssl/certs/sandbox.crt -H "Metadata-Flavor: Google" \
+    "http://metadata.google.internal/computeMetadata/v1/instance/attributes/ssl-certificate"
+
+curl -s -o /etc/ssl/private/sandbox.key -H "Metadata-Flavor: Google" \
+    "http://metadata.google.internal/computeMetadata/v1/instance/attributes/ssl-certificate-key"
+
 configure_nginx_proxy() {
   printf "$FUNCNAME...\n"
 
@@ -217,29 +224,44 @@ server {
 }
 
 server {
+  listen 443 ssl;
+  server_name kibana.$HOSTNAME.$_SANDBOX_ID.instruqt.io;
+  ssl_certificate     /etc/ssl/certs/sandbox.crt;
+  ssl_certificate_key /etc/ssl/private/sandbox.key;
+
+  location / {
+    proxy_pass $KIBANA_URL;
+    proxy_cache off;
+
+    proxy_set_header Host $KIBANA_URL_WITHOUT_PROTOCOL;
+    proxy_set_header Authorization "Basic $ELASTICSEARCH_AUTH_BASE64";
+
+    proxy_set_header Connection "";
+    proxy_http_version 1.1;
+
+    proxy_hide_header Content-Security-Policy;
+    proxy_hide_header X-Frame-Options;
+    add_header Content-Security-Policy "script-src 'report-sample' 'self' kibana.estccdn.com; worker-src 'report-sample' 'self' blob: kibana.estccdn.com; style-src 'report-sample' 'self' 'unsafe-inline' *.elastic.co:* *.elstc.co:* kibana.estccdn.com; object-src 'report-sample' 'none'; connect-src 'self' https:; font-src 'self' *.elastic.co:* *.elstc.co:* kibana.estccdn.com; img-src 'self' *.elastic.co:* *.elstc.co:* data: blob: kibana.estccdn.com; report-to violations-endpoint";
+  }
+}
+
+server {
   listen 9100 default_server;
   server_name kibana;
 
   location / {
-    proxy_set_header Host $KIBANA_URL_WITHOUT_PROTOCOL;
     proxy_pass $KIBANA_URL;
-    proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
-    proxy_set_header Connection '';
-    proxy_set_header X-Scheme \$scheme;
+    proxy_cache off;
+
+    proxy_set_header Host $KIBANA_URL_WITHOUT_PROTOCOL;
     proxy_set_header Authorization "Basic $ELASTICSEARCH_AUTH_BASE64";
-    proxy_set_header Accept-Encoding '';
 
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains;";
-
-    proxy_redirect off;
+    proxy_set_header Connection "";
     proxy_http_version 1.1;
 
-    client_max_body_size 20M;
-
-    proxy_read_timeout          600;
-    proxy_send_timeout          300;
-    send_timeout                300;
-    proxy_connect_timeout       300;
+    proxy_hide_header Content-Security-Policy;
+    proxy_hide_header X-Frame-Options;
+    add_header Content-Security-Policy "script-src 'report-sample' 'self' kibana.estccdn.com; worker-src 'report-sample' 'self' blob: kibana.estccdn.com; style-src 'report-sample' 'self' 'unsafe-inline' *.elastic.co:* *.elstc.co:* kibana.estccdn.com; object-src 'report-sample' 'none'; connect-src 'self' https:; font-src 'self' *.elastic.co:* *.elstc.co:* kibana.estccdn.com; img-src 'self' *.elastic.co:* *.elstc.co:* data: blob: kibana.estccdn.com; report-to violations-endpoint";
  }
 }
 
@@ -258,7 +280,6 @@ server {
 EOF
 
   systemctl restart nginx
-
   printf "$FUNCNAME...SUCCESS\n"
 }
 configure_nginx_proxy
