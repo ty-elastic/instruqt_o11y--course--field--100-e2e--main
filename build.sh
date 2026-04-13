@@ -323,7 +323,11 @@ fi
 
 if [ "$grafana" = "true" ]; then
     cd prometheus-grafana
-    kubectl apply -f grafana.yaml
+
+    export elasticsearch_es_endpoint=$elasticsearch_es_endpoint
+    export elasticsearch_api_key=$elasticsearch_api_key  
+
+    envsubst '$elasticsearch_es_endpoint,$elasticsearch_api_key' < grafana.yaml | kubectl apply -f -
     cd ..
 fi
 

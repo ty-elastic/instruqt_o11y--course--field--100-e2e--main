@@ -44,17 +44,40 @@ config_apm_dv() {
 }
 
 config_rum() {
-    printf "$FUNCNAME...\n"
+   printf "$FUNCNAME...\n"
 
-    # fast path
-    install_integration_package "otel_rum_dashboards" $elasticsearch_kibana_endpoint $elasticsearch_api_key
-    if [ $? -ne 0 ]; then
-        printf "$FUNCNAME...install_package failed\n"
-        return 1
-    fi
+   # fast path
+   install_integration_package "otel_rum_dashboards" $elasticsearch_kibana_endpoint $elasticsearch_api_key
+   if [ $? -ne 0 ]; then
+      printf "$FUNCNAME...install_package failed\n"
+      return 1
+   fi
 
-    printf "$FUNCNAME...SUCCESS\n"
-    return 0
+   RUM_DASHBOARD_ID=$(echo $INTEGRATION_DASHBOARDS | jq -r '.id')
+   printf "$FUNCNAME...found $RUM_DASHBOARD_ID\n"
+
+   output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/internal/apm/custom-dashboard" \
+         -w "\n%{http_code}" \
+         -H 'kbn-xsrf: true' \
+         -H 'x-elastic-internal-origin: Kibana' \
+         -H "Authorization: ApiKey ${elasticsearch_api_key}" \
+         -H 'Content-Type: application/json' \
+         -d '{
+      "dashboardSavedObjectId": "'$RUM_DASHBOARD_ID'",
+      "serviceEnvironmentFilterEnabled": true,
+      "serviceNameFilterEnabled": true,
+      "kuery": "service.name: trader-app-web"
+   }')
+
+   # Extract HTTP status code
+   http_code=$(echo "$output" | tail -n1)
+   http_response=$(echo "$output" | sed '$d')
+   if [ "$http_code" != "200" ]; then
+      printf "$FUNCNAME...ERROR $http_code: $http_response\n"
+      return 1
+   fi
+   printf "$FUNCNAME...SUCCESS\n"
+   return 0
 }
 
 #config_apm_ml

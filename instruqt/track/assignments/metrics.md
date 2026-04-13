@@ -37,7 +37,11 @@ node.js Monitor
 3. Enter `ES|QL` mode (if Discover is not yet in `ES|QL` mode)
 4. Execute the following ES|QL:
 ```
+<<<<<<< Updated upstream
 TS metrics-* | WHERE data_stream.dataset == "prometheusreceiver.otel"
+=======
+TS metrics-prometheusreceiver.otel-default
+>>>>>>> Stashed changes
 ```
 
 > [!NOTE]
