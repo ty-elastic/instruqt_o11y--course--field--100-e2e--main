@@ -364,6 +364,20 @@ collectors:
                 - from: connection
           extract:
             otel_annotations: true
+            annotations:
+              - key_regex: "example.com/(.*)"
+                from: pod
+                tag_name: "k8s.annotations.pod.example.com/$1"
+              - key_regex: "example.com/(.*)"
+                from: namespace
+                tag_name: "k8s.annotations.namespace.example.com/$1"
+            labels:
+              - key_regex: "example.com/(.*)"
+                from: pod
+                tag_name: "k8s.labels.pod.example.com/$1"
+              - key_regex: "example.com/(.*)"
+                from: namespace
+                tag_name: "k8s.labels.namespace.example.com/$1"
             metadata:
               - "k8s.namespace.name"
               - "k8s.deployment.name"
