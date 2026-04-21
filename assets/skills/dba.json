@@ -7,7 +7,7 @@
     "tool_ids": [],
     "readonly": false,
     "experimental": false,
-    "x-add-to-agent": [
+    "x-add-to-agents": [
         "elastic-ai-agent"
     ]
 }
