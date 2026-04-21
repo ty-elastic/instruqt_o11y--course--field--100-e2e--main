@@ -1,8 +1,8 @@
 {
     "id": "rca-search-knowledge",
     "name": "Search Knowledgebase",
-    "description": "Use this skill to search the knowledgebase",
-    "content": "I keep my knowledge in an index called \"rca_knowledge\"",
+    "description": "Use this skill to search for past incidents and issues",
+    "content": "I keep knowledge of past incidents and issues in an index called `rca_knowledge`.",
     "referenced_content": [],
     "tool_ids": [
         "platform.core.search"
