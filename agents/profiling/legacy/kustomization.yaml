@@ -1,0 +1,10 @@
+resources:
+  - all.yaml  # This is the file created by your script
+
+patches:
+  - target:
+      kind: DaemonSet
+      name: universal-profiling-agent
+    patch: |-
+      - op: remove
+        path: /spec/template/spec/containers/0/securityContext/procMount

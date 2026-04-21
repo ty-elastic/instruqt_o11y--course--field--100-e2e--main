@@ -65,6 +65,9 @@ spec:
             - name: OTEL_JAVA_EXPERIMENTAL_LOG_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
               value: '*'
 
+            - name: ELASTIC_OTEL_UNIVERSAL_PROFILING_INTEGRATION_ENABLED
+              value: 'true'
+
             - name: JAVA_TOOL_OPTIONS
               value: "-Dloader.path=/usr/src/app/lib"
 

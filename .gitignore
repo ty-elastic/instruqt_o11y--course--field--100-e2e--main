@@ -10,6 +10,9 @@ redpanda/
 src/hostmetrics-sim/
 agents/apm/measure.yaml
 
+hostmetrics-sim
+k8smetrics-sim
+
 instruqt/bundle
 instruqt/track/track_scripts
 instruqt/track/track.yml

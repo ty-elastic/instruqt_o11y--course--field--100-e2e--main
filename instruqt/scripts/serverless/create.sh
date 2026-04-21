@@ -239,6 +239,9 @@ server {
     proxy_set_header Connection "";
     proxy_http_version 1.1;
 
+    proxy_read_timeout 300s;
+    proxy_send_timeout 300s;
+
     proxy_hide_header Content-Security-Policy;
     proxy_hide_header X-Frame-Options;
     add_header Content-Security-Policy "script-src 'report-sample' 'self' kibana.estccdn.com; worker-src 'report-sample' 'self' blob: kibana.estccdn.com; style-src 'report-sample' 'self' 'unsafe-inline' *.elastic.co:* *.elstc.co:* kibana.estccdn.com; object-src 'report-sample' 'none'; connect-src 'self' https:; font-src 'self' *.elastic.co:* *.elstc.co:* kibana.estccdn.com; img-src 'self' *.elastic.co:* *.elstc.co:* data: blob: kibana.estccdn.com; report-to violations-endpoint";
@@ -258,6 +261,9 @@ server {
 
     proxy_set_header Connection "";
     proxy_http_version 1.1;
+
+    proxy_read_timeout 300s;
+    proxy_send_timeout 300s;
 
     proxy_hide_header Content-Security-Policy;
     proxy_hide_header X-Frame-Options;

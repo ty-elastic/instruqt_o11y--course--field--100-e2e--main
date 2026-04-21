@@ -91,7 +91,10 @@ install_integration_package() {
         return 1
     fi
 
+    export INTEGRATION_DASHBOARDS=$(echo $http_response | jq -r '.items[] | select (.type == "dashboard")')
+    
     printf "$FUNCNAME for $1...SUCCESS\n"
     return 0
 }
 export -f install_integration_package
+

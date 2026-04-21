@@ -4,3 +4,5 @@ metadata:
   name: $NAMESPACE
   labels:
     name: $NAMESPACE
+  annotations:
+    example.com/test: "true"

@@ -107,16 +107,21 @@ data:
         timeout: 10s
         api_version: v2
     scrape_configs:
-    - job_name: prometheus
-      honor_timestamps: true
-      scrape_interval: 15s
-      scrape_timeout: 10s
-      metrics_path: /metrics
-      scheme: http
-      static_configs:
-      - targets:
-        - router.trading-na.svc.cluster.local:9000
-        - router.trading-emea.svc.cluster.local:9000
+      - job_name: prometheus
+        honor_timestamps: true
+        scrape_interval: 15s
+        scrape_timeout: 10s
+        metrics_path: /metrics
+        scheme: http
+        static_configs:
+        - targets:
+          - router.trading-na.svc.cluster.local:9000
+          - router.trading-emea.svc.cluster.local:9000
+    remote_write:
+      - url: "$elasticsearch_es_endpoint/_prometheus/api/v1/write"
+        authorization:
+          type: "ApiKey"
+          credentials: "$elasticsearch_api_key"
 kind: ConfigMap
 metadata:
   labels:

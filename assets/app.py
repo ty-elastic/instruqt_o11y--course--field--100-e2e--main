@@ -534,13 +534,40 @@ def load_skills(kibana_server, kibana_auth):
                     del skill['readonly']
                     del skill['experimental']
 
+                    print(skill)
+                    if 'x-add-to-agents' in skill:
+                        #print(skill)
+                        agents = skill['x-add-to-agents']
+                        #print('here!!!')
+                        del skill['x-add-to-agents']
+                    else:
+                        agents = []
+
+                    
+                    
                     delete_existing_skill(kibana_server, kibana_auth, skill['id'])
 
                     #print(agent)
                     resp = requests.post(f"{kibana_server}/api/agent_builder/skills",
                                         json=skill,
-                                        headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
-                    print(resp.json())     
+                                        headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json"})
+                    print(resp.json())
+
+                    for agent in agents:
+                        update_json = {
+                            "configuration": {
+                                "skill_ids": [ skill['id'] ]
+                            }
+                        }
+                        print(update_json)
+                        #print('here')
+
+                        resp = requests.put(f"{kibana_server}/api/agent_builder/agents/{agent}",
+                                            json=update_json,
+                                            headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json"})
+                        print(resp.json())
+
+
  
 
 def load_agents(kibana_server, kibana_auth):
