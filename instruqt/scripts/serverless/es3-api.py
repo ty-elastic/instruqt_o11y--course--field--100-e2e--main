@@ -474,7 +474,7 @@ class ElasticCloudClient:
             print(response.text)
             raise Exception(f"Failed to get project status: {response.text}")
 
-    def list_projects(self, project_type: str) -> List[Dict[str, Any]]:
+    def list_projects(self, project_type: str, project_name: str = None) -> List[Dict[str, Any]]:
         """
         List all projects of a specific type
 
@@ -488,8 +488,18 @@ class ElasticCloudClient:
 
         response = requests.get(url, headers=self.headers)
 
+        output = response.json()
+        if project_name is not None:
+            output = {"items": []}
+            ids = []
+            for project in response.json()['items']:
+                if project_name in project['name']:
+                    output["items"].append(project)
+                    ids.append(project['id'])
+            #print(json.dumps(ids))
+
         if response.status_code == 200:
-            return response.json()
+            return output
         else:
             print(f"Error listing projects: {response.status_code}")
             print(response.text)
@@ -731,10 +741,12 @@ def main():
                 print("Error: Project ID is required for deletion")
                 sys.exit(1)
 
-            print(f"Deleting {project_type} project {project_id}...")
-            result = elastic_client.delete_project(project_type, project_id)
-            if result:
-                print(f"Successfully deleted project {project_id}")
+            project_ids = project_id.split(',')
+            for id in project_ids:
+                print(f"Deleting {project_type} project {id}...")
+                result = elastic_client.delete_project(project_type, id)
+                if result:
+                    print(f"Successfully deleted project {id}")
 
         elif operation == 'update':
             if not project_id:
@@ -768,7 +780,7 @@ def main():
 
         elif operation == 'list':
             print(f"Listing all {project_type} projects...")
-            result = elastic_client.list_projects(project_type)
+            result = elastic_client.list_projects(project_type, project_name)
             print(json.dumps(result, indent=2))
 
         else:

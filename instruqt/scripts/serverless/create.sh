@@ -7,8 +7,6 @@ create_serverless_prj() {
   export ES3_API_PY=/workspace/workshop/instruqt/scripts/serverless/es3-api.py
   export JSON_FILE='/tmp/project_results.json'
 
-  printf "KEY=$ESS_CLOUD_API_KEY\n"
-
   case "$PROJECT_TYPE" in
       "observability")
         PRODUCT_TIER="${PRODUCT_TIER:-complete}"
