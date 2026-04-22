@@ -1,10 +1,11 @@
 #!/bin/bash
 
 export DEPLOYMENT_ID=`agent variable get ES_DEPLOYMENT_ID`
+export ES3_API_PY=/workspace/workshop/instruqt/scripts/serverless/es3-api.py
 
 printf "Cleaning up project $PROJECT_TYPE $DEPLOYMENT_ID in $REGIONS...\n"
 
-python3 ~/bin/es3-api.py \
+python3 $ES3_API_PY \
    --operation delete \
    --project-type $PROJECT_TYPE \
    --regions $REGIONS \
