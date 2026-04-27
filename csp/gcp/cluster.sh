@@ -1,6 +1,7 @@
 project="elastic-sa"
 zone="us-central1-a"
 name="superdemo"
+keep_until=$(date -v+1m +%Y-%m-%d)
 
 while getopts "p:n:z:r:t:u:" opt
 do
@@ -14,7 +15,7 @@ do
    esac
 done
 
-labels="division=field,org=sa,team=$team,project=$user"
+labels="division=field,org=sa,team=$team,project=$user,keep-until=$keep_until"
 prjname="$user-$name"
 
 gcloud beta container clusters delete $prjname --zone $zone

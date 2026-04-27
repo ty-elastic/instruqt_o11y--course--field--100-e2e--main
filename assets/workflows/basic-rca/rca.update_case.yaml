@@ -1,0 +1,117 @@
+version: '1'
+name: rca.update_case
+description: Create a new case or add a comment to an existing case
+enabled: true
+tags:
+- rca
+triggers:
+- type: manual
+settings:
+  timeout: 20m
+inputs:
+- name: description
+  description: the description of the case
+  required: true
+  type: string
+- name: title
+  description: the title of the case
+  required: true
+  type: string
+- name: severity
+  description: the severity of the case
+  required: true
+  default: low
+  type: string
+- name: mode
+  description: mode=create to create a new case, mode=comment to add a comment to an existing case, or mode=alert to attach an alert to an existing case
+  required: true
+  default: create
+  type: string
+- name: comment
+  description: if mode=comment, the comment to add a comment to an existing case
+  required: false
+  type: string
+- name: case_id
+  description: if mode=comment or mode=alert, the case id to modify
+  required: false
+  type: string
+- name: alert_id
+  description: if mode=alert, the id of the alert to attach
+  required: false
+  type: string
+- name: alert_index
+  description: if mode=alert, the index of the alert to attach
+  required: false
+  type: string
+- name: alert_uuid
+  description: if mode=alert, the uuid of the alert to attach
+  required: false
+  type: string
+- name: alert_rule_uuid
+  description: if mode=alert, the uuid of the rule of the alert to attach
+  required: false
+  type: string
+- name: alert_rule_name
+  description: if mode=alert, the name of the rule of the alert to attach
+  required: false
+  type: string
+steps:
+- name: mode_check
+  type: if
+  condition: 'inputs.mode: "create"'
+  steps:
+  - name: get_case_settings
+    type: kibana.request
+    with:
+      method: GET
+      path: /api/cases/configure
+  - name: create_new_case
+    type: kibana.createCaseDefaultSpace
+    with:
+      connector:
+        id: '{{ steps.get_case_settings.output.data[0].connector.id }}'
+        name: '{{ steps.get_case_settings.output.data[0].connector.name }}'
+        type: .none
+        fields:
+      description: '{{ inputs.description }}'
+      owner: observability
+      settings:
+        syncAlerts: true
+      severity: '{{ inputs.severity }}'
+      tags:
+      - trading
+      title: '{{ inputs.title }}'
+  else:
+  - name: mode_check2
+    type: if
+    condition: 'inputs.mode: "alert"'
+    steps:
+    - name: add_alert_to_case
+      type: kibana.request
+      with:
+        method: POST
+        path: /api/cases/{{ inputs.case_id }}/comments
+        body:
+          type: alert
+          alertId: '{{ inputs.alert_id }}'
+          index: '{{ inputs.alert_index }}'
+          owner: observability
+          rule:
+            id: '{{ inputs.alert_rule_uuid }}'
+            name: '{{ inputs.alert_rule_name }}'
+      on-failure:
+        retry:
+          max-attempts: 3
+          delay: 1s
+    else:
+    - name: add_comment_to_existing_case
+      type: kibana.request
+      with:
+        method: POST
+        path: /api/cases/{{ inputs.case_id }}/comments
+        body:
+          type: user
+          owner: observability
+          comment: '{{inputs.comment}}'
+      on-failure:
+        continue: true

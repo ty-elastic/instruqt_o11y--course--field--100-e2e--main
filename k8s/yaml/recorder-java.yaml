@@ -68,6 +68,9 @@ spec:
             - name: ELASTIC_OTEL_UNIVERSAL_PROFILING_INTEGRATION_ENABLED
               value: 'true'
 
+            - name: ELASTIC_OTEL_OPAMP_ENDPOINT
+              value: 'http://localhost:4320/v1/opamp'
+
             - name: JAVA_TOOL_OPTIONS
               value: "-Dloader.path=/usr/src/app/lib"
 

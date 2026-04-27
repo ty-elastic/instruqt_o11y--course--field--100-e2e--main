@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: utils
+  labels:
+    name: utils
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pos
+  namespace: utils
+  labels:
+    service: pos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: pos
+  template:
+    metadata:
+      labels:
+        service: pos
+      annotations:
+        io.opentelemetry.discovery.logs/enabled: "true"
+        io.opentelemetry.discovery.logs/config: |
+          operators:
+            - id: container-parser # Extract container's metadata
+              type: container
+            - id: es_index
+              type: add
+              field: attributes["elasticsearch.index"]
+              value: logs.otel
+    spec:
+      containers:
+        - name: pos
+          image: $REPO/pos:$COURSE
+          imagePullPolicy: Always
+      restartPolicy: Always

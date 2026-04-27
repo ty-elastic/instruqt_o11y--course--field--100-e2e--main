@@ -102,7 +102,8 @@ func (c *TradeService) RecordTrade(context context.Context, trade *Trade) (*Trad
 	insertId, _ := res.LastInsertId()
 	trace.SpanFromContext(context).SetAttributes(attribute.Int64("sql_insert_id", insertId))
 
-	logger.WithContext(context).Info("trade committed for " + trade.CustomerId)
+	//logger.WithContext(context).Info("trade committed for " + trade.CustomerId)
+	logger.WithContext(context).Infof("recorded transaction for %s: %s %d shares of %s @ %f", trade.CustomerId, trade.Action, trade.Shares, trade.Symbol, trade.SharePrice)
 
 	return trade, nil
 }

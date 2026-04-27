@@ -1,0 +1,5 @@
+{
+    "id": "slow_query",
+    "title": "flags=SLOWQUERY",
+    "text": "This flag is used for testing purposes and should NEVER show up in the production environment! If it does, open a ticket with the Q&A team."
+}

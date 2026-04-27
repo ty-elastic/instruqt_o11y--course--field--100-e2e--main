@@ -1,0 +1,22 @@
+name: alert_handler
+enabled: true
+description: Perform RCA on alerts
+tags:
+- rca
+triggers:
+- type: alert
+steps:
+- name: foreach_alert
+  type: foreach
+  foreach: '{{ event.alerts }}'
+  steps:
+    - name: rca
+      type: ai.agent
+      create-conversation: true
+      connector-id: Anthropic-Claude-Sonnet-4-6
+      with:
+        message: |
+          Perform Root Cause Analysis on this alert, create a case with the result of the analysis, and attach the alert.
+          ```json
+          {{ foreach.item | json: 2 }}
+          ```

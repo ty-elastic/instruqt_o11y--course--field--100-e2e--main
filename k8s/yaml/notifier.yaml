@@ -44,8 +44,10 @@ spec:
               value: $POSTGRESQL_DBNAME
             - name: OTEL_DOTNET_AUTO_TRACES_NPGSQL_INSTRUMENTATION_ENABLED
               value: "true"
-            # - name: OTEL_DOTNET_AUTO_INSTRUMENTATIONS
-            #   value: "npgsql,aspnetcore,http"
+            - name: REGION
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
       restartPolicy: Always
 ---
 apiVersion: v1

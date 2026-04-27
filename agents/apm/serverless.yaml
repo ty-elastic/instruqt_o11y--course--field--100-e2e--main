@@ -186,6 +186,16 @@ collectors:
     env:
       - name: ELASTIC_AGENT_OTEL
         value: '"true"'
+      - name: ELASTIC_ENDPOINT
+        valueFrom:
+          secretKeyRef:
+            name: elastic-secret-otel
+            key: elastic_endpoint
+      - name: ELASTIC_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: elastic-secret-otel
+            key: elastic_api_key
     volumeMounts:
       - name: varlogpods
         mountPath: /var/log/pods
@@ -213,6 +223,23 @@ collectors:
           observe_nodes: true
           observe_services: true
           observe_ingresses: true
+        bearertokenauth:
+          scheme: "APIKey"
+          token: ${ELASTIC_API_KEY}
+        apmconfig:
+          opamp:
+            protocols:
+              http:
+                # Default is localhost:4320
+                # To specify a custom endpoint, uncomment the following line
+                # and set the endpoint to the custom endpoint
+                endpoint: localhost:4320
+          source:
+            elasticsearch:
+              endpoint: ${ELASTIC_ENDPOINT}
+              auth:
+                authenticator: bearertokenauth
+
       exporters:
         # [Debug exporter](https://github.com/open-telemetry/opentelemetry-collector/blob/main/exporter/debugexporter/README.md)
         debug:
@@ -230,9 +257,6 @@ collectors:
               action: upsert
 
             - key: deployment.environment.name
-              from_attribute: k8s.namespace.name
-              action: upsert
-            - key: data_stream.namespace
               from_attribute: k8s.namespace.name
               action: upsert
             - key: resource.attributes.cloud.region
@@ -537,7 +561,7 @@ collectors:
             - container.id
       # [Service Section](https://opentelemetry.io/docs/collector/configuration/#service)
       service:
-        extensions: [k8s_observer]
+        extensions: [k8s_observer, bearertokenauth, apmconfig]
         pipelines:
           # Disable default non used kube-stack Helm Chart pipelines
           logs: null

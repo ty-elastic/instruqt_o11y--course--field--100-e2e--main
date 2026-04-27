@@ -22,4 +22,4 @@ ENV HOST_COUNT="10"
 ENV COLLECT_INTERVAL="60s"
 ENV HOST_PREFIX="sim-host"
 
-CMD ["/usr/src/app/hostmetrics-sim"]
+ENTRYPOINT ["/usr/src/app/hostmetrics-sim"]
