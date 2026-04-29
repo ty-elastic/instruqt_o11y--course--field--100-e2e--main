@@ -1,9 +1,9 @@
 version: '1'
-name: rca.update_case
-description: Create a new case or add a comment to an existing case
+name: rca-core.update_case
+description: Create a new case or add a comment or alert to an existing case
 enabled: true
 tags:
-- rca
+- rca-core
 triggers:
 - type: manual
 settings:

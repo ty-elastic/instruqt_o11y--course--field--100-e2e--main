@@ -1,9 +1,9 @@
 {
-    "id": "rca.update_case",
+    "id": "rca-core.update_case",
     "type": "workflow",
-    "description": "Create a case or add a comment to an existing case",
+    "description": "Create a new case or add a comment or alert to an existing case",
     "tags": [
-        "rca"
+        "rca-core"
     ],
     "configuration": {
         "workflow_id": "workflow-48774c9d-15e5-4daa-961b-3e88d82fa17b",
