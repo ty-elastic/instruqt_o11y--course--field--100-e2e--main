@@ -582,7 +582,7 @@ collectors:
               - resource/hostname
               - resource/cloud
               - resource/environment
-              - resource/logs_routing
+              #- resource/logs_routing
             exporters:
               - otlp/gateway
           metrics/node/otel:
@@ -618,7 +618,7 @@ collectors:
               - batch
               - resource/hostname
               - resource/environment
-              - resource/logs_routing
+              #- resource/logs_routing
             exporters:
               - otlp/gateway
           traces/apm:

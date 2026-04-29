@@ -1,3 +1,5 @@
+printf "inside\n"
+
 source assets/scripts/retry.sh
 
 check_assets() {

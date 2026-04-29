@@ -1,14 +1,15 @@
 arch=linux/amd64
 build=true
-
+docs=false
 branch=test
 
-while getopts "a:b:c:r:" opt
+while getopts "a:b:c:r:d:" opt
 do
    case "$opt" in
       a ) arch="$OPTARG" ;;
       b ) build="$OPTARG" ;;
       r ) branch="$OPTARG" ;;
+      d ) docs="$OPTARG" ;;
    esac
 done
 
@@ -40,7 +41,7 @@ echo $track_slug
 echo $track_id
 echo $course
 
-if [ "$build" = "true" ]; then
+if [ "$docs" = "true" ]; then
   cd tools/pandoc
   docker build --platform linux/amd64 -t pandoc-inter-custom .
   cd ../..
@@ -122,7 +123,7 @@ for assignment in assignments/*.md; do
   cat $assignment >> '01-setup/assignment.md'
 done
 
-if [ "$build" = "true" ]; then
+if [ "$docs" = "true" ]; then
   #docs
   title=$(yq .title track.yml)
   echo "![](./header.png)" > input.md

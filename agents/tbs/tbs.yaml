@@ -111,7 +111,7 @@ data:
 
         traces/2-process-tbs:
           receivers: [ forward ]
-          #processors: [ tail_sampling ]
+          processors: [ tail_sampling ]
           exporters: [ debug, elasticsearch/otel ]
 
         metrics/aggregated-otel-metrics:

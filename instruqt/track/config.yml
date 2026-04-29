@@ -11,7 +11,7 @@ virtualmachines:
   cpus: 1
   provision_ssl_certificate: true
   allow_external_ingress:
-  - https
+  - high-ports
 - name: k3s
   image: elastic/k3s-v1-33-4
   shell: /bin/bash
