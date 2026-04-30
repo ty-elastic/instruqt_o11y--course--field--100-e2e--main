@@ -247,42 +247,6 @@ server {
     add_header Content-Security-Policy "script-src 'report-sample' 'self' kibana.estccdn.com; worker-src 'report-sample' 'self' blob: kibana.estccdn.com; style-src 'report-sample' 'self' 'unsafe-inline' *.elastic.co:* *.elstc.co:* kibana.estccdn.com; object-src 'report-sample' 'none'; connect-src 'self' https:; font-src 'self' *.elastic.co:* *.elstc.co:* kibana.estccdn.com; img-src 'self' *.elastic.co:* *.elstc.co:* data: blob: kibana.estccdn.com; report-to violations-endpoint";
   }
 }
-
-# server {
-#   listen 9100 default_server;
-#   server_name kibana;
-
-#   location / {
-#     proxy_pass $KIBANA_URL;
-#     proxy_cache off;
-
-#     proxy_set_header Host $KIBANA_URL_WITHOUT_PROTOCOL;
-#     proxy_set_header Authorization "Basic $ELASTICSEARCH_AUTH_BASE64";
-
-#     proxy_set_header Connection "";
-#     proxy_http_version 1.1;
-
-#     proxy_read_timeout 300s;
-#     proxy_send_timeout 300s;
-
-#     proxy_hide_header Content-Security-Policy;
-#     proxy_hide_header X-Frame-Options;
-#     add_header Content-Security-Policy "script-src 'report-sample' 'self' kibana.estccdn.com; worker-src 'report-sample' 'self' blob: kibana.estccdn.com; style-src 'report-sample' 'self' 'unsafe-inline' *.elastic.co:* *.elstc.co:* kibana.estccdn.com; object-src 'report-sample' 'none'; connect-src 'self' https:; font-src 'self' *.elastic.co:* *.elstc.co:* kibana.estccdn.com; img-src 'self' *.elastic.co:* *.elstc.co:* data: blob: kibana.estccdn.com; report-to violations-endpoint";
-#  }
-# }
-
-# server {
-#   listen 9200;
-#   server_name elasticsearch;
-
-#   location / {
-#     proxy_pass $ES_URL;
-#     proxy_connect_timeout       300;
-#     proxy_send_timeout          300;
-#     proxy_read_timeout          300;
-#     send_timeout                300;
-#   }
-# }
 EOF
 
   systemctl restart nginx

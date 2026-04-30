@@ -8,7 +8,6 @@ tabs:
   title: Elastic
   type: website
   url: https://kibana.es3-api.${_SANDBOX_ID}.instruqt.io:60088/app/dashboards#/list?_g=(filters:!(),refreshInterval:(pause:!f,value:30000),time:(from:now-30m,to:now))
-  path: 
   new_window: false
 - id: od0txjt2rf8q
   title: Elastic-Breakout
