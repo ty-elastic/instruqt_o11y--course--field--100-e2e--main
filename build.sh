@@ -184,6 +184,7 @@ if [ "$deploy_otel" != "false" ]; then
 fi
 
 if [ "$features" = "true" ]; then
+    pwd
     assets/scripts/features_es.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 fi
 
