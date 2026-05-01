@@ -1,3 +1,5 @@
+#!/bin/bash
+
 WORKING_DIR=/root/workshop
 source $WORKING_DIR/instruqt/scripts/retry.sh
 

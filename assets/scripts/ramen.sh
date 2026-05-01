@@ -1,3 +1,5 @@
+#!/bin/bash
+
 while getopts "h:i:j:" opt
 do
    case "$opt" in

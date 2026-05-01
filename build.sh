@@ -1,3 +1,4 @@
+#!/bin/bash
 printf "inside\n"
 
 # Move to the directory where this script is located
