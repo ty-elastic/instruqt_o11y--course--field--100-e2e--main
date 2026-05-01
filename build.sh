@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Move to the directory where this script is located
-cd "$(dirname "$0")" || exit
-
 source $PWD/assets/scripts/retry.sh
 
 check_assets() {
