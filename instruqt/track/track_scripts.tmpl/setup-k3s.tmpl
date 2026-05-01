@@ -68,4 +68,8 @@ $WORKING_DIR/build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICS
 $WORKING_DIR/build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -g true
 
 # ramen
+cd $WORKING_DIR
+pwd
+ls assets/scripts/
 assets/scripts/ramen.sh -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -j $ELASTICSEARCH_URL
+$WORKING_DIR/assets/scripts/ramen.sh -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -j $ELASTICSEARCH_URL
