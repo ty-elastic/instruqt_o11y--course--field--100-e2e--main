@@ -71,5 +71,9 @@ $WORKING_DIR/build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICS
 cd $WORKING_DIR
 pwd
 ls assets/scripts/
+echo "rel"
 assets/scripts/ramen.sh -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -j $ELASTICSEARCH_URL
+echo "with bash"
+bash assets/scripts/ramen.sh -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -j $ELASTICSEARCH_URL
+echo "abs"
 $WORKING_DIR/assets/scripts/ramen.sh -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -j $ELASTICSEARCH_URL
