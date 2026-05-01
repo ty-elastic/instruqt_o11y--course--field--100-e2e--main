@@ -1,5 +1,8 @@
 printf "inside\n"
 
+# Move to the directory where this script is located
+cd "$(dirname "$0")" || exit
+
 source assets/scripts/retry.sh
 
 check_assets() {
