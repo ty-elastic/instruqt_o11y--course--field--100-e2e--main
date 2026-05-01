@@ -1,4 +1,10 @@
 version: "3"
+containers:
+- name: guac
+  image: gcr.io/instruqt/guacamole
+  shell: /bin/bash
+  ports:
+  - 8080
 virtualmachines:
 - name: es3-api
   image: elastic/debian12nginx128

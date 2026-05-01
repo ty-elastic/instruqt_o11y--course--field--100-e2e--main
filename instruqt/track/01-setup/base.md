@@ -60,6 +60,11 @@ tabs:
   title: ES Host
   type: terminal
   hostname: es3-api
+- title: Remote Desktop
+  type: service
+  hostname: guac
+  path: /#/client/c/srv01?username=guac_user&password=guac_password
+  port: 8080
 difficulty: basic
 timelimit: 43200
 enhanced_loading: null
