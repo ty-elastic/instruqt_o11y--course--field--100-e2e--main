@@ -1,4 +1,5 @@
-source /workspace/workshop/instruqt/scripts/retry.sh
+WORKING_DIR=/root/workshop
+source $WORKING_DIR/instruqt/scripts/retry.sh
 
 check_host() {
     local host_stripped="${1#*://}"  # Remove protocol (http:// or https://)

@@ -1,10 +1,11 @@
-source /workspace/workshop/instruqt/scripts/retry.sh
+WORKING_DIR=/root/workshop
+source $WORKING_DIR/instruqt/scripts/retry.sh
 
 create_serverless_prj() {
   printf "$FUNCNAME...\n"
   printf "$PROJECT_TYPE in $REGIONS\n"
 
-  export ES3_API_PY=/workspace/workshop/instruqt/scripts/serverless/es3-api.py
+  export ES3_API_PY=$WORKING_DIR/instruqt/scripts/serverless/es3-api.py
   export JSON_FILE='/tmp/project_results.json'
 
   case "$PROJECT_TYPE" in

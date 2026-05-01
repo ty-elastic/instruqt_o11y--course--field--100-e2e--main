@@ -35,12 +35,14 @@ wait_for_kubernetes_api
 
 # ----------------------------------------- CLONE CODE
 
+WORKING_DIR=/root/workshop
+
 export COURSE={{COURSE}}
 export ARTIFACTS_REPO=elastic-sa/locations/us-central1/repositories/tbekiares-instruqt
 export ARTIFACT_VERSION=1.0
 
-mkdir -p /workspace/workshop
-cd /workspace/workshop
+mkdir -p $WORKING_DIR
+cd $WORKING_DIR
 
 curl -X GET \
      -o $COURSE.tgz \
@@ -49,21 +51,21 @@ tar -xzf $COURSE.tgz
 
 # ----------------------------------------- APPS
 
-source /workspace/workshop/instruqt/scripts/vars.sh -w true
+source $WORKING_DIR/instruqt/scripts/vars.sh -w true
 
-cd /workspace/workshop
+cd $WORKING_DIR
 
 # services
-./build.sh -o serverless -c $COURSE -d true -n true -b false -s all -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443
+$WORKING_DIR/build.sh -o serverless -c $COURSE -d true -n true -b false -s all -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443
 
 # synthetics, profiling
-./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -p true -m true
+$WORKING_DIR/build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -p true -m true
 
 # assets
-./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -w true -e http://$HOSTNAME.$_SANDBOX_ID.instruqt.io:43210
+$WORKING_DIR/build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -w true -e http://$HOSTNAME.$_SANDBOX_ID.instruqt.io:43210
 
 # grafana
-./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -g true
+$WORKING_DIR/build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -g true
 
 # ramen
 assets/scripts/ramen.sh -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -j $ELASTICSEARCH_URL
