@@ -73,7 +73,7 @@ pwd
 ls assets/scripts/
 echo "rel"
 assets/scripts/ramen.sh -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -j $ELASTICSEARCH_URL
-echo "with bash"
-bash assets/scripts/ramen.sh -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -j $ELASTICSEARCH_URL
+echo "with pwd"
+bash $PWD/assets/scripts/ramen.sh -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -j $ELASTICSEARCH_URL
 echo "abs"
 $WORKING_DIR/assets/scripts/ramen.sh -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -j $ELASTICSEARCH_URL
