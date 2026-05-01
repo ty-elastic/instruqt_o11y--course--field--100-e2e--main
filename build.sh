@@ -161,13 +161,13 @@ fi
 
 if [ "$build_service" = "true" ]; then
     cd ./src
-    $PWD/build.sh -k $service_version -r $repo -s $service -c $course -a $arch
+    source $PWD/build.sh -k $service_version -r $repo -s $service -c $course -a $arch
     cd ..
 fi
 
 if [ "$build_lib" = "true" ]; then
     cd ./lib
-    $PWD/build.sh -r $repo -c $course -a $arch
+    source $PWD/build.sh -r $repo -c $course -a $arch
     cd ..
 fi
 
@@ -177,11 +177,11 @@ if [ "$deploy_otel" != "false" ]; then
         deploy_otel="stack"
     fi
 
-    $PWD/assets/scripts/otel.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint -o $deploy_otel
+    source $PWD/assets/scripts/otel.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint -o $deploy_otel
 fi
 
 if [ "$features" = "true" ]; then
-    $PWD/assets/scripts/features_es.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+    source $PWD/assets/scripts/features_es.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 fi
 
 printf "deploying services...\n"
@@ -218,7 +218,6 @@ for current_region in "${regions[@]}"; do
                         printf "skipping recorder-go-zero deployment...\n"
                         continue
                     fi
-
 
                     if [ "$deploy_service" = "delete" ]; then
                         printf "deleting $current_service from region $REGION\n"
@@ -268,18 +267,18 @@ done
 printf "deploying services...SUCCESS\n"
 
 if [ "$profiling" = "true" ]; then
-    $PWD/assets/scripts/profiling.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+    source $PWD/assets/scripts/profiling.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 fi
 
 if [ "$synthetics" = "true" ]; then
-    $PWD/assets/scripts/synthetics.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+    source $PWD/assets/scripts/synthetics.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 fi
 
 if [ "$remote_endpoint" != "na" ]; then
     cd utils/remote
 
     if [ "$build_lib" = "true" ]; then
-        $PWD/build.sh -r $repo -c $course -a $arch
+        source $PWD/build.sh -r $repo -c $course -a $arch
     fi
 
     envsubst '$COURSE,$REPO' < remote.yaml | kubectl apply -f -
@@ -296,7 +295,7 @@ if [ "$assets" = "true" ]; then
     cd assets
 
     if [ "$build_lib" = "true" ]; then
-        $PWD/build.sh -r $repo -c $course -a $arch
+        source $PWD/build.sh -r $repo -c $course -a $arch
     fi
 
     export JOB_ID=$(( $RANDOM ))
@@ -320,7 +319,7 @@ if [ "$assets" = "true" ]; then
             printf "check services for $namespace\n"
         fi
     done
-    $PWD/assets/scripts/features_dep.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+    source $PWD/assets/scripts/features_dep.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 fi
 
 if [ "$grafana" = "true" ]; then
