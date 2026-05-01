@@ -1,10 +1,9 @@
 #!/bin/bash
-printf "inside\n"
 
 # Move to the directory where this script is located
 cd "$(dirname "$0")" || exit
 
-source assets/scripts/retry.sh
+source $PWD/assets/scripts/retry.sh
 
 check_assets() {
     kubectl wait --for=condition=complete job/assets-$1 --timeout=120s
@@ -165,13 +164,13 @@ fi
 
 if [ "$build_service" = "true" ]; then
     cd ./src
-    ./build.sh -k $service_version -r $repo -s $service -c $course -a $arch
+    $PWD/build.sh -k $service_version -r $repo -s $service -c $course -a $arch
     cd ..
 fi
 
 if [ "$build_lib" = "true" ]; then
     cd ./lib
-    ./build.sh -r $repo -c $course -a $arch
+    $PWD/build.sh -r $repo -c $course -a $arch
     cd ..
 fi
 
@@ -181,12 +180,11 @@ if [ "$deploy_otel" != "false" ]; then
         deploy_otel="stack"
     fi
 
-    assets/scripts/otel.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint -o $deploy_otel
+    $PWD/assets/scripts/otel.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint -o $deploy_otel
 fi
 
 if [ "$features" = "true" ]; then
-    pwd
-    assets/scripts/features_es.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+    $PWD/assets/scripts/features_es.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 fi
 
 printf "deploying services...\n"
@@ -273,18 +271,18 @@ done
 printf "deploying services...SUCCESS\n"
 
 if [ "$profiling" = "true" ]; then
-    assets/scripts/profiling.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+    $PWD/assets/scripts/profiling.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 fi
 
 if [ "$synthetics" = "true" ]; then
-    assets/scripts/synthetics.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+    $PWD/assets/scripts/synthetics.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 fi
 
 if [ "$remote_endpoint" != "na" ]; then
     cd utils/remote
 
     if [ "$build_lib" = "true" ]; then
-        ./build.sh -r $repo -c $course -a $arch
+        $PWD/build.sh -r $repo -c $course -a $arch
     fi
 
     envsubst '$COURSE,$REPO' < remote.yaml | kubectl apply -f -
@@ -301,7 +299,7 @@ if [ "$assets" = "true" ]; then
     cd assets
 
     if [ "$build_lib" = "true" ]; then
-        ./build.sh -r $repo -c $course -a $arch
+        $PWD/build.sh -r $repo -c $course -a $arch
     fi
 
     export JOB_ID=$(( $RANDOM ))
@@ -325,7 +323,7 @@ if [ "$assets" = "true" ]; then
             printf "check services for $namespace\n"
         fi
     done
-    assets/scripts/features_dep.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+    $PWD/assets/scripts/features_dep.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 fi
 
 if [ "$grafana" = "true" ]; then

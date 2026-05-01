@@ -1,6 +1,6 @@
 #!/bin/bash
+WORKING_DIR=/workspace/workshop
 
-WORKING_DIR=/root/workshop
 source $WORKING_DIR/instruqt/scripts/retry.sh
 
 check_host() {

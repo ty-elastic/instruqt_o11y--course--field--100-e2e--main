@@ -1,5 +1,6 @@
-source assets/scripts/retry.sh
+#!/bin/bash
 
+source $PWD/assets/scripts/retry.sh
 
 get_version_for_package_from_elastic() {
     printf "$FUNCNAME for $1...\n"

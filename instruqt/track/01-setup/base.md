@@ -60,7 +60,7 @@ tabs:
   title: ES Host
   type: terminal
   hostname: es3-api
-- title: Remote Desktop
+- title: Windows
   type: service
   hostname: guac
   path: /#/client/c/srv01?username=guac_user&password=guac_password

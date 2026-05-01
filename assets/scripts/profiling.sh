@@ -1,5 +1,9 @@
-source assets/scripts/retry.sh
-source assets/scripts/integration_packages.sh
+#!/bin/bash
+
+source $PWD/assets/scripts/retry.sh
+
+source $PWD/assets/scripts/retry.sh
+source $PWD/assets/scripts/integration_packages.sh
 
 while getopts "n:h:i:j:k:" opt
 do

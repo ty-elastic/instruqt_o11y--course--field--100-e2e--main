@@ -1,4 +1,6 @@
 #!/bin/bash
+WORKING_DIR=/workspace/workshop
+
 #set -euxo pipefail
 set +x
 
@@ -11,8 +13,6 @@ do
 done
 
 # ----------------------------------------- CLONE CODE
-
-WORKING_DIR=/root/workshop
 
 export COURSE={{COURSE}}
 export ARTIFACTS_REPO=elastic-sa/locations/us-central1/repositories/tbekiares-instruqt
@@ -35,10 +35,6 @@ source $WORKING_DIR/instruqt/scripts/serverless/create.sh
 
 source $WORKING_DIR/instruqt/scripts/vars.sh -w true
 
-cd $WORKING_DIR
-ls
-pwd
-
 # platform
-printf "about to run\n"
-$WORKING_DIR/build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -f true
+cd $WORKING_DIR
+$PWD/build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -f true

@@ -1,4 +1,6 @@
-source assets/scripts/retry.sh
+#!/bin/bash
+
+source $PWD/assets/scripts/retry.sh
 
 while getopts "h:i:j:k:" opt
 do
@@ -10,6 +12,6 @@ do
    esac
 done
 
-assets/scripts/apm.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
-assets/scripts/dashboards.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
-assets/scripts/integrations.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+$PWD/assets/scripts/apm.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+$PWD/assets/scripts/dashboards.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+$PWD/assets/scripts/integrations.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint

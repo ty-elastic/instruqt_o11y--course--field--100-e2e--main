@@ -1,4 +1,6 @@
-WORKING_DIR=/root/workshop
+#!/bin/bash
+WORKING_DIR=/workspace/workshop
+
 source $WORKING_DIR/instruqt/scripts/retry.sh
 
 create_serverless_prj() {

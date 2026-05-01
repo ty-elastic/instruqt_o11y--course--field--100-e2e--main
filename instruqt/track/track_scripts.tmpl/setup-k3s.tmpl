@@ -1,4 +1,6 @@
 #!/bin/bash
+WORKING_DIR=/workspace/workshop
+
 #set -euxo pipefail
 set +x
 
@@ -35,8 +37,6 @@ wait_for_kubernetes_api
 
 # ----------------------------------------- CLONE CODE
 
-WORKING_DIR=/root/workshop
-
 export COURSE={{COURSE}}
 export ARTIFACTS_REPO=elastic-sa/locations/us-central1/repositories/tbekiares-instruqt
 export ARTIFACT_VERSION=1.0
@@ -56,24 +56,16 @@ source $WORKING_DIR/instruqt/scripts/vars.sh -w true
 cd $WORKING_DIR
 
 # services
-$WORKING_DIR/build.sh -o serverless -c $COURSE -d true -n true -b false -s all -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443
+$PWD/build.sh -o serverless -c $COURSE -d true -n true -b false -s all -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443
 
 # synthetics, profiling
-$WORKING_DIR/build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -p true -m true
+$PWD/build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -p true -m true
 
 # assets
-$WORKING_DIR/build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -w true -e http://$HOSTNAME.$_SANDBOX_ID.instruqt.io:43210
+$PWD/build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -w true -e http://$HOSTNAME.$_SANDBOX_ID.instruqt.io:43210
 
 # grafana
-$WORKING_DIR/build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -g true
+$PWD/build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -g true
 
 # ramen
-cd $WORKING_DIR
-pwd
-ls assets/scripts/
-echo "rel"
-assets/scripts/ramen.sh -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -j $ELASTICSEARCH_URL
-echo "with pwd"
-bash $PWD/assets/scripts/ramen.sh -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -j $ELASTICSEARCH_URL
-echo "abs"
-$WORKING_DIR/assets/scripts/ramen.sh -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -j $ELASTICSEARCH_URL
+$PWD/assets/scripts/ramen.sh -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -j $ELASTICSEARCH_URL
