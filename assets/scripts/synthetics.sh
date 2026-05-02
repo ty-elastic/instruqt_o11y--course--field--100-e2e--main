@@ -43,7 +43,7 @@ create_synthetics_policy() {
   http_code=$(echo "$output" | tail -n1)
   http_response=$(echo "$output" | sed '$d')
   if [ "$http_code" != "200" ]; then
-    printf "$FUNCNAME...ERROR $http_code: $http_response\n"
+    printf "$FUNCNAME...ERROR $http_code: $output\n"
     return 1
   fi
 
