@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source $PWD/assets/scripts/retry.sh
+
 
 check_assets() {
     kubectl wait --for=condition=complete job/assets-$1 --timeout=120s
@@ -117,6 +117,8 @@ done
 
 echo working_dir=$working_dir
 cd $working_dir
+
+source $PWD/assets/scripts/retry.sh
 
 export MYSQL_HOST=mysql
 export MYSQL_USER=root

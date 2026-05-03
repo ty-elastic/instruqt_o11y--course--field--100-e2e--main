@@ -1,15 +1,21 @@
 #!/bin/bash
 
-source $PWD/assets/scripts/retry.sh
+working_dir=$PWD
 
-while getopts "h:i:j:" opt
+while getopts "h:i:j:z:" opt
 do
    case "$opt" in
       h ) elasticsearch_kibana_endpoint="$OPTARG" ;;
       i ) elasticsearch_api_key="$OPTARG" ;;
       j ) elasticsearch_es_endpoint="$OPTARG" ;;
+      z ) working_dir="$OPTARG" ;;
    esac
 done
+
+echo working_dir=$working_dir
+cd $working_dir
+
+source $PWD/assets/scripts/retry.sh
 
 enable_ramen() {
    printf "$FUNCNAME...\n"
