@@ -54,10 +54,10 @@ tar -xzf $COURSE.tgz
 source $WORKING_DIR/instruqt/scripts/vars.sh -w true
 
 # services
-(cd $WORKING_DIR && ./build.sh -o serverless -c $COURSE -d true -n true -b false -s all -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443)
+$WORKING_DIR/build.sh -z $WORKING_DIR -o serverless -c $COURSE -d true -n true -b false -s all -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443
 
 # synthetics, profiling
-(cd $WORKING_DIR && .$WORKING_DIR/build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -p true -m true)
+$WORKING_DIR/build.sh -z $WORKING_DIR -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -p true -m true
 
 # assets
 $WORKING_DIR/build.sh -z $WORKING_DIR -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -w true -e http://$HOSTNAME.$_SANDBOX_ID.instruqt.io:43210
