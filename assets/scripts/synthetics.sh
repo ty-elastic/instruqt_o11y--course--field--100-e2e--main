@@ -24,22 +24,6 @@ create_synthetics_policy() {
 
   ((POLICY_NUM++))
 
-  curl -X POST "$elasticsearch_kibana_endpoint/api/fleet/agent_policies?sys_monitoring=false" \
-      -H 'kbn-xsrf: true' \
-      -H 'x-elastic-internal-origin: Kibana' \
-      -H "Authorization: ApiKey ${elasticsearch_api_key}" \
-      -H 'Content-Type: application/json' \
-      -d '{
-    "name": "Synthetics 96",
-    "description": "",
-    "namespace": "default",
-    "monitoring_enabled": [
-      "logs",
-      "metrics"
-    ]
-  }'
-
-
   output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/api/fleet/agent_policies?sys_monitoring=false" \
       -w "\n%{http_code}" \
       -H 'kbn-xsrf: true' \

@@ -68,6 +68,7 @@ elasticsearch_kibana_endpoint="na"
 elasticsearch_api_key="na"
 elasticsearch_otlp_endpoint="na"
 remote_endpoint="na"
+working_dir="$PWD"
 
 proxy_port=8081
 
@@ -78,7 +79,7 @@ case "${unameOut}" in
     *)          machine="UNKNOWN:${unameOut}"
 esac
 
-while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:n:" opt
+while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:n:z:" opt
 do
    case "$opt" in
       a ) arch="$OPTARG" ;;
@@ -110,10 +111,12 @@ do
 
       w ) assets="$OPTARG" ;;
       y ) annotations="$OPTARG" ;;
+      z ) working_dir="$OPTARG" ;;
    esac
 done
 
-echo elasticsearch_kibana_endpoint=$elasticsearch_kibana_endpoint
+echo working_dir=$working_dir
+cd $working_dir
 
 export MYSQL_HOST=mysql
 export MYSQL_USER=root
