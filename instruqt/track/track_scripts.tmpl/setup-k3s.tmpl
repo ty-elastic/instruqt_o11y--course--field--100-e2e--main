@@ -59,6 +59,7 @@ source $PWD/build.sh -o serverless -c $COURSE -d true -n true -b false -s all -j
 
 # synthetics, profiling
 cd $WORKING_DIR
+echo KIBANA_URL=$KIBANA_URL
 source $PWD/build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -p true -m true
 
 # assets

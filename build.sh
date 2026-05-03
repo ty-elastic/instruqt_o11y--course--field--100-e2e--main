@@ -113,6 +113,8 @@ do
    esac
 done
 
+echo elasticsearch_kibana_endpoint=$elasticsearch_kibana_endpoint
+
 export MYSQL_HOST=mysql
 export MYSQL_USER=root
 export MYSQL_PASSWORD=password
