@@ -65,6 +65,7 @@ tabs:
   hostname: guac
   path: /#/client/c/srv01?username=guac_user&password=guac_password
   port: 8080
+  new_window: true
 difficulty: basic
 timelimit: 43200
 enhanced_loading: null
