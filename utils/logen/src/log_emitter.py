@@ -41,6 +41,8 @@ class LogEmitter(ABC):
         if node is not None:
             setattr(record, 'hostname', node)
         if component is not None:
-            setattr(record, 'appname', component)
+            setattr(record, 'appname', f"{self.service_name}-{component}")
+        else:
+            setattr(record, 'appname', self.service_name)
         self.log_backoff()
         self.handler.emit(record)
