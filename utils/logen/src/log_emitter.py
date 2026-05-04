@@ -37,5 +37,10 @@ class LogEmitter(ABC):
         record.created = ct
         record.msecs = ct * 1000
         record.relativeCreated = (record.created - self.start_time) * 1000
+
+        if node is not None:
+            setattr(record, 'hostname', node)
+        if component is not None:
+            setattr(record, 'appname', component)
         self.log_backoff()
         self.handler.emit(record)
