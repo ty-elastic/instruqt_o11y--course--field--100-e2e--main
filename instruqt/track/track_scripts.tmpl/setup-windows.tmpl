@@ -1,6 +1,12 @@
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+# --- PYTHON
 
-choco install python -y
+$env:url = "https://www.python.org/ftp/python/3.13.13/python-3.13.13-amd64.exe"
+$env:outPath = "$env:TEMP\python-installer.exe"
+Invoke-WebRequest -Uri $env:url -OutFile $env:outPath
+
+Start-Process -FilePath $env:outPath -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1" -Wait
+
+# -- CODE
 
 $env:WORKING_DIR = "C:\Users\instruqt\workshop"
 
@@ -13,3 +19,6 @@ cd $env:WORKING_DIR
 
 curl.exe -o "$env:COURSE.tgz" "https://artifactregistry.googleapis.com/download/v1/projects/$env:ARTIFACTS_REPO/files/$env:COURSE%3A$env:ARTIFACT_VERSION%3A$env:COURSE.tgz:download?alt=media"
 tar -xzf "$env:COURSE.tgz"
+
+cd utils\logen
+pip install -r requirements.txt
