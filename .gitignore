@@ -3,6 +3,7 @@
 __pycache__
 .venv
 logs
+loghub
 bin
 out
 

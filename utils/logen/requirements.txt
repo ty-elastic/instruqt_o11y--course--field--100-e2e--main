@@ -1,0 +1,10 @@
+flask
+requests
+ua-generator
+Faker
+pyyaml
+
+opentelemetry-api==1.35.0
+opentelemetry-sdk==1.35.0
+opentelemetry-instrumentation-logging
+opentelemetry-exporter-otlp

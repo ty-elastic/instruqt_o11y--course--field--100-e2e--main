@@ -1,0 +1,225 @@
+metadata:
+  stock:
+    orders: ['market', 'limit', 'stop', 'buy']
+    symbols:
+      ZVZZT:
+        price:
+          min: 10
+          max: 200
+          swing: 10
+      ZALM:
+        price:
+          min: 10
+          max: 200
+          swing: 10
+      ZYX:
+        price:
+          min: 10
+          max: 200
+          swing: 10
+      CBAZ:
+        price:
+          min: 10
+          max: 200
+          swing: 10
+      BAA:
+        price:
+          min: 10
+          max: 200
+          swing: 10 
+      OELK:
+        price:
+          min: 100
+          max: 1000
+          swing: 50
+  
+  region:
+    NA:
+      client_ip_range: '107.80.0.0/16'
+      num_users: 10
+      resource_attributes:
+        cloud.availability_zone: "us-central1-a"
+        cloud.region: "us-central"
+        host.name: "k8s-default-pool-{host_uuid}"
+        k8s.node.name: "k8s-default-pool-{host_uuid}"
+        k8s.cluster.name: "k8s-us-central1"
+    LATAM:
+      client_ip_range: '186.189.224.0/20'
+      num_users: 10
+      resource_attributes:
+        cloud.availability_zone: "southamerica-east1-b"
+        cloud.region: "southamerica-east1"
+        host.name: "k8s-default-pool-{host_uuid}"
+        k8s.node.name: "k8s-default-pool-{host_uuid}"
+        k8s.cluster.name: "k8s-southamerica-east1"
+    EU:
+      client_ip_range: '149.254.212.0/24'
+      num_users: 10
+      resource_attributes:
+        cloud.availability_zone: "europe-west3-a"
+        cloud.region: "europe-west3"
+        host.name: "k8s-default-pool-{host_uuid}"
+        k8s.node.name: "k8s-default-pool-{host_uuid}"
+        k8s.cluster.name: "k8s-europe-west3"
+    APAC:
+      client_ip_range: '103.107.52.0/24'
+      num_users: 10
+      resource_attributes:
+        cloud.availability_zone: "asia-east2-c"
+        cloud.region: "asia-east2"
+        host.name: "k8s-default-pool-{host_uuid}"
+        k8s.node.name: "k8s-default-pool-{host_uuid}"
+        k8s.cluster.name: "k8s-asia-east2"
+
+threads:
+  - name: proxy
+    language: cpp
+    mode: classic
+    format: structured
+    output: syslog
+
+    metadata:
+      api:
+        - endpoint: '/trade/request'
+          payload: 
+            min: 205
+            max: 220
+        - endpoint: '/trade/status'
+          payload: 
+            min: 316
+            max: 340
+    schedule:
+      - type: nginx
+        logs_per_second: 100
+        name: proxy
+
+  - name: hadoop
+    language: java
+    mode: wired
+    format: structured
+    output: syslog
+    
+    messages:
+      nominal:
+        file:
+          path: logs/Hadoop_2k.log_structured.csv
+          type: csv
+        order: loop
+
+    schedule:
+      - type: service
+        messages: nominal
+        logs_per_second: 50
+
+  - name: spark
+    language: java
+    mode: wired
+    format: raw
+    output: syslog
+
+    messages:
+      nominal:
+        file:
+          path: logs/Spark_2k.log_structured.csv
+          type: csv
+        order: loop
+      errors:
+        lines:
+          - body: "memory.MemoryStore: Not enough space to cache rdd_22_1, so persisting partition to disk instead."
+            level: WARNING
+          - body: |
+              java.lang.OutOfMemoryError (Java heap space)
+                at org.apache.spark.sql.execution.UnsafeRowSerializerInstance.serialize(UnsafeRowSerializer.scala:56)
+                at org.apache.spark.shuffle.sort.ShufflePartitionPairsWriter.write(ShufflePartitionPairsWriter.java:78)
+                at org.apache.spark.shuffle.sort.SortShuffleWriter.write(SortShuffleWriter.java:63)
+                at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:99)
+                at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:55)
+                at org.apache.spark.scheduler.Task.run(Task.scala:121)
+                at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:444)
+                at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+                at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+                at java.lang.Thread.run(Thread.java:748)
+            level: ERROR   
+        order: loop
+
+    schedule:
+      - type: generate_exception
+        messages: errors
+        filter:
+          percent: 50
+        duration_minutes: 0.5
+        repeat:
+          min_minutes: 1
+          max_minutes: 1
+
+      - type: service
+        messages: nominal
+        logs_per_second: 50
+
+
+  - name: spark_sigevents
+    language: java
+    mode: classic
+    format: structured
+    output: syslog
+
+    messages:
+      nominal:
+        file:
+          path: logs/Spark_2k.log_structured.csv
+          type: csv
+        order: loop
+      errors:
+        lines:
+          - body: "memory.MemoryStore (Not enough space to cache rdd_22_1, so persisting partition to disk instead)"
+            level: WARNING
+          - body: |
+              java.lang.OutOfMemoryError (Java heap space)
+                at org.apache.spark.sql.execution.UnsafeRowSerializerInstance.serialize(UnsafeRowSerializer.scala:56)
+                at org.apache.spark.shuffle.sort.ShufflePartitionPairsWriter.write(ShufflePartitionPairsWriter.java:78)
+                at org.apache.spark.shuffle.sort.SortShuffleWriter.write(SortShuffleWriter.java:63)
+                at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:99)
+                at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:55)
+                at org.apache.spark.scheduler.Task.run(Task.scala:121)
+                at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:444)
+                at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+                at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+                at java.lang.Thread.run(Thread.java:748)
+            level: ERROR   
+        order: loop
+
+    schedule:
+      - type: generate_exception
+        messages: errors
+        filter:
+          percent: 75
+        duration_minutes: 0.1
+        repeat:
+          min_minutes: 1
+          max_minutes: 10
+
+      - type: service
+        messages: nominal
+        logs_per_second: 50
+
+  - name: trader
+    language: python
+    format: structured
+    output: syslog
+
+    messages:
+      nominal:
+        lines:
+          - body: "{stock.order} order: {user.name}, {client.ip}, {stock.symbol}, {stock.shares}, ${stock.price}, {uuid}"
+            level: INFO
+      db_errors:
+        lines:
+          - body: "Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: java.util.concurrent.ExecutionException: org.springframework.transaction.TransactionSystemException: Could not commit JPA transaction] with root cause"
+            level: ERROR
+          - body: "Failed to connect to the database. Reason: Connection refused."
+            level: ERROR
+
+    schedule:
+      - type: service
+        messages: nominal
+        logs_per_second: 50

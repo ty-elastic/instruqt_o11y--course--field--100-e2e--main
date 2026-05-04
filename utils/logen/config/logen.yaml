@@ -1,0 +1,50 @@
+metadata:
+  region:
+    NA:
+      client_ip_range: '107.80.0.0/16'
+      num_users: 10
+      resource_attributes:
+        cloud.availability_zone: "us-central1-a"
+        cloud.region: "us-central"
+        host.name: "k8s-default-pool-{host_uuid}"
+        k8s.node.name: "k8s-default-pool-{host_uuid}"
+        k8s.cluster.name: "k8s-us-central1"
+
+threads:
+  - name: hpc
+    language: java
+    mode: wired
+    format: structured
+    output: syslog
+    
+    messages:
+      nominal:
+        file:
+          path: logs/HPC_2k.log_structured.csv
+          type: csv
+          eventids: ['E1','E2','E4','E6','E8','E12','E14','E17','E18','E25','E28','E29','E30','E31','E36','E38','E41','E42','E43','E45']
+          level: 'INFO'
+        order: random
+
+      errors:
+        file:
+          path: logs/HPC_2k.log_structured.csv
+          type: csv
+          eventids: ['E3','E5','E9','E10','E11','E13','E15','E16','E19','E20','E21','E22','E23','E24','E26','E27','E32','E33','E34','E35','E37','E39','E40','E44','E46']
+          level: 'WARN'
+        order: random
+
+    schedule:
+
+      - type: generate_exception
+        messages: errors
+        filter:
+          percent: 50
+        duration_minutes: 0.5
+        repeat:
+          min_minutes: 1
+          max_minutes: 1
+
+      - type: service
+        messages: nominal
+        logs_per_second: 50

@@ -1,0 +1,15 @@
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+choco install python -y
+
+$env:WORKING_DIR = "C:\Users\instruqt\workshop"
+
+$env:COURSE = "o11y--course--field--100-e2e--test"
+$env:ARTIFACTS_REPO = "elastic-sa/locations/us-central1/repositories/tbekiares-instruqt"
+$env:ARTIFACT_VERSION = "1.0"
+
+mkdir -p $env:WORKING_DIR
+cd $env:WORKING_DIR
+
+curl.exe -o "$env:COURSE.tgz" "https://artifactregistry.googleapis.com/download/v1/projects/$env:ARTIFACTS_REPO/files/$env:COURSE%3A$env:ARTIFACT_VERSION%3A$env:COURSE.tgz:download?alt=media"
+tar -xzf "$env:COURSE.tgz"
