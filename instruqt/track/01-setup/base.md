@@ -25,37 +25,10 @@ tabs:
   type: code
   hostname: k3s
   path: /workspace/workshop/src
-- id: egfjlbcitmki
-  title: K8s YAML
-  type: code
-  hostname: k3s
-  path: /workspace/workshop/k8s/yaml
-- id: 0hvtwlczt4y6
-  title: OTel Operator YAML
-  type: code
-  hostname: k3s
-  path: /workspace/workshop/agents
 - id: hdp9opgzqab3
   title: Services Host
   type: terminal
   hostname: k3s
-- id: ajbo9kz0lxtx
-  title: GitHub Issues
-  type: website
-  url: https://github.com/ty-elastic/instruqt_o11y--course--field--100-e2e--main/issues
-  new_window: true
-- id: mvodj4cdjhua
-  title: Slides
-  type: website
-  url: https://docs.google.com/presentation/d/11lkZIvLNwWR8Tm6edCsPTIImypjKiylzwhOAa8527EM/edit?usp=drive_link
-  new_window: true
-- id: ppfqqvaqdevp
-  title: Grafana
-  type: service
-  hostname: k3s
-  path: /
-  port: 3000
-  new_window: true
 - id: oae9yx2izef4
   title: ES Host
   type: terminal
@@ -65,6 +38,13 @@ tabs:
   hostname: guac
   path: /#/client/c/srv01?username=guac_user&password=guac_password
   port: 8080
+  new_window: true
+- id: ppfqqvaqdevp
+  title: Grafana
+  type: service
+  hostname: k3s
+  path: /
+  port: 3000
   new_window: true
 difficulty: basic
 timelimit: 43200

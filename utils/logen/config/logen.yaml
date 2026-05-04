@@ -44,6 +44,7 @@ threads:
         repeat:
           min_minutes: 1
           max_minutes: 1
+        logs_per_second: 100
 
       - type: service
         messages: nominal

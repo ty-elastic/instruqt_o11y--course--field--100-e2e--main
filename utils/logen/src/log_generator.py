@@ -56,7 +56,7 @@ def generate_nginx_line(*, vars, timestamp, metadata, global_state):
                             user_agent=user['user_agent'].text)
         lines.append({'body': line, 'level': "INFO"})
         send_timestamp = send_timestamp + timedelta(seconds=1/1000)
-    return lines, error_request
+    return lines, error_request, False
 
 def var_substitute_line(*, vars, template):
     for k,v in vars.items():
@@ -66,7 +66,7 @@ def var_substitute_line(*, vars, template):
     return template
 
 def get_exception_message(timestamp, vars, thread_state):
-
+    in_exception = False
     src_messages_id = None
     exceptions_indices_to_remove = []
     for index, exception in enumerate(thread_state['exceptions']):
@@ -87,7 +87,7 @@ def get_exception_message(timestamp, vars, thread_state):
             exception['reset'] = True
             exception['start_timestamp'] = timestamp
 
-        if exception['start_timestamp'] >= timestamp:
+        if exception['start_timestamp'] <= timestamp:
             if exception['reset'] == True:
                 print(f"starting exception {exception}")
                 exception['reset'] = False
@@ -95,6 +95,8 @@ def get_exception_message(timestamp, vars, thread_state):
                     exception['stop_timestamp'] = timestamp + timedelta(minutes=exception['duration_minutes'])
         else:
             continue
+
+        in_exception = True
 
         if 'filter' in exception:
             if ('region' in exception['filter'] and exception['filter']['region'] != vars['region']):
@@ -106,13 +108,13 @@ def get_exception_message(timestamp, vars, thread_state):
     for index in exceptions_indices_to_remove:
         del thread_state['exceptions'][index]
 
-    return src_messages_id
+    return src_messages_id, in_exception
 
 def generate_service_line(*, vars, timestamp, metadata, service, messages, thread_state):
     lines = []
 
     exception_message = False
-    src_messages_id = get_exception_message(timestamp, vars, thread_state)
+    src_messages_id, in_exception = get_exception_message(timestamp, vars, thread_state)
     if src_messages_id is None:
         src_messages_id = service['messages']
     else:
@@ -130,7 +132,7 @@ def generate_service_line(*, vars, timestamp, metadata, service, messages, threa
             thread_state['messages'][src_messages_id]['idx'] = idx + 1
 
     lines.append(message)
-    return lines, exception_message
+    return lines, exception_message, in_exception
 
 def generate(*, thread, thread_name, generator, loggers, start_timestamp, end_timestamp, logs_per_second, metadata, thread_state, global_state, messages):
     global g_realtime
@@ -146,9 +148,13 @@ def generate(*, thread, thread_name, generator, loggers, start_timestamp, end_ti
 
         lines = []
         if generator['type'] == 'nginx':
-            lines, exception_message = generate_nginx_line(vars=vars, timestamp=timestamp, metadata=metadata, global_state=global_state)
+            lines, exception_message, in_exception = generate_nginx_line(vars=vars, timestamp=timestamp, metadata=metadata, global_state=global_state)
         elif generator['type'] == 'service':
-            lines, exception_message = generate_service_line(vars=vars, timestamp=timestamp, metadata=metadata, service=generator, messages=messages, thread_state=thread_state)
+            lines, exception_message, in_exception = generate_service_line(vars=vars, timestamp=timestamp, metadata=metadata, service=generator, messages=messages, thread_state=thread_state)
+
+        current_logs_per_second = logs_per_second
+        if in_exception and 'logs_per_second' in exception:    
+            current_logs_per_second = exception['logs_per_second']
 
         for line in lines:
             if thread['format'] == 'raw':
@@ -164,9 +170,9 @@ def generate(*, thread, thread_name, generator, loggers, start_timestamp, end_ti
             wallclock = datetime.now(tz=timezone.utc)
             #print(f"wall={wallclock.timestamp()},time={timestamp.timestamp()}")
             delta = wallclock.timestamp() - timestamp.timestamp()
-            #print(abs(delta))
             # leading
             if delta < 0:
                 time.sleep(abs(delta))
-        timestamp = timestamp + timedelta(seconds=1/logs_per_second)
+
+        timestamp = timestamp + timedelta(seconds=1/current_logs_per_second)
     return timestamp
