@@ -6,11 +6,13 @@ Invoke-WebRequest -Uri $env:url -OutFile $env:outPath
 
 Start-Process -FilePath $env:outPath -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1" -Wait
 
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+
 # -- CODE
 
 $env:WORKING_DIR = "C:\Users\instruqt\workshop"
 
-$env:COURSE = "o11y--course--field--100-e2e--test"
+#$env:COURSE = "o11y--course--field--100-e2e--test"
 $env:ARTIFACTS_REPO = "elastic-sa/locations/us-central1/repositories/tbekiares-instruqt"
 $env:ARTIFACT_VERSION = "1.0"
 
@@ -22,3 +24,7 @@ tar -xzf "$env:COURSE.tgz"
 
 cd utils\logen
 pip install -r requirements.txt
+
+# -- START
+
+python src/app.py
