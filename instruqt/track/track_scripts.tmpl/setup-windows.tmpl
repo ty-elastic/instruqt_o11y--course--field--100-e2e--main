@@ -8,7 +8,11 @@ Start-Process -FilePath $env:outPath -ArgumentList "/quiet InstallAllUsers=1 Pre
 
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
 
-# -- CODE
+ # -- IIS
+ 
+Install-WindowsFeature -name Web-Server -IncludeManagementTools
+
+# -- SYSLOG CODE
 
 $env:WORKING_DIR = "C:\Users\instruqt.WINDOWS\workshop"
 
@@ -27,6 +31,6 @@ tar -xzf "$env:COURSE.tgz"
 cd utils\logen
 pip install -r requirements.txt
 
-# -- START
+# -- SYSLOG START
 
 Start-Process pythonw.exe -ArgumentList "src/app.py" -WindowStyle Hidden

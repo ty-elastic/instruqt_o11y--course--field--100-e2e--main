@@ -1,6 +1,6 @@
 {
   "type": "browser",
-  "name": "Request Trade",
+  "name": "Request Trade ($NAMESPACE)",
   "tags": ["trader"],
   "private_locations": ["host-1"],
   "schedule": 1,

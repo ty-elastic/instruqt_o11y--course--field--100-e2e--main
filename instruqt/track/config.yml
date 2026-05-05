@@ -23,6 +23,7 @@ virtualmachines:
   shell: /bin/bash
   memory: 24576
   cpus: 4
+  provision_ssl_certificate: true
   allow_external_ingress:
   - high-ports 
 - name: windows

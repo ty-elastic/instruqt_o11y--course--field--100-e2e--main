@@ -1,0 +1,5 @@
+{
+    "id": "syslog_conventions",
+    "title": "conventions for syslog at example.com",
+    "text": "We use port 9514 for syslog at example.com."
+}

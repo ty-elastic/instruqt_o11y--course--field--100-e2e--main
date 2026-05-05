@@ -1,0 +1,8 @@
+{
+  "type": "browser",
+  "name": "IIS",
+  "tags": ["iis"],
+  "private_locations": ["host-1"],
+  "schedule": 1,
+  "inline_script": "step('Go to http://windows', async () => {await page.goto('http://windows');});"
+}

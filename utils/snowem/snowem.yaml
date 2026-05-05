@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: utils
+  labels:
+    name: utils
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: snowem
+  namespace: utils
+  labels:
+    service: snowem
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: snowem
+  template:
+    metadata:
+      annotations:
+        io.opentelemetry.discovery.logs/enabled: "false"
+      labels:
+        service: snowem
+    spec:
+      containers:
+        - name: snowem
+          image: $REPO/snowem:$COURSE
+          imagePullPolicy: Always
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service: snowem
+  name: snowem-ext
+  namespace: utils
+spec:
+  ports:
+    - name: remote
+      port: 43211
+      targetPort: 3000
+  type: LoadBalancer
+  selector:
+    service: snowem
+---
