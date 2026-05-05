@@ -19,6 +19,7 @@ spec:
         instrumentation.opentelemetry.io/inject-python: "opentelemetry-operator-system/elastic-instrumentation"
         io.opentelemetry.discovery.logs/enabled: "false"
         resource.opentelemetry.io/service.version: "$SERVICE_VERSION"
+        example.com/org: "trading_ops"
       labels:
         app: trading
         service: trader

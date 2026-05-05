@@ -142,6 +142,8 @@ spec:
         app: trading
         service: postgresql
       annotations:
+        example.com/org: "db_ops"
+
         io.opentelemetry.discovery.logs.postgresql/enabled: "true"
         io.opentelemetry.discovery.logs.postgresql/config: |
           operators:

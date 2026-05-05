@@ -31,6 +31,7 @@ spec:
         io.opentelemetry.discovery.logs/enabled: "false"
         resource.opentelemetry.io/service.version: "$SERVICE_VERSION"
         resource.opentelemetry.io/tail_sampling: "true"
+        example.com/org: "db_ops"
       labels:
         app: trading
         service: recorder-java

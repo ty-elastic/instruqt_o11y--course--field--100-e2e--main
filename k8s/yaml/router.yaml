@@ -70,6 +70,7 @@ spec:
         instrumentation.opentelemetry.io/inject-nodejs: "opentelemetry-operator-system/elastic-instrumentation"
         io.opentelemetry.discovery.logs/enabled: "true"
         resource.opentelemetry.io/service.version: "$SERVICE_VERSION"
+        example.com/org: "it_ops"
       labels:
         app: trading
         service: router

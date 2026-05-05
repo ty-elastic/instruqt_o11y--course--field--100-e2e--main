@@ -19,6 +19,7 @@ spec:
         io.opentelemetry.discovery.logs/enabled: "true"
         instrumentation.opentelemetry.io/inject-sdk: "opentelemetry-operator-system/elastic-instrumentation"
         resource.opentelemetry.io/service.version: "$SERVICE_VERSION"
+        example.com/org: "db_ops"
 
         io.opentelemetry.discovery.logs/config: |
           operators:

@@ -220,6 +220,7 @@ spec:
         service: proxy
       annotations:
         #instrumentation.opentelemetry.io/inject-nginx: "opentelemetry-operator-system/elastic-instrumentation"
+        example.com/org: "it_ops"
 
         io.opentelemetry.discovery.metrics/enabled: "true"
         io.opentelemetry.discovery.metrics/scraper: "nginx"

@@ -17,6 +17,8 @@ spec:
   template:
     metadata:
       annotations:
+        example.com/org: "trading_ops"
+
         instrumentation.opentelemetry.io/inject-python: "opentelemetry-operator-system/elastic-instrumentation"
         io.opentelemetry.discovery.logs/enabled: "true"
         io.opentelemetry.discovery.logs/config: |
