@@ -64,8 +64,8 @@ if __name__ == "__main__":
     num_cores = multiprocessing.cpu_count()
     processes = []
 
-    for region in REGIONS:
-        create_latency(region, 2000)
+    # for region in REGIONS:
+    #     create_latency(region, 2000)
 
     do_lots_of_math()
 
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     #     #print(inst)
     #     print("exception received. Initiating graceful shutdown...")
 
-    for region in REGIONS:
-        clear_latency(region)
+    # for region in REGIONS:
+    #     clear_latency(region)
 
     time.sleep(1)

@@ -85,6 +85,14 @@ if [ "$build" = "true" ]; then
   ./build.sh -c $course
   cd ../../instruqt
 
+  cd ../utils/logen
+  ./build.sh -c $course
+  cd ../../instruqt
+
+  cd ../utils/snowem
+  ./build.sh -c $course
+  cd ../../instruqt
+
   cd ..
   ./build.sh -c $course -b true -x true -s all
   cd instruqt

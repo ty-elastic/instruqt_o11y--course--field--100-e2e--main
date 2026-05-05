@@ -39,6 +39,13 @@ tabs:
   path: /#/client/c/srv01?username=guac_user&password=guac_password
   port: 8080
   new_window: true
+- id: ppfqqvaqdevy
+  title: ITSM
+  type: service
+  hostname: k3s
+  path: /
+  port: 43211
+  new_window: true
 - id: ppfqqvaqdevp
   title: Grafana
   type: service

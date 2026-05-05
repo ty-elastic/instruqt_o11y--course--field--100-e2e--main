@@ -60,7 +60,7 @@ $WORKING_DIR/build.sh -z $WORKING_DIR -o serverless -c $COURSE -d true -n true -
 $WORKING_DIR/build.sh -z $WORKING_DIR -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -p true -m true
 
 # assets
-$WORKING_DIR/build.sh -z $WORKING_DIR -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -w true -e http://$HOSTNAME.$_SANDBOX_ID.instruqt.io:43210
+$WORKING_DIR/build.sh -z $WORKING_DIR -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -w true -e https://remote.es3-api.$_SANDBOX_ID.instruqt.io:60089
 
 # grafana
 $WORKING_DIR/build.sh -z $WORKING_DIR -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -g true
@@ -68,9 +68,9 @@ $WORKING_DIR/build.sh -z $WORKING_DIR -o false -c $COURSE -d false -b false -s n
 # logs
 $WORKING_DIR/build.sh -z $WORKING_DIR -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -j $ELASTICSEARCH_URL -u true
 
+# snowem
+$WORKING_DIR/build.sh -z $WORKING_DIR -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -j $ELASTICSEARCH_URL -q true -e https://snowem.es3-api.$_SANDBOX_ID.instruqt.io:60090
+
 # ramen
 $WORKING_DIR/assets/scripts/ramen.sh -z $WORKING_DIR -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -j $ELASTICSEARCH_URL
 
-#### SNOWEM
-
-envsubst < $WORKING_DIR/utils/snowem/snowem.yaml | kubectl apply -f -

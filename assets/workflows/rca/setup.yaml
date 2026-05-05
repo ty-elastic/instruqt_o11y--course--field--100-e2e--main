@@ -72,9 +72,9 @@ steps:
       closure_type: close-by-user
       connector:
         fields:
-        id: none
-        name: none
-        type: .none
+        id: snowem
+        name: snowem
+        type: .servicenow
       customFields:
       - defaultValue: not_available
         key: system_environment

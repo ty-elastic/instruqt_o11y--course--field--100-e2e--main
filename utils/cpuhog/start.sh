@@ -6,6 +6,6 @@ export REPO=us-central1-docker.pkg.dev/elastic-sa/tbekiares
 export COURSE=$INSTRUQT_TRACK_SLUG
 
 cd /workspace/workshop
-export NAMESPACE=trading-1
+export NAMESPACE=trading-na
 envsubst < cpuhog/cpuhog.yaml | kubectl apply -f -
 cd /workspace/

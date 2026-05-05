@@ -79,9 +79,9 @@ case "${unameOut}" in
     *)          machine="UNKNOWN:${unameOut}"
 esac
 
-while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:n:z:u:" opt
+while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:n:z:u:q:" opt
 do
-   case "$opt" in
+   case "$opt" in 
       a ) arch="$OPTARG" ;;
       c ) course="$OPTARG" ;;
       s ) service="$OPTARG" ;;
@@ -113,6 +113,7 @@ do
       y ) annotations="$OPTARG" ;;
       z ) working_dir="$OPTARG" ;;
       u ) logen="$OPTARG" ;;
+      q ) snowem="$OPTARG" ;;
    esac
 done
 
@@ -291,11 +292,6 @@ if [ "$remote_endpoint" != "na" ]; then
 
     envsubst '$COURSE,$REPO' < remote.yaml | kubectl apply -f -
     cd ../..
-
-    if [ "$remote_endpoint" = "cluster" ]; then
-        retry_command_lin get_lb_address utils remote-ext
-        remote_endpoint=http://SERVICE_IP:SERVICE_PORT
-    fi
 fi
 
 if [ "$assets" = "true" ]; then
@@ -353,5 +349,22 @@ if [ "$logen" = "true" ]; then
     envsubst '$COURSE,$REPO' < logen.yaml | kubectl apply -f -
     cd ../..
 fi
+
+if [ "$snowem" = "true" ]; then
+    cd utils/snowem
+
+    export COURSE=$course
+    export REPO=$repo
+
+    if [ "$build_service" = "true" ]; then
+        source $PWD/build.sh -c $course
+    fi
+
+    envsubst '$COURSE,$REPO' < snowem.yaml | kubectl apply -f -
+    cd ../..
+
+    source $PWD/assets/scripts/snowem.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -e $remote_endpoint
+fi
+
 
 
