@@ -317,17 +317,17 @@ if [ "$assets" = "true" ]; then
     envsubst '$JOB_ID,$COURSE,$REPO,$elasticsearch_kibana_endpoint,$elasticsearch_es_endpoint,$elasticsearch_api_key,$remote_endpoint,$namespaces' < assets.yaml | kubectl apply -f -
     cd ..
 
-    # retry_command_lin check_assets $JOB_ID
+    retry_command_lin check_assets $JOB_ID
 
-    # for current_region in "${regions[@]}"; do
-    #     namespace=$namespace_base-$current_region
+    for current_region in "${regions[@]}"; do
+        namespace=$namespace_base-$current_region
 
-    #     if [[ "$service" == "all" || "$service" == "monkey" ]]; then
-    #         check_services $namespace
-    #         printf "check services for $namespace\n"
-    #     fi
-    # done
-    # source $PWD/assets/scripts/features_dep.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+        if [[ "$service" == "all" || "$service" == "monkey" ]]; then
+            check_services $namespace
+            printf "check services for $namespace\n"
+        fi
+    done
+    source $PWD/assets/scripts/features_dep.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 fi
 
 if [ "$grafana" = "true" ]; then
