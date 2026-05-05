@@ -21,7 +21,7 @@ virtualmachines:
 - name: k3s
   image: elastic/k3s-v1-33-4
   shell: /bin/bash
-  memory: 16384
+  memory: 24,576
   cpus: 4
   allow_external_ingress:
   - high-ports 
