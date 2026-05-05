@@ -26,6 +26,7 @@ virtualmachines:
   provision_ssl_certificate: true
   allow_external_ingress:
   - high-ports 
+  - https
 - name: windows
   image: instruqt/windows-server
   machine_type: n1-standard-4

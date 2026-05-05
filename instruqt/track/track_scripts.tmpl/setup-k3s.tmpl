@@ -72,3 +72,43 @@ $WORKING_DIR/build.sh -z $WORKING_DIR -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -j
 $WORKING_DIR/assets/scripts/ramen.sh -z $WORKING_DIR -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -j $ELASTICSEARCH_URL
 
 #### SNOWEM
+
+envsubst < WORKING_DIR/utils/snowem/snowem.yaml | kubectl apply -f -
+
+curl -s -o /etc/ssl/certs/sandbox.crt -H "Metadata-Flavor: Google" \
+    "http://metadata.google.internal/computeMetadata/v1/instance/attributes/ssl-certificate"
+
+curl -s -o /etc/ssl/private/sandbox.key -H "Metadata-Flavor: Google" \
+    "http://metadata.google.internal/computeMetadata/v1/instance/attributes/ssl-certificate-key"
+
+kubectl create secret tls traefik-cert \
+  --cert=/etc/ssl/certs/sandbox.crt \
+  --key=/etc/ssl/private/sandbox.key
+
+cat > "ingress.yaml" <<EOF
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: https-ingress
+  namespace: utils
+spec:
+  tls:
+  - hosts:
+      - k3s.${_SANDBOX_ID}.instruqt.io
+    secretName: traefik-cert
+  rules:
+  - host: k3s.${_SANDBOX_ID}.instruqt.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: snowem
+            port:
+              number: 3000
+EOF
+
+envsubst < ingress.yaml | kubectl apply -f -
+
+
