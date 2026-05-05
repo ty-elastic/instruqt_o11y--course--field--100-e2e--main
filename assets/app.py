@@ -435,7 +435,7 @@ def load_agent_tools(kibana_server, kibana_auth):
                         update_json = {
                             "configuration": {
                                 "tools": [
-                                    {"tool_ids": existing['configuration']['tools'][0]['tool_ids']}
+                                    {"tool_ids": existing['configuration']['tools'][0]['tool_ids'] if 'tools' in existing['configuration'] and len(existing['configuration']['tools']) > 0 and 'tool_ids' in existing['configuration']['tools'][0] else []}
                                 ]
                             }
                         }
@@ -599,7 +599,7 @@ def load_skills(kibana_server, kibana_auth):
 
                         update_json = {
                             "configuration": {
-                                "skill_ids": existing['configuration']['skill_ids']
+                                "skill_ids": existing['configuration']['skill_ids'] if 'skill_ids' in existing['configuration'] else []
                             }
                         }
 
