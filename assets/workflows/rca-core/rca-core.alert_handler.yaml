@@ -2,7 +2,7 @@ name: alert_handler
 enabled: true
 description: Perform RCA on alerts
 tags:
-- rca
+- rca-core
 triggers:
 - type: alert
 steps:

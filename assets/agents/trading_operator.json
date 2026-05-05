@@ -25,7 +25,7 @@
           "platform.core.index_explorer",
           "platform.core.cases",
           
-          "rca-core.update_case"
+          "rca-core.cases"
         ]
       }
     ],

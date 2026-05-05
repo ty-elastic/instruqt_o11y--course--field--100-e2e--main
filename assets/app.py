@@ -137,7 +137,7 @@ def delete_existing_workflow(kibana_server, kibana_auth, es_host, workflow_name)
     print("search workflows...")
     resp = requests.get(f"{kibana_server}/api/workflows?size=50&page=1",
                         headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
-    #print(resp.json())
+    print(resp.json())
     print("done")
     
     for workflow in resp.json()['results']:
@@ -381,7 +381,7 @@ def load_agent_tools(kibana_server, kibana_auth):
 
     workflows_resp = requests.get(f"{kibana_server}/api/workflows?size=50&page=1",
                         headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
-
+    #print(workflows_resp.json())
 
     directory_path = "tools"
     target_extension = ".json"
@@ -399,6 +399,15 @@ def load_agent_tools(kibana_server, kibana_auth):
                     tool = json.load(fileo)
                     del tool['readonly']
 
+                    print(tool)
+                    if 'x-add-to-agents' in tool:
+                        #print(skill)
+                        agents = tool['x-add-to-agents']
+                        #print('here!!!')
+                        del tool['x-add-to-agents']
+                    else:
+                        agents = []
+
                     print(f"loading tool {tool['id']}")
 
                     if tool['type'] == 'workflow':
@@ -414,7 +423,35 @@ def load_agent_tools(kibana_server, kibana_auth):
                     resp = requests.post(f"{kibana_server}/api/agent_builder/tools",
                                         json=tool,
                                         headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
-                    print(resp.json())     
+                    #print(resp.json())     
+
+                    for agent in agents:
+
+                        resp1 = requests.get(f"{kibana_server}/api/agent_builder/agents/{agent}",
+                                            headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json"})
+                        #print(resp1.json())
+                        existing = resp1.json()
+
+                        update_json = {
+                            "configuration": {
+                                "tools": [
+                                    {"tool_ids": existing['configuration']['tools'][0]['tool_ids']}
+                                ]
+                            }
+                        }
+
+                        update_json['configuration']['tools'][0]['tool_ids'].append(tool['id'])
+
+                        #print(update_json)
+                        #print('here')
+
+                        resp = requests.put(f"{kibana_server}/api/agent_builder/agents/{agent}",
+                                            json=update_json,
+                                            headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json"})
+                        print("updated tools")
+                        print(resp.json())
+
+
 
 def delete_existing_slo(kibana_server, kibana_auth, slo_name):
 
@@ -554,19 +591,28 @@ def load_skills(kibana_server, kibana_auth):
                     print(resp.json())
 
                     for agent in agents:
+
+                        resp1 = requests.get(f"{kibana_server}/api/agent_builder/agents/{agent}",
+                                            headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json"})
+                        #print(resp1.json())
+                        existing = resp1.json()
+
                         update_json = {
                             "configuration": {
-                                "skill_ids": [ skill['id'] ]
+                                "skill_ids": existing['configuration']['skill_ids']
                             }
                         }
-                        print(update_json)
+
+                        update_json['configuration']['skill_ids'].append(skill['id'])
+
+                        #print(update_json)
                         #print('here')
 
                         resp = requests.put(f"{kibana_server}/api/agent_builder/agents/{agent}",
                                             json=update_json,
                                             headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json"})
+                        print("updated skills")
                         print(resp.json())
-
 
  
 

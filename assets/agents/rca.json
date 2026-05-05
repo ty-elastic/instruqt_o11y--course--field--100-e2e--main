@@ -25,7 +25,7 @@
                     "search_k8s_pod_metrics",
                     "search_logs_error",
                     "get_topologies",
-                    "rca-core.update_case",
+                    "rca-core.cases",
                     "remediation_service_action"
                 ]
             }
