@@ -19,3 +19,6 @@ export REMOTE_PORT=$(kubectl -n trading-na get svc proxy-ext -o jsonpath='{.spec
 
 # grafana
 #./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $MOTEL_INGEST_URL -g true
+
+# logs
+./build.sh -o false -c $COURSE -d false -b true -u true

@@ -1,7 +1,7 @@
 arch=linux/amd64
 repo=us-central1-docker.pkg.dev/elastic-sa/tbekiares
-course=o11y--course--field--100-e2e--serverless
-current_service=pos
+course=latest
+current_service=logen
 
 while getopts "c:" opt
 do

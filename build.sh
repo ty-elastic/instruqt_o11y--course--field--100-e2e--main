@@ -79,7 +79,7 @@ case "${unameOut}" in
     *)          machine="UNKNOWN:${unameOut}"
 esac
 
-while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:n:z:" opt
+while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:n:z:u:" opt
 do
    case "$opt" in
       a ) arch="$OPTARG" ;;
@@ -112,6 +112,7 @@ do
       w ) assets="$OPTARG" ;;
       y ) annotations="$OPTARG" ;;
       z ) working_dir="$OPTARG" ;;
+      u ) logen="$OPTARG" ;;
    esac
 done
 
@@ -337,6 +338,20 @@ if [ "$grafana" = "true" ]; then
 
     envsubst '$elasticsearch_es_endpoint,$elasticsearch_api_key' < grafana.yaml | kubectl apply -f -
     cd ..
+fi
+
+if [ "$logen" = "true" ]; then
+    cd utils/logen
+
+    export COURSE=$course
+    export REPO=$repo
+
+    if [ "$build_service" = "true" ]; then
+        source $PWD/build.sh -c $course
+    fi
+
+    envsubst '$COURSE,$REPO' < logen.yaml | kubectl apply -f -
+    cd ../..
 fi
 
 

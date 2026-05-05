@@ -14,7 +14,7 @@ BACKLOG_Q_TIME_S = 60 * 60
 BACKLOG_Q_BATCH_S = 60 * 2
 BACKLOG_Q_TIMEOUT_MS = 10
 
-DEBUG = True
+DEBUG = False
 
 class LogOtel(LogEmitter):
     def __init__(self, *, service_name, max_logs_per_second, regional_attributes, language, mode=None):
@@ -33,7 +33,7 @@ class LogOtel(LogEmitter):
                 "container.id": uuid.uuid4().hex
             }
             if mode == 'wired':
-                attributes['elasticsearch.index'] = 'logs'
+                attributes['elasticsearch.index'] = 'logs.otel'
             else:
                 attributes['data_stream.dataset'] = service_name
             if language is not None:
@@ -48,9 +48,9 @@ class LogOtel(LogEmitter):
             if 'COLLECTOR_ADDRESS' in os.environ:
                 address = os.environ['COLLECTOR_ADDRESS']
             else:
-                address = "collector"
-            print(f"sending logs to http://{address}:4317 for {service_name}, {regional_attributes['cloud.availability_zone']}")
-            otlp_exporter = OTLPLogExporter(endpoint=f"http://{address}:4317", insecure=True)
+                address = "http://127.0.0.1:4317"
+            print(f"sending logs to {address} for {service_name}, {regional_attributes['cloud.availability_zone']}")
+            otlp_exporter = OTLPLogExporter(endpoint=address, insecure=True)
             processor = BatchLogRecordProcessor(
                 otlp_exporter,
                 schedule_delay_millis=BACKLOG_Q_TIMEOUT_MS,

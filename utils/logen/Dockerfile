@@ -7,6 +7,7 @@ COPY requirements.txt .
 RUN --mount=type=cache,target=/root/.cache/pip pip3 install --root-user-action=ignore -r requirements.txt
 
 COPY src src
+COPY logs logs
 
 ENV PYTHONUNBUFFERED=1
 

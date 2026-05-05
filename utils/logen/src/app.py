@@ -104,6 +104,8 @@ def run_schedule(thread, global_metadata, global_state, thread_state):
         thread['mode'] = 'classic'
     if 'format' not in thread:
         thread['format'] = 'structured'
+    if 'output' not in thread:
+        thread['output'] = 'otlp'
 
     schedule = thread['schedule']
     thread_name = thread['name']
