@@ -71,10 +71,15 @@ steps:
           type: kibana.createCaseDefaultSpace
           with:
             connector:
-              id: '{{ steps.get_case_settings.output.data[0].connector.id }}'
-              name: '{{ steps.get_case_settings.output.data[0].connector.name }}'
-              type: '{{ steps.get_case_settings.output.data[0].connector.type }}'
-              fields:
+              id: '{{ steps.get_case_settings.output[0].connector.id }}'
+              name: '{{ steps.get_case_settings.output[0].connector.name }}'
+              type: ".servicenow"
+              fields: 
+                category: ''
+                impact: ''
+                severity: '{{ inputs.severity }}'
+                subcategory: ''
+                urgency: ''
             description: '{{ inputs.description }}'
             owner: observability
             settings:
