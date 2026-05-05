@@ -73,7 +73,7 @@ steps:
             connector:
               id: '{{ steps.get_case_settings.output.data[0].connector.id }}'
               name: '{{ steps.get_case_settings.output.data[0].connector.name }}'
-              type: .none
+              type: '{{ steps.get_case_settings.output.data[0].connector.type }}'
               fields:
             description: '{{ inputs.description }}'
             owner: observability
