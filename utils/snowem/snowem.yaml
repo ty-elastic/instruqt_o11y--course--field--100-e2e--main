@@ -35,13 +35,14 @@ kind: Service
 metadata:
   labels:
     service: snowem
-  name: snowem
+  name: snowem-ext
   namespace: utils
 spec:
   ports:
     - name: snowem
-      port: 3000
+      port: 43211
       targetPort: 3000
+  type: LoadBalancer
   selector:
     service: snowem
 ---

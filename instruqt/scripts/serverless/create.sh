@@ -250,6 +250,34 @@ server {
     add_header Content-Security-Policy "script-src 'report-sample' 'self' kibana.estccdn.com; worker-src 'report-sample' 'self' blob: kibana.estccdn.com; style-src 'report-sample' 'self' 'unsafe-inline' *.elastic.co:* *.elstc.co:* kibana.estccdn.com; object-src 'report-sample' 'none'; connect-src 'self' https:; font-src 'self' *.elastic.co:* *.elstc.co:* kibana.estccdn.com; img-src 'self' *.elastic.co:* *.elstc.co:* data: blob: kibana.estccdn.com; report-to violations-endpoint";
   }
 }
+
+server {
+  listen 60089 ssl;
+  server_name remote.$HOSTNAME.$_SANDBOX_ID.instruqt.io;
+  ssl_certificate     /etc/ssl/certs/sandbox.crt;
+  ssl_certificate_key /etc/ssl/private/sandbox.key;
+
+  location / {
+    proxy_pass http://k3s:43210;
+    proxy_cache off;
+
+    proxy_http_version 1.1;
+  }
+}
+
+server {
+  listen 60090 ssl;
+  server_name snowem.$HOSTNAME.$_SANDBOX_ID.instruqt.io;
+  ssl_certificate     /etc/ssl/certs/sandbox.crt;
+  ssl_certificate_key /etc/ssl/private/sandbox.key;
+
+  location / {
+    proxy_pass http://k3s:43211;
+    proxy_cache off;
+
+    proxy_http_version 1.1;
+  }
+}
 EOF
 
   systemctl restart nginx
