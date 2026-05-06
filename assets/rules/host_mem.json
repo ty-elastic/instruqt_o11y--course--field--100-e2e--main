@@ -1,0 +1,57 @@
+{
+  "name": "Host Memory Usage Spike",
+  "tags": ["auto"],
+  "schedule": {
+    "interval": "1m"
+  },
+  "params": {
+    "nodeType": "host",
+    "criteria": [
+      {
+        "metric": "memory",
+        "comparator": ">",
+        "threshold": [
+          50
+        ],
+        "timeSize": 1,
+        "timeUnit": "m",
+        "customMetric": {
+          "type": "custom",
+          "id": "alert-custom-metric",
+          "field": "",
+          "aggregation": "avg"
+        }
+      }
+    ],
+    "sourceId": "default",
+    "schema": "ecs"
+  },
+  "artifacts": {
+    "dashboards": [],
+    "investigation_guide": {
+      "blob": ""
+    }
+  },
+  "actions": [
+    {
+      "id": "system-connector-.workflows",
+      "params": {
+        "subActionParams": {
+          "workflowId": "alert-handler",
+          "summaryMode": true,
+          "alertStates": {
+            "new": true,
+            "ongoing": false,
+            "recovered": true
+          }
+        },
+        "subAction": "run"
+      }
+    }
+  ],
+  "alert_delay": {
+    "active": 1
+  },
+  "rule_type_id": "metrics.alert.inventory.threshold",
+  "consumer": "alerts"
+}
