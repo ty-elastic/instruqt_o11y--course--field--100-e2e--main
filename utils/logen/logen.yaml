@@ -55,7 +55,7 @@ data:
       - name: hadoop
         language: java
         mode: wired
-        format: structured
+        format: raw
 
         messages:
           nominal:
@@ -71,8 +71,8 @@ data:
 
       - name: spark
         language: java
-        mode: wired
-        format: raw
+        mode: classic
+        format: structured
 
         messages:
           nominal:
