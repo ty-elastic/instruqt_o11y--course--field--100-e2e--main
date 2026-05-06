@@ -29,7 +29,7 @@
   "artifacts": {
     "dashboards": [],
     "investigation_guide": {
-      "blob": ""
+      "blob": "If there is a host memory spike, check to see if it is a one-time occurrence, or if it is happening regularly. If it is happening regularly, contact infra ops."
     }
   },
   "actions": [
