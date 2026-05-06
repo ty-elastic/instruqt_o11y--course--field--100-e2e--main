@@ -1,33 +1,9 @@
 {
       "job_id": "hosts_memory_usage",
-      "job_type": "anomaly_detector",
-      "job_version": "12.0.0",
-      "create_time": 1778035921562,
-      "model_snapshot_id": "1778035925",
-      "custom_settings": {
-        "managed": true,
-        "created_by": "ml-module-metrics-ui-hosts",
-        "custom_urls": [
-          {
-            "url_name": "Host Metrics",
-            "url_value": "metrics/detail/host/$host.name$?_a=(autoReload:!f,refreshInterval:5000,time:(from:%27$earliest$%27,interval:%3E%3D1m,to:%27$latest$%27))"
-          }
-        ],
-        "metrics_source_config": {
-          "indexPattern": "metrics-*,metricbeat-*",
-          "timestampField": "@timestamp",
-          "bucketSpan": 900000
-        }
-      },
       "datafeed_config": {
         "datafeed_id": "datafeed-hosts_memory_usage",
         "job_id": "hosts_memory_usage",
-        "authorization": {
-          "roles": [
-            "admin"
-          ]
-        },
-        "query_delay": "64000ms",
+        "query_delay": "120s",
         "chunking_config": {
           "mode": "auto"
         },
@@ -77,6 +53,7 @@
             ]
           }
         },
+        "frequency": "120s",
         "indices": [
           "metrics-*",
           "metricbeat-*"
@@ -92,7 +69,7 @@
       ],
       "description": "Metrics: Hosts - Identify unusual spikes in memory usage across hosts.",
       "analysis_config": {
-        "bucket_span": "15m",
+        "bucket_span": "2m",
         "detectors": [
           {
             "detector_description": "max('system.memory.actual.used.pct')",
