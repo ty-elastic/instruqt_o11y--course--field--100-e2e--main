@@ -240,6 +240,7 @@ def load_synthetics(kibana_server, kibana_auth, namespaces):
                             with open(full_path, 'r') as fileo:
                                 synthetic = json.load(fileo)
                                 print(f'namespace={namespace}')
+                                synthetic['name'] = synthetic['name'].replace('$NAMESPACE', namespace)
                                 synthetic['inline_script'] = synthetic['inline_script'].replace('$NAMESPACE', namespace)
                                 port = port+1
                                 synthetic['inline_script'] = synthetic['inline_script'].replace('$PORT', str(port))
