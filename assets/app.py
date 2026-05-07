@@ -344,7 +344,24 @@ def load_ml(es_host, kibana_auth):
                                         headers={f"Authorization": kibana_auth, "Content-Type": "application/json"})
                     print(resp.json())   
 
+def enable_rules(kibana_server, kibana_auth, es_host):
+
+    directory_path = "rules_enable"
+
+    print("ENABLE RULES")
+    
+    for root, dirs, files in os.walk(directory_path):
+        for file in files:
+            print(file)
+
+            resp = requests.post(f"{kibana_server}/api/alerting/rule/{file}/_enable",
+                                headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+            print(resp.json())    
+
+
 def load_rules(kibana_server, kibana_auth, es_host, connect_alerts=False):
+
+    enable_rules(kibana_server, kibana_auth, es_host)
 
     resp = requests.get(f"{kibana_server}/api/workflows?size=50&page=1",
                         headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
