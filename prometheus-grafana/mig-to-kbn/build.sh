@@ -1,7 +1,7 @@
 arch=linux/amd64
 repo=us-central1-docker.pkg.dev/elastic-sa/tbekiares
-course=o11y--course--field--demo-oneworkflow--main
-current_service=cpuhog
+course=latest
+current_service=obs-migrate
 
 while getopts "c:" opt
 do
