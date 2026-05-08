@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mig-to-kbn
+  namespace: grafana
+spec:
+  template:
+    spec:
+      containers:
+        - image: $REPO/obs-migrate:$COURSE
+          name: obs-migrate
+          imagePullPolicy: Always
+          env:
+            - name: GRAFANA_URL
+              value: "http://k3s:3000"
+            - name: GRAFANA_USER
+              value: "admin"
+            - name: GRAFANA_PASS
+              value: "grafana"
+          command:
+            - "migrate"
+            - "--source"
+            - "grafana"
+            - "--input-mode"
+            - "api"
+            - "--assets"
+            - "all"
+            - "--native-promql"
+            - "--upload"
+            - "--kibana-url"
+            - $elasticsearch_kibana_endpoint
+            - "--kibana-api-key"
+            - $elasticsearch_api_key
+      restartPolicy: Never
+---

@@ -10,12 +10,19 @@ data:
   datasource.yml: |-
     apiVersion: 1
     datasources:
-    - name: Prometheus
-      type: prometheus
-      url: http://prometheus:9090 
-      isDefault: true
-      access: proxy
-      editable: true
+      - name: Prometheus
+        type: prometheus
+        url: http://prometheus:9090 
+        isDefault: true
+        access: proxy
+        editable: true
+
+    providers:
+      - name: 'Dashboards'
+        folder: 'Node'
+        type: file
+        options:
+          path: /var/lib/grafana/dashboards
 kind: ConfigMap
 metadata:
   labels:
@@ -44,6 +51,16 @@ spec:
       annotations:
         io.opentelemetry.discovery.logs/enabled: "true"
     spec:
+      initContainers:
+        - name: init-dashboards
+          image: alpine
+          command: ["sh", "-c"]
+          args:
+            - |
+              wget -O /tmp/dashboards/16306.json https://grafana.com/api/dashboards/16306/revisions/2/download
+          volumeMounts:
+          - mountPath: /tmp/dashboards
+            name: dashboard-volume
       containers:
         - env:
             - name: GF_SECURITY_ADMIN_PASSWORD
@@ -68,13 +85,17 @@ spec:
             - containerPort: 3000
               protocol: TCP
           volumeMounts:
+            - mountPath: /var/lib/grafana/dashboards
+              name: dashboard-volume
             - mountPath: /etc/grafana/provisioning/datasources
               name: grafana-config
       restartPolicy: Always
       volumes:
-        - configMap:
+        - name: grafana-config
+          configMap:
             name: grafana-config
-          name: grafana-config
+        - name: dashboard-volume
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
