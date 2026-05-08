@@ -37,11 +37,7 @@ node.js Monitor
 3. Enter `ES|QL` mode (if Discover is not yet in `ES|QL` mode)
 4. Execute the following ES|QL:
 ```
-<<<<<<< Updated upstream
-TS metrics-* | WHERE data_stream.dataset == "prometheusreceiver.otel"
-=======
-TS metrics-prometheusreceiver.otel-default
->>>>>>> Stashed changes
+TS metrics-generic.prometheus-default
 ```
 
 > [!NOTE]
@@ -108,7 +104,7 @@ sum by (region) (rate(http_requests_total[5m]))
 3. Enter `ES|QL` mode (if Discover is not yet in `ES|QL` mode)
 4. Execute the following ES|QL:
 ```
-PROMQL index=metrics-* start=?_tstart end=?_tend step=5m sum by (region) (rate(http_requests_total[5m]))
+PROMQL index=metrics-generic.prometheus-default start=?_tstart end=?_tend step=5m sum by (region) (rate(http_requests_total[5m]))
 ```
 
 > [!NOTE]
