@@ -11,13 +11,20 @@ spec:
           name: obs-migrate
           imagePullPolicy: Always
           env:
+            - name: ELASTICSEARCH_ENDPOINT
+              value: "$elasticsearch_es_endpoint"
+            - name: KIBANA_ENDPOINT
+              value: "$elasticsearch_kibana_endpoint"
+            - name : KEY
+              value: "$elasticsearch_api_key"
+
             - name: GRAFANA_URL
               value: "http://k3s:3000"
             - name: GRAFANA_USER
               value: "admin"
             - name: GRAFANA_PASS
               value: "grafana"
-          command:
+          args:
             - "migrate"
             - "--source"
             - "grafana"

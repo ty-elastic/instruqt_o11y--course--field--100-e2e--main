@@ -16,7 +16,17 @@ data:
         isDefault: true
         access: proxy
         editable: true
-
+kind: ConfigMap
+metadata:
+  labels:
+    service: grafana
+  name: grafana-datasources
+  namespace: grafana
+---
+apiVersion: v1
+data:
+  provider.yml: |-
+    apiVersion: 1
     providers:
       - name: 'Dashboards'
         folder: 'Node'
@@ -27,7 +37,7 @@ kind: ConfigMap
 metadata:
   labels:
     service: grafana
-  name: grafana-config
+  name: grafana-dashboards
   namespace: grafana
 ---
 apiVersion: apps/v1
@@ -88,12 +98,17 @@ spec:
             - mountPath: /var/lib/grafana/dashboards
               name: dashboard-volume
             - mountPath: /etc/grafana/provisioning/datasources
-              name: grafana-config
+              name: grafana-datasources
+            - mountPath: /etc/grafana/provisioning/dashboards
+              name: grafana-dashboards
       restartPolicy: Always
       volumes:
-        - name: grafana-config
+        - name: grafana-datasources
           configMap:
-            name: grafana-config
+            name: grafana-datasources
+        - name: grafana-dashboards
+          configMap:
+            name: grafana-dashboards     
         - name: dashboard-volume
           emptyDir: {}
 ---

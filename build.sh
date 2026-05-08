@@ -337,7 +337,7 @@ if [ "$grafana" = "true" ]; then
 
     envsubst '$elasticsearch_es_endpoint,$elasticsearch_api_key' < grafana.yaml | kubectl apply -f -
     check_services grafana
-    envsubst '$elasticsearch_kibana_endpoint,$elasticsearch_api_key,$COURSE,$REPO' < migrate.yaml | kubectl apply -f -
+    envsubst '$elasticsearch_kibana_endpoint,$elasticsearch_es_endpoint,$elasticsearch_api_key,$COURSE,$REPO' < migrate.yaml | kubectl apply -f -
 
     cd ..
 fi
