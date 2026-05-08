@@ -8,6 +8,7 @@ RUN git clone https://github.com/elastic/mig-to-kbn.git
 WORKDIR /python-docker/mig-to-kbn
 
 RUN pip install -e ".[all]"
+RUN pip install uv
 RUN obs-migrate --help
 
 ENV PYTHONUNBUFFERED=1
