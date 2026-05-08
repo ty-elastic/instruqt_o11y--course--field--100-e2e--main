@@ -81,10 +81,6 @@ if [ "$build" = "true" ]; then
   ./build.sh -c $course
   cd ../../instruqt
 
-  cd ../utils/cpuhog
-  ./build.sh -c $course
-  cd ../../instruqt
-
   cd ../utils/logen
   ./build.sh -c $course
   cd ../../instruqt
