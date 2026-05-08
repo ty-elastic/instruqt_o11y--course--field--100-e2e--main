@@ -356,7 +356,7 @@ def enable_rules(kibana_server, kibana_auth, es_host):
 
             resp = requests.post(f"{kibana_server}/api/alerting/rule/{file}/_enable",
                                 headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
-            print(resp.json())    
+            print(resp)    
 
 
 def load_rules(kibana_server, kibana_auth, es_host, connect_alerts=False):
