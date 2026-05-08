@@ -365,7 +365,7 @@ def load_rules(kibana_server, kibana_auth, es_host, connect_alerts=False):
 
     resp = requests.get(f"{kibana_server}/api/workflows?size=50&page=1",
                         headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
-    #print(resp.json())
+    print(resp.json())
     
     alert_queue_id = None
     for workflow in resp.json()['results']:

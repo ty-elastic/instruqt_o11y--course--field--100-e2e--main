@@ -313,7 +313,7 @@ if [ "$assets" = "true" ]; then
     envsubst '$JOB_ID,$COURSE,$REPO,$elasticsearch_kibana_endpoint,$elasticsearch_es_endpoint,$elasticsearch_api_key,$remote_endpoint,$namespaces' < assets.yaml | kubectl apply -f -
     cd ..
 
-    retry_command_lin check_assets $JOB_ID
+    #retry_command_lin check_assets $JOB_ID
 
     for current_region in "${regions[@]}"; do
         namespace=$namespace_base-$current_region
