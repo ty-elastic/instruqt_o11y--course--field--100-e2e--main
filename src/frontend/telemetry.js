@@ -1,23 +1,4 @@
-/*
-npm install @opentelemetry/api\
-      @opentelemetry/core\
-      @opentelemetry/resources\
-      @opentelemetry/opentelemetry-browser-detector\
-      @opentelemetry/sdk-trace-base\
-      @opentelemetry/sdk-trace-web\
-      @opentelemetry/context-zone\
-      @opentelemetry/exporter-trace-otlp-http\
-      @opentelemetry/sdk-metrics\
-      @opentelemetry/exporter-metrics-otlp-http\
-      @opentelemetry/api-logs\
-      @opentelemetry/sdk-logs\
-      @opentelemetry/exporter-logs-otlp-http\
-      @opentelemetry/instrumentation\
-      @opentelemetry/auto-instrumentations-web\
-      @opentelemetry/instrumentation-long-task\
-      @opentelemetry/web-common
-  */
-
+// file: telemetry.js
 import { diag, DiagConsoleLogger, trace, metrics } from '@opentelemetry/api';
 import { diagLogLevelFromString, SDK_INFO } from '@opentelemetry/core';
 import { resourceFromAttributes, detectResources } from '@opentelemetry/resources';
@@ -98,7 +79,7 @@ function initOpenTelemetry(config) {
   const tracerProvider = new WebTracerProvider({
     resource,
     spanProcessors: [
-      createSessionSpanProcessor(sessionManager),
+    createSessionSpanProcessor(sessionManager),
       new BatchSpanProcessor(new OTLPTraceExporter({
         url: tracesEndpoint,
       })),
@@ -124,8 +105,8 @@ function initOpenTelemetry(config) {
   const loggerProvider = new LoggerProvider({
     resource: resource,
     processors: [
-      createSessionLogRecordProcessor(sessionManager),
-      new BatchLogRecordProcessor(logExporter)]
+        createSessionLogRecordProcessor(sessionManager),
+        new BatchLogRecordProcessor(logExporter)]
   });
   logs.setGlobalLoggerProvider(loggerProvider);
 

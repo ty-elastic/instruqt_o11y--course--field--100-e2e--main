@@ -10,6 +10,8 @@ data:
         protocols:
           grpc:
             endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
        
     exporters:
       debug: {}
@@ -24,7 +26,34 @@ data:
             hostname: "tbs-sample-collector-headless.opentelemetry-operator-system.svc.cluster.local"
             interval: "5s"
 
+      elasticsearch/otel:
+        endpoints:
+          - ${ELASTIC_ENDPOINT} # Will be populated from environment variable
+        api_key: ${ELASTIC_API_KEY} # Will be populated from environment variable
+        mapping:
+          mode: otel
+        sending_queue:
+          enabled: true
+          sizer: bytes
+          queue_size: 50000000 # 50MB uncompressed
+          block_on_overflow: true
+          batch:
+            flush_timeout: 1s
+            min_size: 1_000_000 # 1MB uncompressed
+            max_size: 4_000_000 # 4MB uncompressed
+        timeout: 15s
+
     service:
+      telemetry:
+        resource:
+          data_stream.dataset: 'collectortelemetry.otel'
+        metrics:
+          readers:
+            - periodic:
+                exporter:
+                  otlp:
+                    endpoint: http://127.0.0.1:4318
+                    protocol: http/protobuf
       pipelines:
         traces:
           receivers:
@@ -33,6 +62,13 @@ data:
           exporters:
             - debug
             - loadbalancing
+        metrics:
+          receivers:
+            - otlp
+          processors: []
+          exporters:
+            - debug
+            - elasticsearch/otel
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -46,6 +82,8 @@ data:
         protocols:
           grpc:
             endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
 
     connectors:
       elasticapm: {}
@@ -103,6 +141,16 @@ data:
               sampling_percentage: 25
 
     service:
+      telemetry:
+        resource:
+          data_stream.dataset: 'collectortelemetry.otel'
+        metrics:
+          readers:
+            - periodic:
+                exporter:
+                  otlp:
+                    endpoint: http://127.0.0.1:4318
+                    protocol: http/protobuf
       pipelines:
         traces/1-process-elastic:
           receivers: [ otlp ]
@@ -114,9 +162,10 @@ data:
           processors: [ tail_sampling ]
           exporters: [ debug, elasticsearch/otel ]
 
-        metrics/aggregated-otel-metrics:
+        metrics:
           receivers:
             - elasticapm
+            - otlp
           processors: []
           exporters:
             - debug
@@ -152,6 +201,16 @@ spec:
           env:
             - name: ELASTIC_AGENT_OTEL
               value: '"true"'
+            - name: ELASTIC_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: elastic-secret-otel
+                  key: elastic_endpoint
+            - name: ELASTIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: elastic-secret-otel
+                  key: elastic_api_key
       restartPolicy: Always
       volumes:
         - name: data

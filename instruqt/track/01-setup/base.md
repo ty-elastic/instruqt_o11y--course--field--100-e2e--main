@@ -24,7 +24,7 @@ tabs:
   title: Code
   type: code
   hostname: k3s
-  path: /workspace/workshop/src
+  path: /workspace/workshop
 - id: hdp9opgzqab3
   title: Services Host
   type: terminal
