@@ -52,7 +52,7 @@ data:
             - periodic:
                 exporter:
                   otlp:
-                    endpoint: http://127.0.0.1:4318
+                    endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4318"
                     protocol: http/protobuf
       pipelines:
         traces:
@@ -149,7 +149,7 @@ data:
             - periodic:
                 exporter:
                   otlp:
-                    endpoint: http://127.0.0.1:4318
+                    endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4318"
                     protocol: http/protobuf
       pipelines:
         traces/1-process-elastic:

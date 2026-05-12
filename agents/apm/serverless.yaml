@@ -153,6 +153,16 @@ collectors:
               enabled: true
       # [Service Section](https://opentelemetry.io/docs/collector/configuration/#service)
       service:
+        telemetry:
+          resource:
+            data_stream.dataset: 'collectortelemetry'
+          metrics:
+            readers:
+              - periodic:
+                  exporter:
+                    otlp:
+                      endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4318"
+                      protocol: http/protobuf
         pipelines:
           metrics:
             exporters:
@@ -569,7 +579,7 @@ collectors:
               - periodic:
                   exporter:
                     otlp:
-                      endpoint: http://127.0.0.1:4318
+                      endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4318"
                       protocol: http/protobuf
         extensions: [k8s_observer, bearertokenauth, apmconfig]
         pipelines:
@@ -748,7 +758,7 @@ collectors:
               - periodic:
                   exporter:
                     otlp:
-                      endpoint: http://127.0.0.1:4318
+                      endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4318"
                       protocol: http/protobuf
         pipelines:
           metrics:
