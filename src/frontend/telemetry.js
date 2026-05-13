@@ -136,7 +136,6 @@ function initOpenTelemetry(config) {
   // Register instrumentations
   registerInstrumentations({
     instrumentations: [
-    new WebVitalsInstrumentation(),
     getWebAutoInstrumentations({
       // load custom configuration for instrumentation-user-interaction
       '@opentelemetry/instrumentation-user-interaction': {
@@ -144,6 +143,7 @@ function initOpenTelemetry(config) {
       },
     }),
       new LongTaskInstrumentation(),
+      new WebVitalsInstrumentation(),
     ],
   });
 }
