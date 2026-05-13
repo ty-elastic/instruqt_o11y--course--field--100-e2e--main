@@ -1,3 +1,24 @@
+/*
+npm install @opentelemetry/api\
+      @opentelemetry/core\
+      @opentelemetry/resources\
+      @opentelemetry/opentelemetry-browser-detector\
+      @opentelemetry/sdk-trace-base\
+      @opentelemetry/sdk-trace-web\
+      @opentelemetry/context-zone\
+      @opentelemetry/exporter-trace-otlp-http\
+      @opentelemetry/sdk-metrics\
+      @opentelemetry/exporter-metrics-otlp-http\
+      @opentelemetry/api-logs\
+      @opentelemetry/sdk-logs\
+      @opentelemetry/exporter-logs-otlp-http\
+      @opentelemetry/instrumentation\
+      @opentelemetry/auto-instrumentations-web\
+      @opentelemetry/instrumentation-long-task
+
+@opentelemetry/browser-instrumentation
+*/
+
 // file: telemetry.js
 import { diag, DiagConsoleLogger, trace, metrics } from '@opentelemetry/api';
 import { diagLogLevelFromString, SDK_INFO } from '@opentelemetry/core';
@@ -15,6 +36,8 @@ import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { getWebAutoInstrumentations } from '@opentelemetry/auto-instrumentations-web';
 import { LongTaskInstrumentation } from '@opentelemetry/instrumentation-long-task';
+
+import { WebVitalsInstrumentation } from '@opentelemetry/browser-instrumentation/experimental/web-vitals';
 
 import axios from "axios";
 
@@ -113,6 +136,7 @@ function initOpenTelemetry(config) {
   // Register instrumentations
   registerInstrumentations({
     instrumentations: [
+    new WebVitalsInstrumentation(),
     getWebAutoInstrumentations({
       // load custom configuration for instrumentation-user-interaction
       '@opentelemetry/instrumentation-user-interaction': {

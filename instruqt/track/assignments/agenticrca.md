@@ -221,6 +221,10 @@ was there a spike in log rate when this issue started occurring?
 ```
 2. Enter the following into the `Ask anything` box at the bottom of the Agent
 ```
+can you visualize the log rate spike by error level?
+```
+3. Enter the following into the `Ask anything` box at the bottom of the Agent
+```
 can you update the case with the results of our log rate analysis?
 ```
 
@@ -244,14 +248,28 @@ We intentionally make remediation a Human-In-the-Loop (HIL) activity, though of 
 can you restart the monkey service?
 ```
 
-After the agent has completed the task, let's verify that the service was restarted
+After the agent has completed the task, let's verify that the service was restarted with elastic-ramen!
 
 1. Open the [button label="Services Host"](tab-6) Instruqt tab
 2. Enter the following `kubectl` command:
 ```bash,run
-kubectl -n trading-na get pods
+elastic-ramen
 ```
-3. Note that the `monkey` pod was recently restarted
+3. In elastic ramen, enter the following command:
+```
+/kibana-conversations
+```
+4. Select the `RCA for Case...` conversation
+5. Enter the following into the ramen prompt:
+```
+can you validate with k8s that the monkey pod was restarted?
+```
+6. Accept the escalations
+7. Enter the following into the ramen prompt:
+```
+can you update the case with this validation evidence?
+```
+
 
 #### (Optional) How does this work?
 
