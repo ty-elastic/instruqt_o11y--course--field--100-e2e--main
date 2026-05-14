@@ -41,9 +41,8 @@ steps:
       required: ["approved"]
 
 - name: check_approval
-  type: condition
-  with:
-    condition: "steps.review.output.approved : true"
+  type: if
+  condition: "steps.review.output.approved : true"
   steps:
     - name: call_remote
       type: http
