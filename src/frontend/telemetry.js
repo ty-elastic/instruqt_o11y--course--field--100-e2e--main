@@ -14,9 +14,8 @@ npm install @opentelemetry/api\
       @opentelemetry/exporter-logs-otlp-http\
       @opentelemetry/instrumentation\
       @opentelemetry/auto-instrumentations-web\
-      @opentelemetry/instrumentation-long-task
-
-@opentelemetry/browser-instrumentation
+      @opentelemetry/instrumentation-long-task\
+      @opentelemetry/browser-instrumentation
 */
 
 // file: telemetry.js

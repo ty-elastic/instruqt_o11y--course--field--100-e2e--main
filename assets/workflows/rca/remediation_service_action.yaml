@@ -20,22 +20,47 @@ inputs:
 triggers:
 - type: manual
 steps:
-- name: call_remote
-  type: http
-  with:
-    url: '{{consts.remote_host}}/service/{{inputs.namespace}}/{{inputs.service_name}}/{{inputs.service_action}}'
-    method: POST
-    headers:
-      Content-Type: application/json
 
-- name: add_comment_to_existing_case
-  type: kibana.request
+- name: review
+  type: waitForInput
   with:
-    method: POST
-    path: /api/cases/{{ inputs.case_id }}/comments
-    body:
-      type: user
-      owner: observability
-      comment: ⚡ Attempted `{{inputs.service_action}}` of `{{inputs.service_name}}`
-  on-failure:
-    continue: true
+    message: |
+      ## About to perform an action on a service
+
+      **Service Name:** {{ inputs.service_name }}
+      **Namespace:** {{ inputs.namespace}}
+      **Requested Action:** {{ inputs.service_action}}   
+
+      Proceed?
+    schema:
+      type: object
+      properties:
+        approved:
+          type: boolean
+          title: "Proceed"
+      required: ["approved"]
+
+- name: check_approval
+  type: condition
+  with:
+    condition: "steps.review.output.approved : true"
+  steps:
+    - name: call_remote
+      type: http
+      with:
+        url: '{{consts.remote_host}}/service/{{inputs.namespace}}/{{inputs.service_name}}/{{inputs.service_action}}'
+        method: POST
+        headers:
+          Content-Type: application/json
+
+    - name: add_comment_to_existing_case
+      type: kibana.request
+      with:
+        method: POST
+        path: /api/cases/{{ inputs.case_id }}/comments
+        body:
+          type: user
+          owner: observability
+          comment: ⚡ Attempted `{{inputs.service_action}}` of `{{inputs.service_name}}`
+      on-failure:
+        continue: true
