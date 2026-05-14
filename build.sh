@@ -117,6 +117,8 @@ do
    esac
 done
 
+echo "**COURSE=$course**"
+
 echo working_dir=$working_dir
 cd $working_dir
 
