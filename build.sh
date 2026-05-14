@@ -172,13 +172,13 @@ fi
 
 if [ "$build_service" = "true" ]; then
     cd ./src
-    source $PWD/build.sh -k $service_version -r $repo -s $service -c $course -a $arch
+    $PWD/build.sh -k $service_version -r $repo -s $service -c $course -a $arch
     cd ..
 fi
 
 if [ "$build_lib" = "true" ]; then
     cd ./lib
-    source $PWD/build.sh -r $repo -c $course -a $arch
+    $PWD/build.sh -r $repo -c $course -a $arch
     cd ..
 fi
 
