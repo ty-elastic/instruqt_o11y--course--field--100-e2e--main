@@ -1,55 +1,3 @@
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: router-collector-config
-  namespace: $NAMESPACE
-data:
-  config.yaml: |-
-    receivers:
-      prometheus:
-        config:
-          global:
-            # Required: Include PrometheusProto to scrape native histograms
-            scrape_protocols: [ PrometheusProto, OpenMetricsText1.0.0, OpenMetricsText0.0.1, PrometheusText0.0.4 ]
-            # Enable native histogram scraping globally
-            scrape_native_histograms: true
-            always_scrape_classic_histograms: true
-          scrape_configs:
-            - job_name: 'router'
-              scrape_interval: 5s
-              static_configs:
-                - targets: ['0.0.0.0:9000']
-
-    processors:
-      batch:
-        send_batch_size: 1000
-        timeout: 1s
-        send_batch_max_size: 1500
-      resource/meta:
-        attributes:
-          - key: service.name
-            value: router
-            action: insert
-          - key: resource.attributes.cloud.region
-            from_context: "${env:OTEL_K8S_NAMESPACE}"
-            action: upsert
-
-    exporters:
-      debug:
-        verbosity: basic
-      otlp/gateway:
-        endpoint: "http://opentelemetry-kube-stack-daemon-collector.opentelemetry-operator-system.svc.cluster.local:4317"
-        tls:
-          insecure: true
-
-    service:
-      pipelines:
-        metrics:
-          receivers: [prometheus]
-          processors: [batch, resource/meta]
-          exporters: [debug, otlp/gateway]
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -93,26 +41,6 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 9000
-      #   - name: collector
-      #     image: otel/opentelemetry-collector-contrib:0.146.0
-      #     command:
-      #       - "/otelcol-contrib"
-      #       - "--config=/etc/otelcol-contrib/config.yaml"
-      #       - "--feature-gates=receiver.prometheusreceiver.EnableNativeHistograms"
-      #     volumeMounts:
-      #       - mountPath: /etc/otelcol-contrib/config.yaml
-      #         name: data
-      #         subPath: config.yaml
-      #         readOnly: true
-      #     env:
-      #       - name: OTEL_K8S_NAMESPACE
-      #         valueFrom:
-      #           fieldRef:
-      #             fieldPath: metadata.namespace
-      # volumes:
-      #   - name: data
-      #     configMap:
-      #       name: router-collector-config
       restartPolicy: Always
 ---
 apiVersion: v1

@@ -112,6 +112,16 @@ EOF
 }
 EOF
 
+  mkdir -p "/root/.config/elastic-ramen"
+  cat > "/root/.config/elastic-ramen/AGENTS.md" <<EOF
+# Local Tools
+You are operating in an environment where you have access to the following local tools:
+* kubectl
+
+If you are asked to do anything related to Kubernetes, including taking action or checking the state of the cluster,
+you should prefer the kubectl tool over any other source of data, including data stored on the Elasticsearch cluster.
+EOF
+
   curl -fsSL https://raw.githubusercontent.com/elastic/elastic-ramen/dev/install | bash
 
   printf "$FUNCNAME...SUCCESS\n"
