@@ -12,23 +12,11 @@ triggers:
 settings:
   timeout: 20m
 steps:
-- name: get_workflows
-  type: kibana.request
-  with:
-    method: GET
-    path: /api/workflows?size=50&page=1
-    headers:
-      x-elastic-internal-origin: kibana
-  timeout: 30s
-- name: get_this_workflow_id
-  type: console
-  with:
-    message: '{% for workflow in steps.get_workflows.output.results %}{%- if workflow.name == consts.workflow_name -%}{{ workflow.id }}{% break %}{%- endif -%}{% endfor %}'
 - name: workflow_status
   type: kibana.request
   with:
     method: GET
-    path: /api/workflows/workflow/{{ steps.get_this_workflow_id.output }}/executions
+    path: /api/workflows/workflow/{{ workflow.id }}/executions
     headers:
       x-elastic-internal-origin: kibana
 - name: is_workflow_running
@@ -67,13 +55,14 @@ steps:
     type: foreach
     foreach: '{{ steps.get_active_alerts.output.hits.hits }}'
     steps:
-    - name: correlate
-      type: ai.agent
-      create-conversation: true
-      agent-id: rca
-      with:
-        schema:
-          items:
+
+
+      - name: correlate
+        type: ai.agent
+        create-conversation: true
+        agent-id: rca
+        with:
+          schema:
             title: CorrelateAlert
             type: object
             additionalProperties: false
@@ -82,7 +71,6 @@ steps:
               case_id:
                 type: string
                 description: if this alert is related to an existing case, the ID of the related case, otherwise `NONE`
-                examples: [a194a64e-d555-46b8-9e50-9b93c3739f76, NONE]
               relation:
                 type: string
                 description: if this alert is related to an existing case, briefly explain how this alert relates to the identified case, otherwise briefly explain why it isn't related to existing cases
@@ -95,100 +83,77 @@ steps:
               severity:
                 type: string
                 description: if this alert is not related to an existing case, a value of `low`, `medium`, `high`, or `critical` based on an initial analysis of the alert
-                examples: [low, medium, high, critical]
               system_environment:
                 type: string
                 description: if, from the topologies, you can identify a system_environment associated with this alert, a value of the name of the associated system
-        message: |
-          Try to correlate this alert to a case: 
-          ```json
-          {{ foreach.item._source | json: 2 }}
-          ```
-    - name: new_or_update_case
-      type: if
-      condition: 'steps.correlate.output.structured_output[0].case_id : NONE'
-      steps:
-      - name: get_case_settings
-        type: kibana.request
+          message: |
+            Try to correlate this alert to a case: 
+            ```json
+            {{ steps.get_active_alerts.output.hits.hits[foreach.index]._source | json: 2 }}
+            ```
+      - name: new_or_update_case
+        type: if
+        condition: 'steps.correlate.output.structured_output.case_id : NONE'
+        steps:
+          - name: create_new_case
+            type: cases.createCase
+            connector-id: snowem
+            with:
+              title: '{{ steps.correlate.output.structured_output.title }}'
+              description: '{{ steps.correlate.output.structured_output.trigger }}'
+              severity: '{{ steps.correlate.output.structured_output.severity }}'
+              tags: ["rca"]
+              owner: "observability"
+              settings:
+                syncAlerts: true
+              customFields:
+                - key: system_environment
+                  type: text
+                  value: '{{ steps.correlate.output.structured_output.system_environment}}'
+            
+      - name: case_id
+        type: console
         with:
-          method: GET
-          path: /api/cases/configure
-      - name: create_new_case
-        type: kibana.createCaseDefaultSpace
+          message: "{% if steps.correlate.output.structured_output.case_id == 'NONE' %}{{ steps.create_new_case.output.case.id }}{% else %}{{ steps.correlate.output.structured_output.case_id }}{%endif%}"
+
+      - name: add_alert_to_case
+        type: cases.addAlerts
         with:
-          connector:
-            id: '{{ steps.get_case_settings.output[0].connector.id }}'
-            name: '{{ steps.get_case_settings.output[0].connector.name }}'
-            type: ".servicenow"
-            fields: 
-              category: ''
-              impact: ''
-              severity: '{{ inputs.severity }}'
-              subcategory: ''
-              urgency: ''
-          customFields:
-          - key: system_environment
-            type: text
-            value: '{{ steps.correlate.output.structured_output[0].system_environment}}'
-          description: '{{ steps.correlate.output.structured_output[0].trigger }}'
-          owner: observability
-          settings:
-            syncAlerts: true
-          severity: '{{ steps.correlate.output.structured_output[0].severity }}'
-          tags:
-          - rca
-          title: '{{ steps.correlate.output.structured_output[0].title }}'
-    - name: case_id
-      type: console
-      with:
-        message: "{% if steps.correlate.output.structured_output[0].case_id == 'NONE' %}{{ steps.create_new_case.output.id }}{% else %}{{ steps.correlate.output.structured_output[0].case_id }}{%endif%}"
-    - name: add_alert_to_case
-      type: kibana.request
-      with:
-        method: POST
-        path: /api/cases/{{ steps.case_id.output }}/comments
-        body:
-          type: alert
-          alertId: '{{ foreach.item._id }}'
-          index: '{{ foreach.item._index }}'
-          owner: observability
-          rule:
-            id: '{{ foreach.item._source["kibana.alert.rule.uuid"] }}'
-            name: '{{ foreach.item._source["kibana.alert.rule.name"] }}'
-      on-failure:
-        retry:
-          max-attempts: 3
-          delay: 1s
-    - name: add_comment_to_case
-      type: kibana.request
-      with:
-        method: POST
-        path: /api/cases/{{ steps.case_id.output }}/comments
-        body:
-          type: user
-          owner: observability
+          case_id: '{{ steps.case_id.output }}'
+          alerts:
+            - alertId: '{{ steps.get_active_alerts.output.hits.hits[foreach.index]._id }}'
+              index: '{{ steps.get_active_alerts.output.hits.hits[foreach.index]._index }}'
+        on-failure:
+          retry:
+            max-attempts: 2
+            delay: 1s
+
+      - name: add_comment_to_case
+        type: cases.addComment
+        with:
+          case_id: '{{ steps.case_id.output }}'
           comment: |
-            # Related Alert
-            * Summary: {{ foreach.item._source["kibana.alert.reason"] }}
-            * [Conversation](/app/agent_builder/conversations/{{ steps.correlate.output.conversation_id }})
-            * Relationship to Case: {{ steps.correlate.output.structured_output[0].relation }}
+              # Related Alert
+              * Summary: {{ steps.get_active_alerts.output.hits.hits[foreach.index]._source["kibana.alert.reason"] }}
+              * [Conversation](/app/agent_builder/conversations/{{ steps.correlate.output.conversation_id }})
+              * Relationship to Case: {{ steps.correlate.output.structured_output.relation }}
+        on-failure:
+          retry:
+            max-attempts: 2
+            delay: 1s
 
   - name: if_new_alerts
     type: if
     condition: steps.get_active_alerts.output.hits.total.value > 0
     steps:
-    - name: get_case_workflow_id
-      type: console
-      with:
-        message: '{% for workflow in steps.get_workflows.output.results %}{%- if workflow.name == consts.case_workflow_name -%}{{ workflow.id }}{% break %}{%- endif -%}{% endfor %}'
-    - name: start_case_process_workflow
-      type: kibana.request
-      with:
-        method: POST
-        path: /api/workflows/workflow/{{ steps.get_case_workflow_id.output }}/run
-        body:
+      - name: get_case_workflow_id
+        type: console
+        with:
+          message: '{% for workflow in steps.get_workflows.output.results %}{%- if workflow.name == consts.case_workflow_name -%}{{ workflow.id }}{% break %}{%- endif -%}{% endfor %}'
+      - name: start_case_process_workflow
+        type: workflow.executeAsync
+        with:
+          workflow-id: "{{ steps.get_case_workflow_id.output }}"
           inputs:
-            event: ''
             alerts_ready: true
-        headers:
-          x-elastic-internal-origin: kibana
+            event: ''
