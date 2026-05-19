@@ -21,23 +21,11 @@ inputs:
   type: boolean
 
 steps:
-- name: get_workflows
-  type: kibana.request
-  with:
-    method: GET
-    path: /api/workflows?size=50&page=1
-    headers:
-      x-elastic-internal-origin: kibana
-  timeout: 30s
-- name: get_this_workflow_id
-  type: console
-  with:
-    message: '{% for workflow in steps.get_workflows.output.results %}{%- if workflow.name == consts.workflow_name -%}{{ workflow.id }}{% break %}{%- endif -%}{% endfor %}'
 - name: workflow_status
   type: kibana.request
   with:
     method: GET
-    path: /api/workflows/workflow/{{ steps.get_this_workflow_id.output }}/executions
+    path: /api/workflows/workflow/{{ workflow.id }}/executions
     headers:
       x-elastic-internal-origin: kibana
 - name: is_workflow_running
@@ -145,22 +133,21 @@ steps:
             continue: true
 
         - name: add_response_to_existing_case
-          type: kibana.request
+          type: cases.addComment
           with:
-            method: POST
-            path: /api/cases/{{ foreach.item.id }}/comments
-            body:
-              type: user
-              owner: observability
-              comment: '{{ steps.rca.output.message }}'
+            case_id: '{{ foreach.item.id }}'
+            comment: '{{ steps.rca.output.message }}'
+          on-failure:
+            retry:
+              max-attempts: 2
+              delay: 1s
 
         - name: add_conversation_to_existing_case
-          type: kibana.request
+          type: cases.addComment
           with:
-            method: POST
-            path: /api/cases/{{ foreach.item.id }}/comments
-            body:
-              type: user
-              owner: observability
-              comment: 🔍 You can continue your investigation or take remediation action [here](/app/agent_builder/conversations/{{ steps.rca.output.conversation_id }}).
-
+            case_id: '{{ foreach.item.id }}'
+            comment: '🔍 You can continue your investigation or take remediation action [here](/app/agent_builder/conversations/{{ steps.rca.output.conversation_id }}).'
+          on-failure:
+            retry:
+              max-attempts: 2
+              delay: 1s
