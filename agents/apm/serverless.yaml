@@ -533,6 +533,7 @@ collectors:
           observe_ingresses: true
       # [Service Section](https://opentelemetry.io/docs/collector/configuration/#service)
       service:
+        extensions: [cgroupruntime, k8s_observer]
         telemetry:
           resource:
             data_stream.dataset: 'collectortelemetry'
