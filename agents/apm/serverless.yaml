@@ -395,7 +395,7 @@ collectors:
               endpoint: 0.0.0.0:4318
               include_metadata: true
         receiver_creator/logs:
-          watch_observers: [k8s_observer]
+          watch_observers: [ k8s_observer ]
           discovery:
             enabled: true
             default_annotations:
