@@ -527,7 +527,10 @@ collectors:
             - container.id
       extensions:
         cgroupruntime: {}
-        k8s_observer: {}
+        k8s_observer:
+          observe_nodes: true
+          observe_services: true
+          observe_ingresses: true
       # [Service Section](https://opentelemetry.io/docs/collector/configuration/#service)
       service:
         telemetry:
@@ -728,13 +731,8 @@ collectors:
           timeout: 15s
       extensions:
         cgroupruntime: {}
-        k8s_observer:
-          observe_nodes: true
-          observe_services: true
-          observe_ingresses: true
       service:
         extensions: [cgroupruntime]
-      service:
         telemetry:
           resource:
             data_stream.dataset: 'collectortelemetry'
