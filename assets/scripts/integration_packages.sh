@@ -66,8 +66,8 @@ get_version_for_package_from_stack() {
 install_integration_package() {
     printf "$FUNCNAME for $1...\n"
 
-    unset $PACKAGE_NAME
-    unset $PACKAGE_VERSION
+    unset PACKAGE_NAME
+    unset PACKAGE_VERSION
 
     # fast path
     get_version_for_package_from_elastic $1
