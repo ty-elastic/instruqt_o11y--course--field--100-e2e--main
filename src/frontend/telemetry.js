@@ -30,7 +30,7 @@ import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 import { logs, SeverityNumber } from '@opentelemetry/api-logs';
-import { LogRecordProcessor, ReadWriteLogRecord, BatchLogRecordProcessor, LoggerProvider } from '@opentelemetry/sdk-logs';
+import { BatchLogRecordProcessor, LoggerProvider } from '@opentelemetry/sdk-logs';
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { getWebAutoInstrumentations } from '@opentelemetry/auto-instrumentations-web';
@@ -51,16 +51,6 @@ const {
 } = require('@opentelemetry/web-common');
 
 const initDone = Symbol('OTEL initialized');
-
-class UserAgentProcessor implements LogRecordProcessor {
-  onEmit(logRecord: ReadWriteLogRecord): void {
-    // Inject the browser's user agent into the log record attributes
-    logRecord.setAttribute('browser.user_agent', navigator.userAgent);
-  }
-
-  async forceFlush(): Promise<void> {}
-  async shutdown(): Promise<void> {}
-}
 
 // Expected properties of the config object:
 // - logLevel
@@ -138,8 +128,7 @@ function initOpenTelemetry(config) {
     resource: resource,
     processors: [
         createSessionLogRecordProcessor(sessionManager),
-        new BatchLogRecordProcessor(logExporter),
-        new UserAgentProcessor()
+        new BatchLogRecordProcessor(logExporter)
       ]
   });
   logs.setGlobalLoggerProvider(loggerProvider);
@@ -159,14 +148,13 @@ function initOpenTelemetry(config) {
   });
 }
 
-
-
 const apm = initOpenTelemetry({
   logLevel: 'info',
   endpoint: '/telemetry',
   resourceAttributes: {
     'service.name': '${SERVICE_NAME}',
-    'service.version': '${SERVICE_VERSION}'
+    'service.version': '${SERVICE_VERSION}',
+    'browser.user_agent': navigator.userAgent // Injects the user agent
   }
 });
 export default apm;
