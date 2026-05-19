@@ -20,8 +20,7 @@ from opentelemetry.sdk.metrics import (
 )
 
 from opentelemetry import _logs as logs
-from opentelemetry.processor.logrecord.baggage import BaggageLogRecordProcessor
-from opentelemetry.processor.baggage import BaggageSpanProcessor, ALLOW_ALL_BAGGAGE_KEYS
+from opentelemetry.processor.baggage import BaggageSpanProcessor, BaggageLogProcessor, ALLOW_ALL_BAGGAGE_KEYS
 
 ATTRIBUTE_PREFIX = "com.example"
 TRADE_TIMEOUT = 5
@@ -44,7 +43,7 @@ def init_otel():
 
     if 'OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED' in os.environ:
         print("enable otel logging")
-        logs.get_logger_provider().add_log_record_processor(BaggageLogRecordProcessor(ALLOW_ALL_BAGGAGE_KEYS))        
+        logs.get_logger_provider().add_log_record_processor(BaggageLogProcessor(ALLOW_ALL_BAGGAGE_KEYS))     
         root_logger = logging.getLogger()
         for handler in root_logger.handlers:
             if isinstance(handler, logging.StreamHandler):
