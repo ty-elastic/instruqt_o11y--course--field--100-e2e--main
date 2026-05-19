@@ -664,6 +664,28 @@ collectors:
                 - delete_key(resource.attributes, "tmp")
                 - set(resource.attributes["browser.name"], resource.attributes["browser.user_agent.name"])
                 - set(resource.attributes["browser.platform"], resource.attributes["browser.os.name"])
+          metric_statements:
+            - context: resource
+              conditions:
+                - resource.attributes["browser.user_agent"] != nil
+              statements:
+                - set(resource.attributes["tmp"], UserAgent(resource.attributes["browser.user_agent"]))
+                - flatten(resource.attributes["tmp"], "browser")
+                - merge_maps(resource.attributes, resource.attributes["tmp"], "upsert")
+                - delete_key(resource.attributes, "tmp")
+                - set(resource.attributes["browser.name"], resource.attributes["browser.user_agent.name"])
+                - set(resource.attributes["browser.platform"], resource.attributes["browser.os.name"])
+          log_statements:
+            - context: resource
+              conditions:
+                - resource.attributes["browser.user_agent"] != nil
+              statements:
+                - set(resource.attributes["tmp"], UserAgent(resource.attributes["browser.user_agent"]))
+                - flatten(resource.attributes["tmp"], "browser")
+                - merge_maps(resource.attributes, resource.attributes["tmp"], "upsert")
+                - delete_key(resource.attributes, "tmp")
+                - set(resource.attributes["browser.name"], resource.attributes["browser.user_agent.name"])
+                - set(resource.attributes["browser.platform"], resource.attributes["browser.os.name"])
 
         transform/servertoclient:
           trace_statements:
@@ -727,11 +749,11 @@ collectors:
         pipelines:
           metrics:
             receivers: [otlp]
-            processors: []
+            processors: [transform/ua]
             exporters: [debug, otlp/ingest_metrics_traces]
           logs:
             receivers: [otlp]
-            processors: []
+            processors: [transform/ua]
             exporters: [debug, otlp/ingest_logs]
           traces:
             receivers: [otlp]
