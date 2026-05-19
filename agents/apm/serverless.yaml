@@ -527,6 +527,7 @@ collectors:
             - container.id
       extensions:
         cgroupruntime: {}
+        k8s_observer: {}
       # [Service Section](https://opentelemetry.io/docs/collector/configuration/#service)
       service:
         telemetry:
@@ -539,7 +540,6 @@ collectors:
                     otlp:
                       endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4318"
                       protocol: http/protobuf
-        extensions: [cgroupruntime, k8s_observer]
         pipelines:
           # Disable default non used kube-stack Helm Chart pipelines
           logs: null
