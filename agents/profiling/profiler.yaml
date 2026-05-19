@@ -128,7 +128,7 @@ spec:
       serviceAccountName: profiling-collector
       containers:
         - name: collector
-          image: docker.elastic.co/elastic-agent/elastic-agent:9.4.0-SNAPSHOT
+          image: docker.elastic.co/elastic-agent/elastic-agent:$AGENT_VERSION
           env:
             - name: OTEL_K8S_NODE_NAME
               valueFrom:

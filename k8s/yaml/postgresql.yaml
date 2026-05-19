@@ -215,7 +215,7 @@ spec:
     spec:
       containers:
         - name: collector
-          image: otel/opentelemetry-collector-contrib:0.145.0
+          image: otel/opentelemetry-collector-contrib:0.152.0
           command:
             - "/otelcol-contrib"
             - "--config=/etc/otelcol-contrib/config.yaml"

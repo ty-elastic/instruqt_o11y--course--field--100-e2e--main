@@ -15,9 +15,11 @@ do
    esac
 done
 
+export AGENT_VERSION=9.4.1
+
 config_profiling_agent() {
     printf "$FUNCNAME...\n"
-    kubectl apply -f agents/profiling/profiler.yaml
+    envsubst '$AGENT_VERSION' < agents/profiling/profiler.yaml | kubectl apply -f -
     printf "$FUNCNAME...SUCCESS\n"
 }
 config_profiling_agent

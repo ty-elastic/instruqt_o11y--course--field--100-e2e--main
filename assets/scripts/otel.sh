@@ -15,6 +15,8 @@ do
    esac
 done
 
+export AGENT_VERSION=9.4.1
+
 check_otel() {
     kubectl wait --for=condition=Ready pods --all -n opentelemetry-operator-system --timeout=120s
 
@@ -54,7 +56,7 @@ deploy_otel() {
     cd ../..
 
     cd agents/tbs
-    kubectl apply -f tbs.yaml
+    envsubst '$AGENT_VERSION' < tbs.yaml | kubectl apply -f -
     cd ../..
 
     if [ "$EXISTING" = "true" ]; then
