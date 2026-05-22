@@ -136,12 +136,12 @@ function initOpenTelemetry(config) {
   // Register instrumentations
   registerInstrumentations({
     instrumentations: [
-    getWebAutoInstrumentations({
-      // load custom configuration for instrumentation-user-interaction
-      '@opentelemetry/instrumentation-user-interaction': {
-        eventNames: ['submit', 'click'],
-      },
-    }),
+      getWebAutoInstrumentations({
+        // load custom configuration for instrumentation-user-interaction
+        '@opentelemetry/instrumentation-user-interaction': {
+          eventNames: ['submit', 'click'],
+        },
+      }),
       new LongTaskInstrumentation(),
       new WebVitalsInstrumentation(),
     ],
@@ -154,7 +154,8 @@ const apm = initOpenTelemetry({
   resourceAttributes: {
     'service.name': '${SERVICE_NAME}',
     'service.version': '${SERVICE_VERSION}',
-    'browser.user_agent': navigator.userAgent // Injects the user agent
+    'browser.user_agent': navigator.userAgent, // Injects the user agent,
+    'user_agent.original': navigator.userAgent // Injects the user agent
   }
 });
 export default apm;

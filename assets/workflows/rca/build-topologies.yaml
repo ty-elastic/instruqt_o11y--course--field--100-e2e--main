@@ -1,4 +1,4 @@
-name: build_topologies
+name: build-topologies
 enabled: true
 version: '1'
 description: build topology to help with correlation and RCA

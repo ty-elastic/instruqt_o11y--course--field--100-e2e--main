@@ -3,6 +3,7 @@ zone="us-central1-a"
 name="superdemo"
 keep_until=$(date -v+1m +%Y-%m-%d)
 
+OPTIND=1
 while getopts "p:n:z:r:t:u:" opt
 do
    case "$opt" in

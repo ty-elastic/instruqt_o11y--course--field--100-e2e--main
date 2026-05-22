@@ -67,6 +67,7 @@ elasticsearch_es_endpoint="na"
 elasticsearch_kibana_endpoint="na"
 elasticsearch_api_key="na"
 elasticsearch_otlp_endpoint="na"
+elasticsearch_fleet_endpoint="na"
 remote_endpoint="na"
 working_dir="$PWD"
 
@@ -79,7 +80,8 @@ case "${unameOut}" in
     *)          machine="UNKNOWN:${unameOut}"
 esac
 
-while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:n:z:u:q:" opt
+OPTIND=1
+while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:n:z:u:q:t:" opt
 do
    case "$opt" in 
       a ) arch="$OPTARG" ;;
@@ -106,6 +108,7 @@ do
       i ) elasticsearch_api_key="$OPTARG" ;;
       j ) elasticsearch_es_endpoint="$OPTARG" ;;
       k ) elasticsearch_otlp_endpoint="$OPTARG" ;;
+      t ) elasticsearch_fleet_endpoint="$OPTARG" ;;
 
       m ) synthetics="$OPTARG" ;;
 
@@ -188,7 +191,7 @@ if [ "$deploy_otel" != "false" ]; then
         deploy_otel="stack"
     fi
 
-    source $PWD/assets/scripts/otel.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint -o $deploy_otel
+    source $PWD/assets/scripts/otel.sh -t $elasticsearch_fleet_endpoint -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint -o $deploy_otel
 fi
 
 if [ "$features" = "true" ]; then
@@ -282,7 +285,7 @@ if [ "$profiling" = "true" ]; then
 fi
 
 if [ "$synthetics" = "true" ]; then
-    source $PWD/assets/scripts/synthetics.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+    source $PWD/assets/scripts/synthetics.sh -t $elasticsearch_fleet_endpoint -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 fi
 
 if [ "$remote_endpoint" != "na" ]; then
@@ -301,6 +304,7 @@ if [ "$assets" = "true" ]; then
     cd assets
 
     if [ "$build_lib" = "true" ]; then
+        echo $course
         source $PWD/build.sh -r $repo -c $course -a $arch
     fi
 

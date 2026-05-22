@@ -86,7 +86,7 @@ steps:
         label: ai_conversation_id
         required: false
         type: text
-      - defaultValue: "0"
+      - defaultValue: '0'
         key: processed_alerts
         label: processed_alerts
         required: false
@@ -95,31 +95,8 @@ steps:
   on-failure:
     continue: true
 
-- name: get_workflows
-  type: kibana.request
+- name: start_topology_builder
+  type: workflow.executeAsync
   with:
-    method: GET
-    path: /api/workflows?size=50&page=1
-    headers:
-      x-elastic-internal-origin: kibana
-  timeout: 30s
-
-- name: foreach_workflow
-  type: foreach
-  foreach: '{{ steps.get_workflows.output.results | json }}'
-  steps:
-
-  - name: is_topology_builder
-    type: if
-    condition: 'foreach.item.name : "build_topologies"'
-    steps:
-    - name: start_topology_builder
-      type: kibana.request
-      with:
-        method: POST
-        path: /api/workflows/workflow/{{ foreach.item.id }}/run
-        body:
-          inputs:
-            event: ''
-        headers:
-          x-elastic-internal-origin: kibana
+    workflow-id: build-topologies
+    inputs: {}

@@ -3,6 +3,7 @@ build=true
 docs=false
 branch=test
 
+OPTIND=1
 while getopts "a:b:c:r:d:" opt
 do
    case "$opt" in

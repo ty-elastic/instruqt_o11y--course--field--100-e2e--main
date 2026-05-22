@@ -2,6 +2,7 @@ arch=linux/amd64
 course=latest
 repo=us-central1-docker.pkg.dev/elastic-sa/tbekiares
 
+OPTIND=1
 while getopts "a:c:r:" opt
 do
     case "$opt" in

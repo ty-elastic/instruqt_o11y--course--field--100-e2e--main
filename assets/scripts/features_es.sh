@@ -4,6 +4,7 @@ source $PWD/assets/scripts/retry.sh
 
 namespace=na
 
+OPTIND=1
 while getopts "n:h:i:j:k:" opt
 do
    case "$opt" in

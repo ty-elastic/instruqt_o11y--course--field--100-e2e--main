@@ -3,6 +3,7 @@ repo=us-central1-docker.pkg.dev/elastic-sa/tbekiares
 course=latest
 current_service=obs-migrate
 
+OPTIND=1
 while getopts "c:" opt
 do
    case "$opt" in

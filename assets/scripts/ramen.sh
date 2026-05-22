@@ -2,6 +2,7 @@
 
 working_dir=$PWD
 
+OPTIND=1
 while getopts "h:i:j:z:" opt
 do
    case "$opt" in

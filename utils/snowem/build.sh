@@ -3,6 +3,7 @@ repo=us-central1-docker.pkg.dev/elastic-sa/tbekiares
 course=latest
 current_service=snowem
 
+OPTIND=1
 while getopts "a:c:r:" opt
 do
    case "$opt" in

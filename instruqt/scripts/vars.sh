@@ -19,6 +19,7 @@ check_host() {
 }
 
 wait=false
+OPTIND=1
 while getopts "w:" opt
 do
    case "$opt" in

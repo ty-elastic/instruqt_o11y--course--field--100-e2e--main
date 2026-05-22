@@ -4,6 +4,7 @@ repo=us-central1-docker.pkg.dev/elastic-sa/tbekiares
 service=all
 service_version="1.0"
 
+OPTIND=1
 while getopts "r:a:c:s:n:k:e:f:g:h:i:" opt
 do
    case "$opt" in

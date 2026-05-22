@@ -42,18 +42,50 @@ data:
             min_size: 1_000_000 # 1MB uncompressed
             max_size: 4_000_000 # 4MB uncompressed
         timeout: 15s
-
+    extensions:
+      opamp:
+        server:
+          http:
+            endpoint: "${env:ELASTIC_FLEET_ENDPOINT}/v1/opamp"
+            headers:
+              Authorization: "ApiKey ${env:ELASTIC_FLEET_OPAMP_API_KEY}"
+        #instance_uid: "${env:OTEL_K8S_POD_NAME}"
+        agent_description:
+          non_identifying_attributes:
+            elastic.collector.group_name: "tbs"
+            elastic.collector.group: "tbs"
+            elastic.display.name: "${env:HOSTNAME}"
+            config.name: "tbs"
+            deployment.environment.name: "trading"
     service:
+      extensions: [opamp]
       telemetry:
         resource:
-          data_stream.dataset: 'collectortelemetry.otel'
+          data_stream.dataset: 'collectortelemetry'
         metrics:
           readers:
             - periodic:
                 exporter:
                   otlp:
-                    endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4318"
-                    protocol: http/protobuf
+                    protocol: "grpc"
+                    endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
+                    insecure: true 
+        logs:
+          processors:
+            - batch:
+                exporter:
+                  otlp:
+                    protocol: "grpc"
+                    endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
+                    insecure: true 
+        traces:
+          processors:
+            - batch:
+                exporter:
+                  otlp:
+                    protocol: "grpc"
+                    endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
+                    insecure: true 
       pipelines:
         traces:
           receivers:
@@ -129,28 +161,67 @@ data:
               key: service.name
               values:
                 - recorder-go
+          # keep user initiated path
+          - name: keep-user
+            type: string_attribute
+            string_attribute:
+              key: service.name
+              values:
+                - trader-app-web
           # keep any trace that has an error
           - name: keep-errors
             type: status_code
             status_code:
               status_codes: [ERROR]
-          # keep 25% of the recorder-java path
+          # keep 25% of everything else
           - name: keep-sample-percentage
             type: probabilistic
             probabilistic:
               sampling_percentage: 25
-
+    extensions:
+      opamp:
+        server:
+          http:
+            endpoint: "${env:ELASTIC_FLEET_ENDPOINT}/v1/opamp"
+            headers:
+              Authorization: "ApiKey ${env:ELASTIC_FLEET_OPAMP_API_KEY}"
+        #instance_uid: "${env:OTEL_K8S_POD_NAME}"
+        agent_description:
+          non_identifying_attributes:
+            elastic.collector.group_name: "tbs"
+            elastic.collector.group: "tbs"
+            elastic.display.name: "${env:HOSTNAME}"
+            config.name: "tbs"
+            deployment.environment.name: "trading"
     service:
+      extensions: [opamp]
       telemetry:
         resource:
-          data_stream.dataset: 'collectortelemetry.otel'
+          data_stream.dataset: 'collectortelemetry'
         metrics:
           readers:
             - periodic:
                 exporter:
                   otlp:
-                    endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4318"
-                    protocol: http/protobuf
+                    protocol: "grpc"
+                    endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
+                    insecure: true 
+        logs:
+          processors:
+            - batch:
+                exporter:
+                  otlp:
+                    protocol: "grpc"
+                    endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
+                    insecure: true 
+        traces:
+          processors:
+            - batch:
+                exporter:
+                  otlp:
+                    protocol: "grpc"
+                    endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
+                    insecure: true 
       pipelines:
         traces/1-process-elastic:
           receivers: [ otlp ]

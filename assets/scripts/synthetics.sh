@@ -2,7 +2,8 @@
 
 source $PWD/assets/scripts/retry.sh
 
-while getopts "n:h:i:j:k:" opt
+OPTIND=1
+while getopts "n:h:i:j:k:t:" opt
 do
    case "$opt" in
       n ) namespace="$OPTARG" ;;
@@ -11,6 +12,7 @@ do
       i ) elasticsearch_api_key="$OPTARG" ;;
       j ) elasticsearch_es_endpoint="$OPTARG" ;;
       k ) elasticsearch_otlp_endpoint="$OPTARG" ;;
+      t ) elasticsearch_fleet_endpoint="$OPTARG" ;;
    esac
 done
 
@@ -77,11 +79,11 @@ config_synthetics_agent() {
         return 1
     fi
 
-  ENROLLMENT=$(echo $http_response | jq -r '.items[] | select (.policy_id == "'$POLICY_ID'")')
+    ENROLLMENT=$(echo $http_response | jq -r '.items[] | select (.policy_id == "'$POLICY_ID'")')
 
-  ENROLLMENT_ID=$(echo $ENROLLMENT | jq -r '.id')
-  ENROLLMENT_API_KEY_ID=$(echo $ENROLLMENT | jq -r '.api_key_id')
-  export ENROLLMENT_API_KEY=$(echo $ENROLLMENT | jq -r '.api_key')
+    ENROLLMENT_ID=$(echo $ENROLLMENT | jq -r '.id')
+    ENROLLMENT_API_KEY_ID=$(echo $ENROLLMENT | jq -r '.api_key_id')
+    export ENROLLMENT_API_KEY=$(echo $ENROLLMENT | jq -r '.api_key')
 
     if [[ -z "$ENROLLMENT_API_KEY" ]]; then
         printf "$FUNCNAME...ERROR: ENROLLMENT_API_KEY is unset\n"
@@ -90,6 +92,7 @@ config_synthetics_agent() {
 
     printf "$FUNCNAME...ENROLLMENT_API_KEY=$ENROLLMENT_API_KEY\n"
 
+    export FLEET_URL=$elasticsearch_fleet_endpoint
     envsubst < agents/synthetics/synthetics.yaml | kubectl apply -f -
     printf "$FUNCNAME...SUCCESS\n"
 }

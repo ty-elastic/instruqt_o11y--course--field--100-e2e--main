@@ -42,6 +42,23 @@ collectors:
     env:
       - name: ELASTIC_AGENT_OTEL
         value: '"true"'
+      - name: ELASTIC_FLEET_OPAMP_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: elastic-secret-otel
+            key: elastic_fleet_opamp_api_key
+      - name: ELASTIC_FLEET_ENDPOINT
+        valueFrom:
+          secretKeyRef:
+            name: elastic-secret-otel
+            key: elastic_fleet_endpoint
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1000Mi
+      requests:
+        cpu: 100m
+        memory: 500Mi
     config:
       exporters:
         # [Debug exporter](https://github.com/open-telemetry/opentelemetry-collector/blob/main/exporter/debugexporter/README.md)
@@ -143,9 +160,23 @@ collectors:
               enabled: true
       extensions:
         cgroupruntime: {}
+        opamp:
+          server:
+            http:
+              endpoint: "${env:ELASTIC_FLEET_ENDPOINT}/v1/opamp"
+              headers:
+                Authorization: "ApiKey ${env:ELASTIC_FLEET_OPAMP_API_KEY}"
+          #instance_uid: "${env:OTEL_K8S_POD_NAME}"
+          agent_description:
+            non_identifying_attributes:
+              elastic.collector.group_name: "cluster"
+              elastic.collector.group: "cluster"
+              elastic.display.name: "${env:HOSTNAME}"
+              config.name: "cluster"
+              deployment.environment.name: "trading"
       # [Service Section](https://opentelemetry.io/docs/collector/configuration/#service)
       service:
-        extensions: [cgroupruntime]
+        extensions: [cgroupruntime, opamp]
         telemetry:
           resource:
             data_stream.dataset: 'collectortelemetry'
@@ -154,8 +185,25 @@ collectors:
               - periodic:
                   exporter:
                     otlp:
-                      endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4318"
-                      protocol: http/protobuf
+                      protocol: "grpc"
+                      endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
+                      insecure: true 
+          logs:
+            processors:
+              - batch:
+                  exporter:
+                    otlp:
+                      protocol: "grpc"
+                      endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
+                      insecure: true 
+          traces:
+            processors:
+              - batch:
+                  exporter:
+                    otlp:
+                      protocol: "grpc"
+                      endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
+                      insecure: true 
         pipelines:
           metrics:
             exporters:
@@ -188,6 +236,23 @@ collectors:
     env:
       - name: ELASTIC_AGENT_OTEL
         value: '"true"'
+      - name: ELASTIC_FLEET_OPAMP_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: elastic-secret-otel
+            key: elastic_fleet_opamp_api_key
+      - name: ELASTIC_FLEET_ENDPOINT
+        valueFrom:
+          secretKeyRef:
+            name: elastic-secret-otel
+            key: elastic_fleet_endpoint
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1000Mi
+      requests:
+        cpu: 100m
+        memory: 500Mi
     volumeMounts:
       - name: varlogpods
         mountPath: /var/log/pods
@@ -238,7 +303,7 @@ collectors:
             log_statements:
               - context: log
                 conditions:
-                  - body != nil and Len(body) >= 2 and Substring(body, 0, 2) == "{\""
+                  - resource.attributes["log-format"] != nil and resource.attributes["log-format"] == "json" and body != nil and Len(body) >= 2 and Substring(body, 0, 2) == "{\""
                 statements:
                   - set(cache, ParseJSON(body))
                   - flatten(cache, "")
@@ -527,13 +592,27 @@ collectors:
             - container.id
       extensions:
         cgroupruntime: {}
+        opamp:
+          server:
+            http:
+              endpoint: "${env:ELASTIC_FLEET_ENDPOINT}/v1/opamp"
+              headers:
+                Authorization: "ApiKey ${env:ELASTIC_FLEET_OPAMP_API_KEY}"
+          #instance_uid: "${env:OTEL_K8S_POD_NAME}"
+          agent_description:
+            non_identifying_attributes:
+              elastic.collector.group_name: "daemonset"
+              elastic.collector.group: "daemonset"
+              elastic.display.name: "${env:HOSTNAME}"
+              config.name: "daemonset"
+              deployment.environment.name: "trading"
         k8s_observer:
           observe_nodes: true
           observe_services: true
           observe_ingresses: true
       # [Service Section](https://opentelemetry.io/docs/collector/configuration/#service)
       service:
-        extensions: [cgroupruntime, k8s_observer]
+        extensions: [cgroupruntime, k8s_observer, opamp]
         telemetry:
           resource:
             data_stream.dataset: 'collectortelemetry'
@@ -542,8 +621,25 @@ collectors:
               - periodic:
                   exporter:
                     otlp:
-                      endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4318"
-                      protocol: http/protobuf
+                      protocol: "grpc"
+                      endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
+                      insecure: true 
+          logs:
+            processors:
+              - batch:
+                  exporter:
+                    otlp:
+                      protocol: "grpc"
+                      endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
+                      insecure: true 
+          traces:
+            processors:
+              - batch:
+                  exporter:
+                    otlp:
+                      protocol: "grpc"
+                      endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
+                      insecure: true 
         pipelines:
           # Disable default non used kube-stack Helm Chart pipelines
           logs: null
@@ -554,7 +650,6 @@ collectors:
               #- filelog
               - receiver_creator/logs
             processors:
-              - transform/parse_json_body
               - batch
               - k8sattributes
               - resourcedetection/system
@@ -564,6 +659,7 @@ collectors:
               - resource/hostname
               - resource/cloud
               - resource/environment
+              - transform/parse_json_body
             exporters:
               - otlp/gateway
           metrics/node/otel:
@@ -642,6 +738,16 @@ collectors:
           secretKeyRef:
             name: elastic-secret-otel
             key: elastic_api_key
+      - name: ELASTIC_FLEET_OPAMP_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: elastic-secret-otel
+            key: elastic_fleet_opamp_api_key
+      - name: ELASTIC_FLEET_ENDPOINT
+        valueFrom:
+          secretKeyRef:
+            name: elastic-secret-otel
+            key: elastic_fleet_endpoint
     config:
       receivers:
         otlp:
@@ -650,6 +756,10 @@ collectors:
               endpoint: ${env:OTEL_K8S_POD_IP}:4317
             http:
               endpoint: ${env:OTEL_K8S_POD_IP}:4318
+        otlp/telemetry:
+          protocols:
+            grpc:
+              endpoint: ${env:OTEL_K8S_POD_IP}:4319
       processors:
         transform/ua:
           trace_statements:
@@ -732,8 +842,22 @@ collectors:
           timeout: 15s
       extensions:
         cgroupruntime: {}
+        opamp:
+          server:
+            http:
+              endpoint: "${env:ELASTIC_FLEET_ENDPOINT}/v1/opamp"
+              headers:
+                Authorization: "ApiKey ${env:ELASTIC_FLEET_OPAMP_API_KEY}"
+          #instance_uid: "${env:OTEL_K8S_POD_NAME}"
+          agent_description:
+            non_identifying_attributes:
+              elastic.collector.group_name: "gateway"
+              elastic.collector.group: "gateway"
+              elastic.display.name: "${env:HOSTNAME}"
+              config.name: "gateway"
+              deployment.environment.name: "trading"
       service:
-        extensions: [cgroupruntime]
+        extensions: [cgroupruntime, opamp]
         telemetry:
           resource:
             data_stream.dataset: 'collectortelemetry'
@@ -742,9 +866,40 @@ collectors:
               - periodic:
                   exporter:
                     otlp:
-                      endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4318"
-                      protocol: http/protobuf
+                      protocol: "grpc"
+                      endpoint: "${env:OTEL_K8S_POD_IP}:4319"
+                      insecure: true 
+          logs:
+            processors:
+              - batch:
+                  exporter:
+                    otlp:
+                      protocol: "grpc"
+                      endpoint: "${env:OTEL_K8S_POD_IP}:4319"
+                      insecure: true 
+          traces:
+            processors:
+              - batch:
+                  exporter:
+                    otlp:
+                      protocol: "grpc"
+                      endpoint: "${env:OTEL_K8S_POD_IP}:4319"
+                      insecure: true 
+
         pipelines:
+          metrics/telemetry:
+            receivers: [otlp/telemetry]
+            processors: []
+            exporters: [debug, otlp/ingest_metrics_traces]
+          logs/telemetry:
+            receivers: [otlp/telemetry]
+            processors: []
+            exporters: [debug, otlp/ingest_logs]
+          traces/telemetry:
+            receivers: [otlp/telemetry]
+            processors: []
+            exporters: [debug, otlp/ingest_metrics_traces]
+
           metrics:
             receivers: [otlp]
             processors: [transform/ua]

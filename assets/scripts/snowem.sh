@@ -2,6 +2,7 @@
 
 source $PWD/assets/scripts/retry.sh
 
+OPTIND=1
 while getopts "h:i:e:" opt
 do
    case "$opt" in
