@@ -52,6 +52,14 @@ collectors:
           secretKeyRef:
             name: elastic-secret-otel
             key: elastic_fleet_endpoint
+      - name: K8S_POD_UID
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.uid
+      - name: K8S_NAMESPACE
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
     resources:
       limits:
         cpu: 500m
@@ -166,20 +174,24 @@ collectors:
               endpoint: "${env:ELASTIC_FLEET_ENDPOINT}/v1/opamp"
               headers:
                 Authorization: "ApiKey ${env:ELASTIC_FLEET_OPAMP_API_KEY}"
-          #instance_uid: "${env:OTEL_K8S_POD_NAME}"
+          instance_uid: "${env:K8S_POD_UID}"
           agent_description:
             non_identifying_attributes:
               elastic.collector.group_name: "cluster"
               elastic.collector.group: "cluster"
               elastic.display.name: "${env:HOSTNAME}"
               config.name: "cluster"
-              deployment.environment.name: "trading"
+              deployment.environment.name: "${env:K8S_NAMESPACE}"
       # [Service Section](https://opentelemetry.io/docs/collector/configuration/#service)
       service:
         extensions: [cgroupruntime, opamp]
         telemetry:
           resource:
-            data_stream.dataset: 'collectortelemetry'
+            elastic.collector.group_name: "cluster"
+            elastic.collector.group: "cluster"
+            service.namespace: "${env:K8S_NAMESPACE}"
+            service.name: "cluster-collector"
+            service.instance.id: "${env:HOSTNAME}"
           metrics:
             readers:
               - periodic:
@@ -246,6 +258,14 @@ collectors:
           secretKeyRef:
             name: elastic-secret-otel
             key: elastic_fleet_endpoint
+      - name: K8S_POD_UID
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.uid
+      - name: K8S_NAMESPACE
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
     resources:
       limits:
         cpu: 500m
@@ -598,14 +618,14 @@ collectors:
               endpoint: "${env:ELASTIC_FLEET_ENDPOINT}/v1/opamp"
               headers:
                 Authorization: "ApiKey ${env:ELASTIC_FLEET_OPAMP_API_KEY}"
-          #instance_uid: "${env:OTEL_K8S_POD_NAME}"
+          instance_uid: "${env:K8S_POD_UID}"
           agent_description:
             non_identifying_attributes:
               elastic.collector.group_name: "daemonset"
               elastic.collector.group: "daemonset"
               elastic.display.name: "${env:HOSTNAME}"
               config.name: "daemonset"
-              deployment.environment.name: "trading"
+              deployment.environment.name: "${env:K8S_NAMESPACE}"
         k8s_observer:
           observe_nodes: true
           observe_services: true
@@ -615,7 +635,11 @@ collectors:
         extensions: [cgroupruntime, k8s_observer, opamp]
         telemetry:
           resource:
-            data_stream.dataset: 'collectortelemetry'
+            elastic.collector.group_name: "daemonset"
+            elastic.collector.group: "daemonset"
+            service.namespace: "${env:K8S_NAMESPACE}"
+            service.name: "daemonset-collector"
+            service.instance.id: "${env:HOSTNAME}"
           metrics:
             readers:
               - periodic:
@@ -748,6 +772,14 @@ collectors:
           secretKeyRef:
             name: elastic-secret-otel
             key: elastic_fleet_endpoint
+      - name: K8S_POD_UID
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.uid
+      - name: K8S_NAMESPACE
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
     config:
       receivers:
         otlp:
@@ -848,19 +880,23 @@ collectors:
               endpoint: "${env:ELASTIC_FLEET_ENDPOINT}/v1/opamp"
               headers:
                 Authorization: "ApiKey ${env:ELASTIC_FLEET_OPAMP_API_KEY}"
-          #instance_uid: "${env:OTEL_K8S_POD_NAME}"
+          instance_uid: "${env:K8S_POD_UID}"
           agent_description:
             non_identifying_attributes:
               elastic.collector.group_name: "gateway"
               elastic.collector.group: "gateway"
               elastic.display.name: "${env:HOSTNAME}"
               config.name: "gateway"
-              deployment.environment.name: "trading"
+              deployment.environment.name: "${env:K8S_NAMESPACE}"
       service:
         extensions: [cgroupruntime, opamp]
         telemetry:
           resource:
-            data_stream.dataset: 'collectortelemetry'
+            elastic.collector.group_name: "gateway"
+            elastic.collector.group: "gateway"
+            service.namespace: "${env:K8S_NAMESPACE}"
+            service.name: "gateway-collector"
+            service.instance.id: "${env:HOSTNAME}"
           metrics:
             readers:
               - periodic:

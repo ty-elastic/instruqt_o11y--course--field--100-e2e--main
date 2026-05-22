@@ -49,19 +49,24 @@ data:
             endpoint: "${env:ELASTIC_FLEET_ENDPOINT}/v1/opamp"
             headers:
               Authorization: "ApiKey ${env:ELASTIC_FLEET_OPAMP_API_KEY}"
-        #instance_uid: "${env:OTEL_K8S_POD_NAME}"
+        instance_uid: "${env:K8S_POD_UID}"
         agent_description:
           non_identifying_attributes:
-            elastic.collector.group_name: "tbs"
-            elastic.collector.group: "tbs"
+            elastic.collector.group_name: "tbs-lb"
+            elastic.collector.group: "tbs-lb"
             elastic.display.name: "${env:HOSTNAME}"
-            config.name: "tbs"
-            deployment.environment.name: "trading"
+            config.name: "tbs-lb"
+            deployment.environment.name: "${env:K8S_NAMESPACE}"
     service:
       extensions: [opamp]
       telemetry:
         resource:
           data_stream.dataset: 'collectortelemetry.otel'
+          elastic.collector.group_name: "tbs-lb"
+          elastic.collector.group: "tbs-lb"
+          service.namespace: "${env:K8S_NAMESPACE}"
+          service.name: "tbs-lb-collector"
+          service.instance.id: "${env:HOSTNAME}"
         metrics:
           readers:
             - periodic:
@@ -185,19 +190,24 @@ data:
             endpoint: "${env:ELASTIC_FLEET_ENDPOINT}/v1/opamp"
             headers:
               Authorization: "ApiKey ${env:ELASTIC_FLEET_OPAMP_API_KEY}"
-        #instance_uid: "${env:OTEL_K8S_POD_NAME}"
+        instance_uid: "${env:K8S_POD_UID}"
         agent_description:
           non_identifying_attributes:
-            elastic.collector.group_name: "tbs"
-            elastic.collector.group: "tbs"
+            elastic.collector.group_name: "tbs-sampler"
+            elastic.collector.group: "tbs-sampler"
             elastic.display.name: "${env:HOSTNAME}"
-            config.name: "tbs"
-            deployment.environment.name: "trading"
+            config.name: "tbs-sampler"
+            deployment.environment.name: "${env:K8S_NAMESPACE}"
     service:
       extensions: [opamp]
       telemetry:
         resource:
           data_stream.dataset: 'collectortelemetry.otel'
+          elastic.collector.group_name: "tbs-sampler"
+          elastic.collector.group: "tbs-sampler"
+          service.namespace: "${env:K8S_NAMESPACE}"
+          service.name: "tbs-sampler-collector"
+          service.instance.id: "${env:HOSTNAME}"
         metrics:
           readers:
             - periodic:
@@ -282,6 +292,14 @@ spec:
                 secretKeyRef:
                   name: elastic-secret-otel
                   key: elastic_api_key
+            - name: K8S_POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: K8S_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
       restartPolicy: Always
       volumes:
         - name: data
@@ -342,6 +360,14 @@ spec:
                 secretKeyRef:
                   name: elastic-secret-otel
                   key: elastic_api_key
+            - name: K8S_POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: K8S_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
       restartPolicy: Always
       volumes:
         - name: data
