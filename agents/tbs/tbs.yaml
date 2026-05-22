@@ -61,7 +61,7 @@ data:
       extensions: [opamp]
       telemetry:
         resource:
-          data_stream.dataset: 'collectortelemetry'
+          data_stream.dataset: 'collectortelemetry.otel'
         metrics:
           readers:
             - periodic:
@@ -197,7 +197,7 @@ data:
       extensions: [opamp]
       telemetry:
         resource:
-          data_stream.dataset: 'collectortelemetry'
+          data_stream.dataset: 'collectortelemetry.otel'
         metrics:
           readers:
             - periodic:
