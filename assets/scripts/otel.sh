@@ -79,7 +79,6 @@ get_opamp_apikey() {
     fi
 
     OPAMP_API_KEY=$(echo $http_response | jq -r '.items[0].api_key')
-
     if [[ -z "$OPAMP_API_KEY" ]]; then
         printf "$FUNCNAME...ERROR: OPAMP_API_KEY is unset\n"
         return 1
