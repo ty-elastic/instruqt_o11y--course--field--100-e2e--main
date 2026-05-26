@@ -4,14 +4,13 @@ enabled: true
 tags:
 - training
 
-inputs:
-  - name: username
-    type: string
-    required: true
-    description: "The name of the user to greet"
-
 triggers:
   - type: manual
+    inputs:
+      - name: username
+        type: string
+        required: true
+        description: "The name of the user to greet"
 
 steps:
   - name: print_greeting

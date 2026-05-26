@@ -8,15 +8,15 @@ tags:
 consts:
   ip_api_base_url: http://ip-api.com/json
 
-inputs:
-  - name: ip_address
-    type: string
-    required: true
-    description: "The IP to geolocate (e.g., 8.8.8.8)"
+
 
 triggers:
   - type: manual
-
+    inputs:
+      - name: ip_address
+        type: string
+        required: true
+        description: "The IP to geolocate (e.g., 8.8.8.8)"
 steps:
   - name: get_geolocation
     type: http

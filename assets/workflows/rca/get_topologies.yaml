@@ -6,16 +6,16 @@ tags:
 - rca
 triggers:
 - type: manual
-inputs:
-- name: search_end_time
-  description: the end of the time window (Format as `%Y-%m-%dT%H:%M:%SZ`)
-  type: string
-  default: now
-- name: system_environment
-  description: System Environment
-  required: false
-  default: .*
-  type: string
+  inputs:
+  - name: search_end_time
+    description: the end of the time window (Format as `%Y-%m-%dT%H:%M:%SZ`)
+    type: string
+    default: now
+  - name: system_environment
+    description: System Environment
+    required: false
+    default: .*
+    type: string
 steps:
 - name: get_system_topologies
   type: elasticsearch.request

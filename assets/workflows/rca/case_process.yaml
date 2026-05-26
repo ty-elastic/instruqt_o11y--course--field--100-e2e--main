@@ -8,17 +8,18 @@ consts:
   workflow_name: case_process
 triggers:
 - type: manual
+  inputs:
+  - name: alerts_ready
+    default: false
+    required: false
+    type: boolean
+  - name: force_update
+    default: false
+    required: false
+    type: boolean
 settings:
   timeout: 20m
-inputs:
-- name: alerts_ready
-  default: false
-  required: false
-  type: boolean
-- name: force_update
-  default: false
-  required: false
-  type: boolean
+
 
 steps:
 - name: workflow_status
