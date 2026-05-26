@@ -6,14 +6,14 @@ tags:
 triggers:
 - type: manual
 
-# Inputs allow you to provide values when running the workflow
-inputs:
-- name: search_start_time
-  description: the start of the time window
-  type: string
-- name: search_end_time
-  description: the end of the time window
-  type: string
+  # Inputs allow you to provide values when running the workflow
+  inputs:
+  - name: search_start_time
+    description: the start of the time window
+    type: string
+  - name: search_end_time
+    description: the end of the time window
+    type: string
 
 steps:
   # Foreach loops iterate over arrays

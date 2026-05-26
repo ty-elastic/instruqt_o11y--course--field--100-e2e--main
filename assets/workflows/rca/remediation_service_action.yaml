@@ -4,21 +4,22 @@ consts:
   remote_host: http://host-1:43210
 tags:
 - rca
-inputs:
-- name: service_name
-  type: string
-  description: the name of the service
-- name: namespace
-  type: string
-  description: namespace the service is running in
-- name: service_action
-  type: string
-  description: the action to take (restart)
-- name: case_id
-  type: string
-  default: NOT_AVAILABLE
+
 triggers:
 - type: manual
+  inputs:
+  - name: service_name
+    type: string
+    description: the name of the service
+  - name: namespace
+    type: string
+    description: namespace the service is running in
+  - name: service_action
+    type: string
+    description: the action to take (restart)
+  - name: case_id
+    type: string
+    default: NOT_AVAILABLE
 steps:
 
 - name: review

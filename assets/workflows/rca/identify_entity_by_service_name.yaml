@@ -6,17 +6,17 @@ tags:
 - rca
 triggers:
 - type: manual
-inputs:
-- name: service_name
-  description: the name of the service
-  required: true
-  type: string
-- name: search_start_time
-  description: the end of the time window (Format as `%Y-%m-%dT%H:%M:%SZ`)
-  type: string
-- name: search_end_time
-  description: the end of the time window (Format as `%Y-%m-%dT%H:%M:%SZ`)
-  type: string
+  inputs:
+  - name: service_name
+    description: the name of the service
+    required: true
+    type: string
+  - name: search_start_time
+    description: the end of the time window (Format as `%Y-%m-%dT%H:%M:%SZ`)
+    type: string
+  - name: search_end_time
+    description: the end of the time window (Format as `%Y-%m-%dT%H:%M:%SZ`)
+    type: string
 steps:
 
 - name: get_exemplary_log_lines
