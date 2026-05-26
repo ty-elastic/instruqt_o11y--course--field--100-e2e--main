@@ -146,14 +146,8 @@ steps:
     type: if
     condition: steps.get_active_alerts.output.hits.total.value > 0
     steps:
-      - name: get_case_workflow_id
-        type: console
-        with:
-          message: '{% for workflow in steps.get_workflows.output.results %}{%- if workflow.name == consts.case_workflow_name -%}{{ workflow.id }}{% break %}{%- endif -%}{% endfor %}'
       - name: start_case_process_workflow
         type: workflow.executeAsync
         with:
-          workflow-id: "{{ steps.get_case_workflow_id.output }}"
-          inputs:
-            alerts_ready: true
-            event: ''
+          workflow-id: "case_process"
+          inputs: {}
