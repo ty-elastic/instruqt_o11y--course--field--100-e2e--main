@@ -16,6 +16,10 @@ do
    esac
 done
 
+if [[ "$service" == processor-* ]]; then
+    service="processor"
+fi
+
 for service_dir in ./*/; do
     echo $service_dir
     if [[ -d "$service_dir" ]]; then
@@ -23,10 +27,6 @@ for service_dir in ./*/; do
         if [[ "$service" == "all" || "$current_service" == "$service" ]]; then
             echo $service
             echo $course
-
-            if [[ "$service" == "chaos" ]]; then
-                cp ../k8s/yaml/*.yaml $service/yaml/
-            fi
 
             docker buildx build --platform $arch \
                 --build-arg SERVICE_VERSION=$service_version \

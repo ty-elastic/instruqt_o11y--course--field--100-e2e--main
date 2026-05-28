@@ -5,12 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"os"
 )
 
 func notify(context context.Context, trade *Trade) {
 	logger.WithContext(context).Info("notifying...")
 
-	apiUrl := "http://notifier:5000/notify"
+	apiUrl := os.Getenv("NOTIFIER_ENDPOINT")
+	if apiUrl == "" {
+		apiUrl = "http://notifier:5000/notify"
+	}
 	jsonTrade, err := json.Marshal(trade)
 	if err != nil {
 		logger.WithContext(context).Warnf("failure to marshall trade: %s", err)

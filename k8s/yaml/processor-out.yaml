@@ -1,0 +1,68 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: trading
+    service: processor-out
+  name: processor-out
+  namespace: $NAMESPACE
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trading
+      service: processor-out
+  template:
+    metadata:
+      annotations:
+        io.opentelemetry.discovery.logs/enabled: "false"
+      labels:
+        app: trading
+        service: processor-out
+    spec:
+      containers:
+        - name: processor-out
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: 'processor-out'
+
+            - name: K8S_POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: K8s_NAMESPACE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "k8s.pod.uid=$(K8S_POD_UID),k8s.namespace.name=$(K8s_NAMESPACE_NAME)"
+
+            - name: BOOTSTRAP_SERVER
+              value: "my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+            - name: OUT_TOPIC
+              value: "q1"
+
+          image: $REPO/processor:$COURSE
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9003
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: trading
+    service: processor-out
+  name: processor-out
+  namespace: $NAMESPACE
+spec:
+  ports:
+    - name: processor-out
+      port: 9003
+      targetPort: 9003
+  selector:
+    app: trading
+    service: processor-out
+---

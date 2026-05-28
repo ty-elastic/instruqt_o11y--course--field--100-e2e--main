@@ -46,6 +46,8 @@ spec:
               value: "$POSTGRESQL_PORT"
             - name: POSTGRESQL_DIALECT
               value: $POSTGRESQL_DIALECT
+            - name: NOTIFIER_ENDPOINT
+              value: "http://notifier:5000/notify"
           image: $REPO/recorder-go-zero:$COURSE
           imagePullPolicy: Always
           name: recorder-go-zero
