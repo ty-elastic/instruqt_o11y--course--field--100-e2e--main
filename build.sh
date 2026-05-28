@@ -1,7 +1,5 @@
 #!/bin/bash
 
-
-
 check_assets() {
     kubectl wait --for=condition=complete job/assets-$1 --timeout=120s
 }
@@ -15,21 +13,6 @@ get_lb_address() {
     export SERVICE_IP=$(kubectl -n $1 get service $2 -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
     export SERVICE_PORT=$(kubectl -n $1 get service $2 -o jsonpath='{.spec.ports[0].port}')
     if [ -z "$SERVICE_IP" ]; then
-      printf "$FUNCNAME...ERROR $http_code: $http_response\n"
-      return 1
-   fi
-   printf "$FUNCNAME...SUCCESS\n"
-   return 0
-}
-
-start_simulation() {
-   printf "$FUNCNAME...\n"
-    output=$(curl -s -X POST "http://$1:$2/monkey/simulation/start" \
-        -w "\n%{http_code}")
-   # Extract HTTP status code
-   http_code=$(echo "$output" | tail -n1)
-   http_response=$(echo "$output" | sed '$d')
-   if [ "$http_code" != "200" ]; then
       printf "$FUNCNAME...ERROR $http_code: $http_response\n"
       return 1
    fi
@@ -218,9 +201,10 @@ for current_region in "${regions[@]}"; do
         #echo $JOB_ID
 
         if [[ "$service" == "all" || "$service" == "kafka" ]]; then
-            cd kafka
-            ./install.sh
-            cd ..
+            source $PWD/utils/kafka/install.sh -v $PWD/utils/kafka/values.yaml
+
+            source $PWD/assets/scripts/integration_packages.sh
+            install_integration_package "kafka_otel" $elasticsearch_kibana_endpoint $elasticsearch_api_key
         fi
 
         envsubst '$NAMESPACE' < k8s/yaml/_namespace.yaml | kubectl apply -f -

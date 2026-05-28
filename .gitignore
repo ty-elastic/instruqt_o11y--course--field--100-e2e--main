@@ -8,7 +8,6 @@ bin
 out
 
 _local/
-redpanda/
 src/hostmetrics-sim/
 agents/apm/measure.yaml
 
