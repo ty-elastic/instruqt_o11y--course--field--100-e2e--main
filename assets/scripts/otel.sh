@@ -17,7 +17,7 @@ do
    esac
 done
 
-export AGENT_VERSION=9.4.1
+export AGENT_VERSION=9.4.2
 
 check_otel() {
     kubectl wait --for=condition=Ready pods --all -n opentelemetry-operator-system --timeout=120s
