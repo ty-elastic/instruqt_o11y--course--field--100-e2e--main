@@ -36,6 +36,9 @@ spec:
               value: "true"
             - name: SERVICE_VERSION
               value: "$SERVICE_VERSION"
+            - name: ROUTER_ENDPOINT
+              value: "http://processor-out:9003/queue"
+
       restartPolicy: Always
 ---
 apiVersion: v1

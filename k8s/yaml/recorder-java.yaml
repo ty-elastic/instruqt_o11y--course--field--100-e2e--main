@@ -81,7 +81,7 @@ spec:
               value: $POSTGRESQL_DBNAME
 
             - name: NOTIFIER_ENDPOINT
-              value: "http://processor-out:9003/notify"
+              value: "http://notifier:5000/notify"
 
           image: $REPO/recorder-java:$COURSE
           imagePullPolicy: Always

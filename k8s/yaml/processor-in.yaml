@@ -32,9 +32,9 @@ spec:
             - name: IN_TOPIC
               value: "q1"
             - name: IN_GROUP
-              value: "processor-in"
+              value: "processor1"
             - name: NOTIFIER_ENDPOINT
-              value: "http://notifier:5000/notify"
+              value: "http://router:9000/record"
 
           image: $REPO/processor:$COURSE
           imagePullPolicy: Always

@@ -16,7 +16,7 @@ ARG VARIANT=none
 COPY app.py .
 COPY model.py .
 
-ENV ROUTER_HOST="router"
+ENV ROUTER_ENDPOINT="http://router:9000/record"
 ENV PYTHONUNBUFFERED=1
 
 ENV OTEL_SERVICE_NAME="trader"

@@ -18,11 +18,15 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.util.UriComponentsBuilder;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -30,12 +34,18 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
+
 public class Consumer {
     private static final Logger log = LoggerFactory.getLogger(Consumer.class);
 
     private final String topicName;
 
     private KafkaConsumer<Integer, String> consumer;
+
+    ObjectMapper mapper = new ObjectMapper();
 
     public KafkaConsumer<Integer, String> createKafkaConsumer(String bootstrapServer, String groupName) {
         Properties props = new Properties();
@@ -55,6 +65,7 @@ public class Consumer {
 
     public Consumer(String bootstrapServer, String topicName, String groupName) {
         this.topicName = topicName;
+        groupName = groupName + "-" + UUID.randomUUID().toString();
         consumer = createKafkaConsumer(bootstrapServer, groupName);
     }
 
@@ -62,10 +73,19 @@ public class Consumer {
         consumer.wakeup(); 
     }
 
-    public HttpResponse<String> httpNotify (String notifierEndpoint, String params) {
+    public HttpResponse<String> httpNotify (String notifierEndpoint, String body) {
         try {
+            Map<String, Object> params = mapper.readValue(body, new TypeReference<Map<String, Object>>(){});
+            UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(notifierEndpoint);
+            // Add map entries to the builder
+            params.forEach(builder::queryParam);
+            // Build and encode the URI string
+            String uriString = builder.build().encode().toUriString();
+
+            log.info("notifying " + uriString);
+
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(new URI(notifierEndpoint + "?" + params))
+                    .uri(new URI(uriString))
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(""))
                     .build();

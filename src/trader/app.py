@@ -179,7 +179,7 @@ def trade(*, trade_id, customer_id, symbol, day_of_week, shares, share_price, ac
     if flags is not None:
         params['flags'] = flags
         
-    trade_response = requests.post(f"http://{os.environ['ROUTER_HOST']}:9000/record", params=params, timeout=TRADE_TIMEOUT)
+    trade_response = requests.post(os.environ['ROUTER_ENDPOINT'], params=params, timeout=TRADE_TIMEOUT)
     trade_response.raise_for_status()
 
     response['shares']= shares

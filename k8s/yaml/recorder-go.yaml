@@ -104,7 +104,7 @@ spec:
             - name: MYSQL_PORT
               value: "$MYSQL_PORT"
             - name: NOTIFIER_ENDPOINT
-              value: "http://processor-out:9003/notify"
+              value: "http://notifier:5000/notify"
           image: $REPO/recorder-go:$COURSE
           imagePullPolicy: Always
           name: recorder-go

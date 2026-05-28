@@ -1,0 +1,64 @@
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaNodePool
+metadata:
+  name: dual-role
+  labels:
+    strimzi.io/cluster: my-cluster
+spec:
+  replicas: 1
+  roles:
+    - controller
+    - broker
+  storage:
+    type: jbod
+    volumes:
+      - id: 0
+        type: persistent-claim
+        size: 100Gi
+        kraftMetadata: shared
+---
+
+apiVersion: kafka.strimzi.io/v1
+kind: Kafka
+metadata:
+  name: my-cluster
+spec:
+  kafka:
+
+    template:
+      pod:
+        metadata:
+          annotations:
+            io.opentelemetry.discovery.metrics/enabled: "true"
+            io.opentelemetry.discovery.metrics/scraper: "kafkametrics"
+            io.opentelemetry.discovery.metrics/config: |
+              brokers: ["my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"]
+              protocol_version: "2.8.0"
+              collection_interval: 10s
+              initial_delay: 1s
+              scrapers:
+                - brokers
+                - topics
+                - consumers
+            io.opentelemetry.discovery.logs/enabled: "true"
+
+    version: 4.2.0
+    metadataVersion: 4.2-IV1
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+      - name: tls
+        port: 9093
+        type: internal
+        tls: true
+    config:
+      offsets.topic.replication.factor: 1
+      transaction.state.log.replication.factor: 1
+      transaction.state.log.min.isr: 1
+      default.replication.factor: 1
+      min.insync.replicas: 1
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}

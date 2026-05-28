@@ -12,6 +12,14 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.concurrent.ExecutionException;
 
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import java.util.Map;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequiredArgsConstructor
 @Validated
@@ -21,23 +29,24 @@ public class Controller {
 	@Autowired(required = false)
     private Producer producer;
 
+	ObjectMapper mapper = new ObjectMapper();
+
 	@GetMapping("/health")
     public ResponseEntity<String> health() {
 			return ResponseEntity.ok().body("KERNEL OK");
     }
 
-	@PostMapping("/notify")
+	@PostMapping("/**")
     public ResponseEntity<String> trade(
-		@RequestParam(value = "trade_id") String tradeId,
-		@RequestParam(value = "database") String database,
-		@RequestParam(value = "flags") String flags
-	) throws ExecutionException, InterruptedException {
+		@RequestParam Map<String, String> allParams
+	) throws ExecutionException, InterruptedException, com.fasterxml.jackson.core.JsonProcessingException {
 
 		log.info("notify rx");
 
 		if (producer != null) {
-			log.info("prod not null");
-			producer.notify(String.format("trade_id=%s&database=%s&flags=%s", tradeId, database, flags));
+			String jsonResult = mapper.writeValueAsString(allParams);
+			log.info("notify rx with body: " + jsonResult);
+			producer.notify(jsonResult);
 		}
 
 		return ResponseEntity.ok().body("NOTIFIED");

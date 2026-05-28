@@ -217,6 +217,12 @@ for current_region in "${regions[@]}"; do
         export JOB_ID=$(( $RANDOM ))
         #echo $JOB_ID
 
+        if [[ "$service" == "all" || "$service" == "kafka" ]]; then
+            cd kafka
+            ./install.sh
+            cd ..
+        fi
+
         envsubst '$NAMESPACE' < k8s/yaml/_namespace.yaml | kubectl apply -f -
 
         if [ "$service" != "none" ]; then
