@@ -2,7 +2,6 @@ package com.example.recorder;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -11,7 +10,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * Service layer is where all the business logic lies

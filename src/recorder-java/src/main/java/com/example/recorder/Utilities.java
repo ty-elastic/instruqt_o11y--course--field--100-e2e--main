@@ -3,8 +3,6 @@ package com.example.recorder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.management.GarbageCollectorMXBean;
-import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
 

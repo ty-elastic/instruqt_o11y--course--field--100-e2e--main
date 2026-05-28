@@ -80,6 +80,9 @@ spec:
             - name: POSTGRESQL_DBNAME
               value: $POSTGRESQL_DBNAME
 
+            - name: NOTIFIER_ENDPOINT
+              value: "http://processor-out:9003/notify"
+
           image: $REPO/recorder-java:$COURSE
           imagePullPolicy: Always
           ports:

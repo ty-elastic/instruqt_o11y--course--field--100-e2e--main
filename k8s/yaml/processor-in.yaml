@@ -1,0 +1,61 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: trading
+    service: processor-in
+  name: processor-in
+  namespace: $NAMESPACE
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trading
+      service: processor-in
+  template:
+    metadata:
+      annotations:
+        io.opentelemetry.discovery.logs/enabled: "false"
+      labels:
+        app: trading
+        service: processor-in
+    spec:
+      containers:
+        - name: processor-in
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: 'processor-in'
+
+            - name: BOOTSTRAP_SERVER
+              value: "my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+            - name: IN_TOPIC
+              value: "q1"
+            - name: IN_GROUP
+              value: "processor-in"
+            - name: NOTIFIER_ENDPOINT
+              value: "http://notifier:5000/notify"
+
+          image: $REPO/processor:$COURSE
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9003
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: trading
+    service: processor-in
+  name: processor-in
+  namespace: $NAMESPACE
+spec:
+  ports:
+    - name: processor-in
+      port: 9003
+      targetPort: 9003
+  selector:
+    app: trading
+    service: processor-in
+---
