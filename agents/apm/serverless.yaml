@@ -218,14 +218,14 @@ collectors:
                       protocol: "grpc"
                       endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
                       insecure: true 
-          traces:
-            processors:
-              - batch:
-                  exporter:
-                    otlp:
-                      protocol: "grpc"
-                      endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
-                      insecure: true 
+          # traces:
+          #   processors:
+          #     - batch:
+          #         exporter:
+          #           otlp:
+          #             protocol: "grpc"
+          #             endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
+          #             insecure: true 
         pipelines:
           metrics:
             exporters:
@@ -678,14 +678,14 @@ collectors:
                       protocol: "grpc"
                       endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
                       insecure: true 
-          traces:
-            processors:
-              - batch:
-                  exporter:
-                    otlp:
-                      protocol: "grpc"
-                      endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
-                      insecure: true 
+          # traces:
+          #   processors:
+          #     - batch:
+          #         exporter:
+          #           otlp:
+          #             protocol: "grpc"
+          #             endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
+          #             insecure: true 
         pipelines:
           # Disable default non used kube-stack Helm Chart pipelines
           logs: null
@@ -937,14 +937,14 @@ collectors:
                       protocol: "grpc"
                       endpoint: "${env:OTEL_K8S_POD_IP}:4319"
                       insecure: true 
-          traces:
-            processors:
-              - batch:
-                  exporter:
-                    otlp:
-                      protocol: "grpc"
-                      endpoint: "${env:OTEL_K8S_POD_IP}:4319"
-                      insecure: true 
+          # traces:
+          #   processors:
+          #     - batch:
+          #         exporter:
+          #           otlp:
+          #             protocol: "grpc"
+          #             endpoint: "${env:OTEL_K8S_POD_IP}:4319"
+          #             insecure: true 
 
         pipelines:
           metrics/telemetry:

@@ -83,14 +83,14 @@ data:
                     protocol: "grpc"
                     endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
                     insecure: true 
-        traces:
-          processors:
-            - batch:
-                exporter:
-                  otlp:
-                    protocol: "grpc"
-                    endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
-                    insecure: true 
+        # traces:
+        #   processors:
+        #     - batch:
+        #         exporter:
+        #           otlp:
+        #             protocol: "grpc"
+        #             endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
+        #             insecure: true 
       pipelines:
         traces:
           receivers:
@@ -224,14 +224,14 @@ data:
                     protocol: "grpc"
                     endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
                     insecure: true 
-        traces:
-          processors:
-            - batch:
-                exporter:
-                  otlp:
-                    protocol: "grpc"
-                    endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
-                    insecure: true 
+        # traces:
+        #   processors:
+        #     - batch:
+        #         exporter:
+        #           otlp:
+        #             protocol: "grpc"
+        #             endpoint: "http://opentelemetry-kube-stack-gateway-collector-headless:4319"
+        #             insecure: true 
       pipelines:
         traces/1-process-elastic:
           receivers: [ otlp ]
