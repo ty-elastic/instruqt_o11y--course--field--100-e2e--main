@@ -1,5 +1,5 @@
 
-retry_script="$PWD/assets/scripts/retry.sh"
+root="../../"
 repo=us-central1-docker.pkg.dev/elastic-sa/tbekiares
 course=latest
 
@@ -7,7 +7,7 @@ OPTIND=1
 while getopts "s:c:r:i:j:h:" opt
 do
    case "$opt" in
-      s ) retry_script="$OPTARG" ;;
+      s ) root="$OPTARG" ;;
       c ) course="$OPTARG" ;;
       r ) repo="$OPTARG" ;;
 
@@ -17,7 +17,7 @@ do
    esac
 done
 
-source $retry_script
+source $root/assets/scripts/retry.sh
 
 get_lb_address() {
    printf "$FUNCNAME...\n"
@@ -102,6 +102,28 @@ export CONNECTOR_ID=$CONNECTOR_ID
 envsubst '$elasticsearch_es_endpoint,$elasticsearch_api_key,$CONNECTOR_ID' < connector.yaml | kubectl apply -f -
 kubectl -n wiki rollout restart deployment/connector
 
+set_mapping() {
+   printf "$FUNCNAME...\n"
+
+   output=$(curl -s -X PUT "$elasticsearch_es_endpoint/wiki" \
+         -w "\n%{http_code}" \
+         -H "Authorization: ApiKey ${elasticsearch_api_key}" \
+         -H 'Content-Type: application/json' \
+         -d '{"mappings": {"dynamic":false,"properties":{"_timestamp":{"type":"date"},"database":{"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}},"id":{"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}},"schema":{"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}},"table":{"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}},"public_pages_content":{"type":"semantic_text"},"public_pages_description":{"type":"semantic_text"},"public_pages_title":{"type":"semantic_text"},"public_pages_creatorid":{"type":"long"},"public_pages_id":{"type":"long"},"public_pages_path":{"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}}}}}')
+
+   # Extract HTTP status code
+   http_code=$(echo "$output" | tail -n1)
+   http_response=$(echo "$output" | sed '$d')
+   if [ "$http_code" != "200" ]; then
+      printf "$FUNCNAME...ERROR $http_code: $http_response\n"
+      return 1
+   fi
+
+   printf "$FUNCNAME...SUCCESS\n"
+   return 0
+}
+retry_command_lin set_mapping
+
 create_wiki_config() {
    printf "$FUNCNAME...\n"
 
@@ -127,12 +149,7 @@ create_wiki_config() {
 retry_command_lin create_wiki_config
 
 
-#!/bin/bash
-
-# Define endpoint and credentials
-API_URL="http://$SERVICE_IP:$SERVICE_PORT/graphql"
-
-enable_api() {
+get_jwt() {
    printf "$FUNCNAME...\n"
    # Define the raw GraphQL query text
    gql_query='
@@ -162,9 +179,116 @@ enable_api() {
    # Define variables as a JSON string
    gql_variables='{"username":"admin@example.com","password":"password123","strategy":"local"}'
 
-   # Build payload and execute request
-   curl -s -X POST "$API_URL" \
-   -H "Content-Type: application/json" \
-   -d "$(jq -n --arg q "$gql_query" --argjson v "$gql_variables" '{query: $q, variables: $v}')"
+   body="$(jq -n --arg q "$gql_query" --argjson v "$gql_variables" '{query: $q, variables: $v}')"
+   echo $body
+
+   output=$(curl -s -X POST "http://$SERVICE_IP:$SERVICE_PORT/graphql" \
+         -w "\n%{http_code}" \
+         -H 'Content-Type: application/json' \
+         -d "$body")
+
+   # Extract HTTP status code
+   http_code=$(echo "$output" | tail -n1)
+   http_response=$(echo "$output" | sed '$d')
+   if [ "$http_code" != "200" ]; then
+      printf "$FUNCNAME...ERROR $http_code: $http_response\n"
+      return 1
+   fi
+
+   JWT=$(echo $http_response | jq -r '.data.authentication.login.jwt')
+
+   printf "$FUNCNAME...JWT=$JWT\n"
+   return 0
 }
-enable_api
+get_jwt
+
+add_content() {
+   printf "$FUNCNAME...\n"
+   # Define the raw GraphQL query text
+   gql_query='
+    mutation ($title: String!, $content: String!, $description: String!, $path: String!){
+        pages {
+            create(
+                title: $title
+                content: $content
+                description: $description
+                editor: "markdown"
+                isPublished:true
+                isPrivate: false
+                locale: "en"
+                path: $path
+                tags:[ "knowledge"]
+            ) {
+                responseResult {
+                    succeeded
+                    errorCode
+                    message
+                }
+                page {
+                    id
+                    path
+                    contentType
+                }
+            }
+        }
+    }'
+
+   # Define variables as a JSON string
+   gql_variables='{"title":"'$1'","content":"'$2'","description":"'$3'","path":"'$4'"}'
+
+   body="$(jq -n --arg q "$gql_query" --argjson v "$gql_variables" '{query: $q, variables: $v}')"
+   #echo $body
+
+   output=$(curl -s -X POST "http://$SERVICE_IP:$SERVICE_PORT/graphql" \
+         -w "\n%{http_code}" \
+         -H "Authorization: Bearer $JWT" \
+         -H 'Content-Type: application/json' \
+         -d "$body")
+
+   # Extract HTTP status code
+   http_code=$(echo "$output" | tail -n1)
+   http_response=$(echo "$output" | sed '$d')
+   if [ "$http_code" != "200" ]; then
+      printf "$FUNCNAME...ERROR $http_code: $http_response\n"
+      return 1
+   fi
+
+   printf "$FUNCNAME...SUCCESS\n"
+   return 0
+}
+
+for file in $root/assets/knowledge/*; do
+    # Ensure it's a file, not a directory
+    if [ -f "$file" ]; then
+        echo "$file"
+        ID=$(jq -r '.id' $file)
+        TITLE=$(jq -r '.title' $file)
+        TEXT=$(jq -r '.text' $file)
+        echo $ID
+        echo $TITLE
+        echo $TEXT
+        add_content "$TITLE" "$TEXT" "$TITLE" $ID
+    fi
+done
+
+sync() {
+   printf "$FUNCNAME...\n"
+
+   output=$(curl -s -X POST "$elasticsearch_es_endpoint/_connector/_sync_job" \
+         -w "\n%{http_code}" \
+         -H "Authorization: ApiKey ${elasticsearch_api_key}" \
+         -H 'Content-Type: application/json' \
+         -d '{"id": "'$CONNECTOR_ID'", "job_type": "full"}')
+
+   # Extract HTTP status code
+   http_code=$(echo "$output" | tail -n1)
+   http_response=$(echo "$output" | sed '$d')
+   if [ "$http_code" != "201" ]; then
+      printf "$FUNCNAME...ERROR $http_code: $http_response\n"
+      return 1
+   fi
+
+   printf "$FUNCNAME...SUCCESS\n"
+   return 0
+}
+retry_command_lin sync
