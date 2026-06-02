@@ -2,7 +2,7 @@
     "id": "rca-search-knowledge",
     "name": "Search Knowledgebase",
     "description": "Use this skill to search for company IT practices and conventions and for past incidents and issues",
-    "content": "I keep knowledge of company IT best practices and conventions, past incidents and issues in an index called `rca_knowledge`.",
+    "content": "I keep knowledge of company IT best practices and conventions, past incidents and issues in an index called `wiki`.",
     "referenced_content": [],
     "tool_ids": [
         "platform.core.search"
