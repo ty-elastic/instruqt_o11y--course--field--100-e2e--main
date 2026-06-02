@@ -321,7 +321,7 @@ if [ "$assets" = "true" ]; then
     done
     source $PWD/assets/scripts/features_dep.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 
-    source $PWD/utils/wiki.js/install.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -s $PWD
+    source $PWD/utils/wiki.js/install.sh -c $course -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -s $PWD
 fi
 
 if [ "$grafana" = "true" ]; then
