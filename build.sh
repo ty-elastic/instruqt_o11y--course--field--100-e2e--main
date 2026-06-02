@@ -181,6 +181,15 @@ if [ "$features" = "true" ]; then
     source $PWD/assets/scripts/features_es.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 fi
 
+if [[ "$deploy_service" == "true" || "$deploy_service" == "delete" || "$deploy_service" == "force" ]]; then
+    if [[ "$service" == "all" || "$service" == "kafka" ]]; then
+        source $PWD/utils/kafka/install.sh -v $PWD/utils/kafka/values.yaml
+
+        source $PWD/assets/scripts/integration_packages.sh
+        install_integration_package "kafka_otel" $elasticsearch_kibana_endpoint $elasticsearch_api_key
+    fi
+fi
+
 printf "deploying services...\n"
 for current_region in "${regions[@]}"; do
     namespace=$namespace_base-$current_region
@@ -200,12 +209,6 @@ for current_region in "${regions[@]}"; do
         export JOB_ID=$(( $RANDOM ))
         #echo $JOB_ID
 
-        if [[ "$service" == "all" || "$service" == "kafka" ]]; then
-            source $PWD/utils/kafka/install.sh -v $PWD/utils/kafka/values.yaml
-
-            source $PWD/assets/scripts/integration_packages.sh
-            install_integration_package "kafka_otel" $elasticsearch_kibana_endpoint $elasticsearch_api_key
-        fi
 
         envsubst '$NAMESPACE' < k8s/yaml/_namespace.yaml | kubectl apply -f -
 

@@ -41,9 +41,9 @@ spec:
             - name: BOOTSTRAP_SERVER
               value: "my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
             - name: IN_TOPIC
-              value: "q1"
+              value: "trades-$REGION"
             - name: IN_GROUP
-              value: "processor1"
+              value: "consumer-$REGION"
             - name: NOTIFIER_ENDPOINT
               value: "http://router:9000/record"
 
