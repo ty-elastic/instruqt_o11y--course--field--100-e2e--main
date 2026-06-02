@@ -19,7 +19,7 @@ Fleet
 2. Click the `copy` button in the Powershell script
 3. Open the [button label="Windows"](tab-0) tab
 4. Click the `Windows` (start) menu in the lower-left
-5. Right-click on `Windows PowerShell` and select `Run as Administrator`
+5. Select `Windows PowerShell`
 6. Paste (control-v) the copied script from Elastic and hit enter
 
 Once the install completes, verify telemetry reception in Elastic.
@@ -32,8 +32,7 @@ Once the install completes, verify telemetry reception in Elastic.
 4. Click `Windows Server` policy
 5. Click `Add integration`
 6. Under `Select integration`, select `Syslog Router`
-7. Under `Configuration integration`, turn off `Route syslog events using the TCP input`
-8. Under `Configuration integration` > `Route syslog events using the UDP input`, paste the following into `Reroute configuration`:
+7. Under `Configuration integration` > `Route syslog events using the UDP input`, paste the following into `Reroute configuration`:
 ```
 - if:
     and:
@@ -48,21 +47,46 @@ Once the install completes, verify telemetry reception in Elastic.
         field: message
         format: rfc5424
 ```
+8. We are intentionally misconfiguring the TCP syslog input to conflict with a known Windows Service. Under `Configuration integration` > `Route syslog events using the TCP input`, change the port to `445` (used for SMB)
 9. Click `Add integration`
 
-## Streams
+## Debugging an Agent Misconfiguration
 
 1. Open the [button label="Elasticsearch"](tab-0) tab
-2. Navigate to `Streams`
-3. Select `Agent policies`
+2. Navigate to `Fleet`
+3. Under `Agents`, wait for the `windows` host to become `Unhealthy`
+3. Select the `windows` Host
+4. Note that the `syslog-router-1` integration `Needs attention`
+5. Open the `syslog-router-1` integration, expand `tcp` and note the failure
+6. Under `Alerts`, note that we have an active alert for an unhealthy Elastic Agent
+7. Click on the three dots on the left-hand side of the alert, and select `View Alert Details`
+8. Open `Help me understand this alert`
+9. Note the explanation
+9. Click `Start conversation`
+9. Ask
+```
+do we have a convention for syslog ports?
+```
 
+Note that AI Assistant can help deciphering alerts in the context of company IT policies.
 
+## Fixing an Agent Misconfiguration
 
+1. Open the [button label="Elasticsearch"](tab-0) tab
+2. Navigate to `Fleet`
+3. Click `Agent Policies`
+4. Open the `Windows Server` policy
+5. Open the `syslog-router-1` integration
+6. Change the TCP input syslog port to `9514`
 
+Note that Agent become healthy and the alert eventually resolves.
 
+# Agent Updates
 
-can you graph fan speed over time? ignore ****
+1. Open the [button label="Elasticsearch"](tab-0) tab
+2. Navigate to `Fleet`
+3. Note `Upgrade Available` for `es3-api` host 
+4. Click the 3 dots on the right of that line and select `Upgrade agent`
 
-can you graph temperate over time?
+Note that the agent updates, and that Fleet starts monitoring the updated agent's health.
 
-yes, please correlate temp spike with fan speed changes

@@ -4,6 +4,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +18,7 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -59,6 +61,7 @@ public class Consumer {
         props.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         props.setProperty(ConsumerConfig.GROUP_ID_CONFIG, groupName);
         props.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
 
         return new KafkaConsumer<>(props);
     }
@@ -115,16 +118,21 @@ public class Consumer {
                 ConsumerRecords<Integer, String> records =
                         consumer.poll(Duration.ofMillis(100));
 
-                for (ConsumerRecord<Integer, String> record : records) {
-                    log.info("Key: " + record.key() + ", Value: " + record.value());
-                    log.info("Partition: " + record.partition() + ", Offset:" + record.offset());
+                try {
+                    for (ConsumerRecord<Integer, String> record : records) {
+                        log.info("Key: " + record.key() + ", Value: " + record.value());
+                        log.info("Partition: " + record.partition() + ", Offset:" + record.offset());
+                        
+                        if (producer != null)
+                            producer.notify(record.value());
 
-                    if (producer != null)
-                        producer.notify(record.value());
-
-                    if (outEndpoint != null) {
-                        httpNotify(outEndpoint, record.value());
+                        if (outEndpoint != null)
+                            httpNotify(outEndpoint, record.value());
                     }
+                    consumer.commitSync();
+                }
+                catch (Exception e) {
+                    log.warn("Failed to process record" + e.toString());
                 }
             }
 

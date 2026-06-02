@@ -72,6 +72,7 @@ This is intended to be an "all-in-one" Observability demo and exploration enviro
 In the following sections, you will find various walk-throughs and notes in the assignment. These are for your benefit as a SA. Familiarize yourself with the flows, play around, and perhaps customize to your liking.
 
 * [Agentic RCA](section-agentic-rca)
+* [Fleet](section-fleet)
 * [Logs](section-logs)
 * [Metrics](section-metrics)
 * [Tracing](section-tracing)

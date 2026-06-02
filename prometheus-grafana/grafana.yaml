@@ -12,10 +12,20 @@ data:
     datasources:
       - name: Prometheus
         type: prometheus
-        url: http://prometheus:9090 
-        isDefault: true
         access: proxy
+        url: http://prometheus:9090 
         editable: true
+
+      - name: Elasticsearch
+        type: prometheus
+        access: proxy
+        url: "$elasticsearch_es_endpoint/_prometheus"
+        basicAuth: false
+        isDefault: true
+        jsonData:
+          httpHeaderName1: "Authorization"
+        secureJsonData:
+          httpHeaderValue1: "ApiKey $elasticsearch_api_key"
 kind: ConfigMap
 metadata:
   labels:
