@@ -1,0 +1,51 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: connector-config
+  namespace: wiki
+data:
+  config.yml: |-
+    elasticsearch.host: "$elasticsearch_es_endpoint"
+    elasticsearch.api_key: "$elasticsearch_api_key"
+    connectors:
+      - connector_id: "$CONNECTOR_ID"
+        service_type: "postgresql"
+        api_key: "$elasticsearch_api_key"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    service: connector
+  name: connector
+  namespace: wiki
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: connector
+  template:
+    metadata:
+      labels:
+        service: connector
+      annotations:
+        io.opentelemetry.discovery.logs/enabled: "true"
+    spec:
+      containers:
+        - name: connector
+          image: docker.elastic.co/integrations/elastic-connectors:9.4.2
+          command:
+            - "/app/bin/elastic-ingest"
+            - "-c"
+            - "/config/config.yml"
+          volumeMounts:
+            - mountPath: /config/config.yml
+              name: config-volume
+              subPath: config.yml
+              readOnly: true
+      volumes:
+        - name: config-volume
+          configMap:
+            name: connector-config
+      restartPolicy: Always

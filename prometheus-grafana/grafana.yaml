@@ -20,10 +20,11 @@ data:
         type: prometheus
         access: proxy
         url: "$elasticsearch_es_endpoint/_prometheus"
-        basicAuth: false
         isDefault: true
+        uid: elasticsearch-prometheus
         jsonData:
           httpHeaderName1: "Authorization"
+          timeInterval: 15s  # Prometheus scrape interval (default: 15s)
         secureJsonData:
           httpHeaderValue1: "ApiKey $elasticsearch_api_key"
 kind: ConfigMap
