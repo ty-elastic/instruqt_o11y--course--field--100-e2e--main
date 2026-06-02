@@ -109,7 +109,7 @@ set_mapping() {
          -w "\n%{http_code}" \
          -H "Authorization: ApiKey ${elasticsearch_api_key}" \
          -H 'Content-Type: application/json' \
-         -d '{"mappings": {"dynamic":false,"properties":{"_timestamp":{"type":"date"},"database":{"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}},"id":{"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}},"schema":{"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}},"table":{"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}},"public_pages_content":{"type":"semantic_text"},"public_pages_description":{"type":"semantic_text"},"public_pages_title":{"type":"semantic_text"},"public_pages_creatorid":{"type":"long"},"public_pages_id":{"type":"long"},"public_pages_path":{"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}}}}}')
+         -d '{"mappings": {"dynamic":false,"properties":{"_timestamp":{"type":"date"},"database":{"type":"keyword"},"id":{"type":"keyword"},"schema":{"type":"keyword"},"table":{"type":"keyword"},"public_pages_content":{"type":"semantic_text"},"public_pages_description":{"type":"semantic_text"},"public_pages_title":{"type":"semantic_text"},"public_pages_creatorid":{"type":"long"},"public_pages_id":{"type":"long"},"public_pages_path":{"type":"keyword"}}}}')
 
    # Extract HTTP status code
    http_code=$(echo "$output" | tail -n1)
