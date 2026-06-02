@@ -90,6 +90,10 @@ if [ "$build" = "true" ]; then
   ./build.sh -c $course
   cd ../../instruqt
 
+  cd ../utils/wiki.js
+  ./build.sh -c $course
+  cd ../../instruqt
+
   cd ../prometheus-grafana/mig-to-kbn
   ./build.sh -c $course
   cd ../../instruqt
