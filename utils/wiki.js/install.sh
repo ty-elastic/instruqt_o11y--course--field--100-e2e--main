@@ -42,7 +42,7 @@ helm install wiki \
     --set ingress.enabled=false \
     requarks/wiki
 
-kubectl apply -f service.yaml -n wiki
+kubectl apply -f $root/utils/wiki.js/service.yaml -n wiki
 
 # wait
 kubectl wait --for=condition=Ready pods --all -n wiki --timeout=120s
@@ -99,7 +99,7 @@ create_wiki_connector() {
 retry_command_lin create_wiki_connector
 
 export CONNECTOR_ID=$CONNECTOR_ID
-envsubst '$elasticsearch_es_endpoint,$elasticsearch_api_key,$CONNECTOR_ID' < connector.yaml | kubectl apply -f -
+envsubst '$elasticsearch_es_endpoint,$elasticsearch_api_key,$CONNECTOR_ID' < $root/utils/wiki.js/connector.yaml | kubectl apply -f -
 kubectl -n wiki rollout restart deployment/connector
 
 set_mapping() {

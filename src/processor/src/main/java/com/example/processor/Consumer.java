@@ -68,7 +68,7 @@ public class Consumer {
 
     public Consumer(String bootstrapServer, String topicName, String groupName) {
         this.topicName = topicName;
-        groupName = groupName + "-" + UUID.randomUUID().toString();
+        //groupName = groupName + "-" + UUID.randomUUID().toString();
         consumer = createKafkaConsumer(bootstrapServer, groupName);
     }
 
@@ -85,7 +85,7 @@ public class Consumer {
             // Build and encode the URI string
             String uriString = builder.build().encode().toUriString();
 
-            log.info("notifying " + uriString);
+            //log.info("notifying " + uriString);
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(new URI(uriString))
@@ -97,7 +97,7 @@ public class Consumer {
                     .build()
                     .send(request, BodyHandlers.ofString());
 
-            log.info("sent notification to " + notifierEndpoint);
+            log.info("relayed to " + notifierEndpoint);
 
             return response;
         }
@@ -120,8 +120,8 @@ public class Consumer {
 
                 try {
                     for (ConsumerRecord<Integer, String> record : records) {
-                        log.info("Key: " + record.key() + ", Value: " + record.value());
-                        log.info("Partition: " + record.partition() + ", Offset:" + record.offset());
+                        //log.info("Key: " + record.key() + ", Value: " + record.value());
+                        //log.info("Partition: " + record.partition() + ", Offset:" + record.offset());
                         
                         if (producer != null)
                             producer.notify(record.value());
