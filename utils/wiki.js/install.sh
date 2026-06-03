@@ -161,20 +161,11 @@ get_jwt() {
             responseResult {
                succeeded
                errorCode
-               slug
                message
-               __typename
             }
             jwt
-            mustChangePwd
-            mustProvideTFA
-            mustSetupTFA
             continuationToken
-            redirect
-            tfaQRImage
-            __typename
          }
-         __typename
       }
    }'
 
@@ -203,7 +194,7 @@ get_jwt() {
    printf "$FUNCNAME...JWT=$JWT\n"
    return 0
 }
-get_jwt
+retry_command_lin get_jwt
 
 add_content() {
    printf "$FUNCNAME...\n"
