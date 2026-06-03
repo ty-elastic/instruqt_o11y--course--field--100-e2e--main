@@ -76,7 +76,7 @@ public class Consumer {
         consumer.wakeup(); 
     }
 
-    public HttpResponse<String> httpNotify (String notifierEndpoint, String body) {
+    public HttpResponse<String> httpNotify (String notifierEndpoint, String body) throws Exception{
         try {
             Map<String, Object> params = mapper.readValue(body, new TypeReference<Map<String, Object>>(){});
             UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(notifierEndpoint);
@@ -103,7 +103,7 @@ public class Consumer {
         }
         catch (Exception e) {
             log.warn("unable to notify: " + e.toString());
-            return null;
+            throw e;
         }
     }
 
@@ -132,7 +132,7 @@ public class Consumer {
                     consumer.commitSync();
                 }
                 catch (Exception e) {
-                    log.warn("Failed to process record" + e.toString());
+                    log.warn("Failed to commit records" + e.toString());
                 }
             }
 
