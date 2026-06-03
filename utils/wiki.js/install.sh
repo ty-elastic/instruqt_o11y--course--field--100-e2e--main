@@ -195,6 +195,7 @@ get_jwt() {
    return 0
 }
 retry_command_lin get_jwt
+export JWT=$JWT
 
 add_content() {
    printf "$FUNCNAME...\n"
