@@ -37,7 +37,6 @@ create_synthetics_policy() {
     "description": "",
     "namespace": "default",
     "monitoring_enabled": [
-      "logs",
       "metrics"
     ]
   }')
