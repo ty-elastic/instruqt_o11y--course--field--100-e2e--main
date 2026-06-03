@@ -40,7 +40,7 @@ $WORKING_DIR/build.sh -z $WORKING_DIR -o false -c $COURSE -d false -b false -s n
 
 # ----------------------------------------- AGENT
 
-$WORKING_DIR/assets/scripts/agent.sh -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -n $FLEET_URL
+source $WORKING_DIR/assets/scripts/agent.sh -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -n $FLEET_URL
 
 # ----------------------------------------- STRESS
 

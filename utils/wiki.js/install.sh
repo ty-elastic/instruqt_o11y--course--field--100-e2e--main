@@ -99,6 +99,8 @@ create_wiki_connector() {
 retry_command_lin create_wiki_connector
 
 export CONNECTOR_ID=$CONNECTOR_ID
+export elasticsearch_es_endpoint=$elasticsearch_es_endpoint
+export elasticsearch_api_key=$elasticsearch_api_key
 envsubst '$elasticsearch_es_endpoint,$elasticsearch_api_key,$CONNECTOR_ID' < $root/utils/wiki.js/connector.yaml | kubectl apply -f -
 kubectl -n wiki rollout restart deployment/connector
 
@@ -114,7 +116,7 @@ set_mapping() {
    # Extract HTTP status code
    http_code=$(echo "$output" | tail -n1)
    http_response=$(echo "$output" | sed '$d')
-   if [ "$http_code" != "200" ]; then
+   if [[ "$http_code" != "200" && "$http_code" != "400" ]]; then
       printf "$FUNCNAME...ERROR $http_code: $http_response\n"
       return 1
    fi
@@ -182,7 +184,7 @@ get_jwt() {
    body="$(jq -n --arg q "$gql_query" --argjson v "$gql_variables" '{query: $q, variables: $v}')"
    echo $body
    echo "http://$SERVICE_IP:$SERVICE_PORT/graphql"
-   
+
    output=$(curl -s -X POST "http://$SERVICE_IP:$SERVICE_PORT/graphql" \
          -w "\n%{http_code}" \
          -H 'Content-Type: application/json' \
@@ -268,7 +270,7 @@ for file in $root/assets/knowledge/*; do
         echo $ID
         echo $TITLE
         echo $TEXT
-        add_content "$TITLE" "$TEXT" "$TITLE" $ID
+        add_content "$TITLE" "$TEXT" "$TITLE" "$ID"
     fi
 done
 
