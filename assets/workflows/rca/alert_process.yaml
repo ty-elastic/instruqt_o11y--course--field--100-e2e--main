@@ -149,5 +149,5 @@ steps:
       - name: start_case_process_workflow
         type: workflow.executeAsync
         with:
-          workflow-id: "case_process"
+          workflow-id: "case-process"
           inputs: {}

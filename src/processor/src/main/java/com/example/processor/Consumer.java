@@ -60,8 +60,8 @@ public class Consumer {
         props.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class.getName());
         props.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         props.setProperty(ConsumerConfig.GROUP_ID_CONFIG, groupName);
-        props.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        props.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
+        props.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
 
         return new KafkaConsumer<>(props);
     }
@@ -96,13 +96,16 @@ public class Consumer {
             HttpResponse<String> response = HttpClient.newBuilder()
                     .build()
                     .send(request, BodyHandlers.ofString());
+            
+            if (response.statusCode() >= 400) {
+                throw new RuntimeException("HTTP Error: " + response.statusCode() + " - " + response.body());
+            }
 
-            log.info("relayed to " + notifierEndpoint);
-
+            log.info("relayed to " + notifierEndpoint + ":" + response.statusCode() + ":" +response.body());
             return response;
         }
         catch (Exception e) {
-            log.warn("unable to notify: " + e.toString());
+            //log.warn("unable to relay: " + e.toString());
             throw e;
         }
     }
@@ -132,7 +135,7 @@ public class Consumer {
                     consumer.commitSync();
                 }
                 catch (Exception e) {
-                    log.warn("Failed to commit records" + e.toString());
+                    log.warn("Failed to commit records " + e.toString());
                 }
             }
 
