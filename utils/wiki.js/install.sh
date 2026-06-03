@@ -181,7 +181,8 @@ get_jwt() {
 
    body="$(jq -n --arg q "$gql_query" --argjson v "$gql_variables" '{query: $q, variables: $v}')"
    echo $body
-
+   echo "http://$SERVICE_IP:$SERVICE_PORT/graphql"
+   
    output=$(curl -s -X POST "http://$SERVICE_IP:$SERVICE_PORT/graphql" \
          -w "\n%{http_code}" \
          -H 'Content-Type: application/json' \
