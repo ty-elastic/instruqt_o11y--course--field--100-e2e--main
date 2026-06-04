@@ -2378,7 +2378,6 @@
     "list": [
       {
         "current": {},
-        "hide": 2,
         "includeAll": false,
         "label": "datasource",
         "name": "DS_PROMETHEUS",

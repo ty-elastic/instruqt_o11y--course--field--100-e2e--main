@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.kafka.clients.admin.ListTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -37,7 +38,7 @@ public class Producer {
 
     public Producer(String bootstrapServer, String topicName) {
         this.topicName = topicName;
-        recreateTopics(bootstrapServer, topicName);
+        recreateTopic(bootstrapServer, topicName, false);
         kafkaProducer = createKafkaProducer(bootstrapServer);
     }
 
@@ -106,31 +107,46 @@ public class Producer {
         }
     }
 
-    public static void recreateTopics(String bootstrapServer, String... topicNames) {
+    public static void recreateTopic(String bootstrapServer, String topicName, boolean deleteIfExists) {
         Properties props = new Properties();
         props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer);
-        props.put(AdminClientConfig.CLIENT_ID_CONFIG, "client-" + UUID.randomUUID());
+        props.put(AdminClientConfig.CLIENT_ID_CONFIG, "client-" + UUID.randomUUID());        
         try (Admin admin = Admin.create(props)) {
-            // delete topics if present
-            try {
-                admin.deleteTopics(Arrays.asList(topicNames)).all().get();
-            } catch (ExecutionException e) {
-                if (!(e.getCause() instanceof UnknownTopicOrPartitionException)) {
-                    throw e;
+
+            if (deleteIfExists) {
+                // delete topics if present
+                try {
+                    admin.deleteTopics(Arrays.asList(topicName)).all().get();
+                } catch (ExecutionException e) {
+                    if (!(e.getCause() instanceof UnknownTopicOrPartitionException)) {
+                        throw e;
+                    }
+                    log.warn("Topics deletion error: {}", e.getCause());
                 }
-                log.warn("Topics deletion error: {}", e.getCause());
+                log.info("Deleted topics: {}", topicName);
             }
-            log.info("Deleted topics: {}", Arrays.toString(topicNames));
+            else {
+                // does topic exist?
+                ListTopicsResult existingTopics = admin.listTopics();
+                for (String existingTopic : existingTopics.names().get()) {
+                    if (existingTopic.equals(topicName)) {
+                        log.info("topic exists: {}", topicName);
+                        return;
+                    }
+                }
+
+                log.info("topic does not exist: {}", topicName);
+            }
+
             // create topics in a retry loop
             while (true) {
                 // use default RF to avoid NOT_ENOUGH_REPLICAS error with minISR > 1
                 short replicationFactor = -1;
-                List<NewTopic> newTopics = Arrays.stream(topicNames)
-                    .map(name -> new NewTopic(name, KAFKA_NUM_PARITIONS, replicationFactor))
-                    .collect(Collectors.toList());
+                NewTopic newTopic = new NewTopic(topicName, KAFKA_NUM_PARITIONS, replicationFactor);
+                List<NewTopic> newTopics = Arrays.asList(newTopic);
                 try {
                     admin.createTopics(newTopics).all().get();
-                    log.info("Created topics: {}", Arrays.toString(topicNames));
+                    log.info("Created topics: {}", topicName);
                     break;
                 } catch (ExecutionException e) {
                     if (!(e.getCause() instanceof TopicExistsException)) {

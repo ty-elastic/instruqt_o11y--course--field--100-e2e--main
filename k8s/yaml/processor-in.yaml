@@ -39,7 +39,7 @@ spec:
               value: "k8s.pod.uid=$(K8S_POD_UID),k8s.namespace.name=$(K8s_NAMESPACE_NAME)"
 
             - name: BOOTSTRAP_SERVER
-              value: "my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+              value: "my-cluster-kafka-bootstrap.infra.svc.cluster.local:9092"
             - name: IN_TOPIC
               value: "trades-$REGION"
             - name: IN_GROUP

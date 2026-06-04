@@ -32,7 +32,7 @@ spec:
             io.opentelemetry.discovery.metrics/enabled: "true"
             io.opentelemetry.discovery.metrics/scraper: "kafkametrics"
             io.opentelemetry.discovery.metrics/config: |
-              brokers: ["my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"]
+              brokers: ["my-cluster-kafka-bootstrap.infra.svc.cluster.local:9092"]
               protocol_version: "2.8.0"
               collection_interval: 10s
               initial_delay: 1s

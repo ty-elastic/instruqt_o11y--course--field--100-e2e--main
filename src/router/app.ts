@@ -4,6 +4,8 @@ import type { Request, Response } from 'express';
 
 import { createProxyMiddleware } from 'http-proxy-middleware';
 
+import { createClient } from 'redis';
+
 import { Logger } from "tslog";
 const logger = new Logger({ name: "router", type: "json" });
 
@@ -36,6 +38,20 @@ const PORT: number = parseInt(process.env.PORT || '9000');
 const app: Express = express();
 
 
+function setupRedis() {
+  const client = createClient({
+    url: `redis://${process.env.REDIS_HOST}`
+  });
+
+  client.on('error', (err) => console.error('Redis Client Error', err));
+
+  client.connect();
+  console.log('Connected to Redis successfully!');
+
+  return client;
+}
+const redisClient = setupRedis();
+
 function getRandomBoolean() {
   return Math.random() < 0.5;
 }
@@ -44,10 +60,14 @@ function customRouter(req: any) {
   var host = "";
   var method = ""
 
+  var sessionStatus = redisClient.get(`${req.query.customer_id}:trades`);
+  redisClient.incr(`${req.query.customer_id}:trades`);
+
   metricTransactions.inc();
   //logger.info(req.query)
-  if (req.query.shares >= 0)
+  if (req.query.shares >= 0) {
     metricSharesTraded.labels({ symbol: req.query.symbol, action: req.query.action }).inc(Number(req.query.shares));
+  }
   else
     logger.warn(`negative shares`);
 
