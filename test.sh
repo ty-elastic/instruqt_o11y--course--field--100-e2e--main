@@ -7,6 +7,8 @@ if [ -f ".env" ]; then
     set +o allexport # Stop automatic exporting
 fi
 
+./build.sh -c $COURSE -1 true
+
 ./build.sh -c $COURSE -d false -b true -x true -s all -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $MOTEL_INGEST_URL
 
 

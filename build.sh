@@ -45,6 +45,7 @@ deploy_otel=false
 deploy_service=false
 annotations=false
 synthetics=false
+prereq=false
 
 elasticsearch_es_endpoint="na"
 elasticsearch_kibana_endpoint="na"
@@ -64,9 +65,10 @@ case "${unameOut}" in
 esac
 
 OPTIND=1
-while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:n:z:u:q:t:" opt
+while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:n:z:u:q:t:1:" opt
 do
    case "$opt" in 
+      1 ) prereq="$OPTARG" ;;
       a ) arch="$OPTARG" ;;
       c ) course="$OPTARG" ;;
       s ) service="$OPTARG" ;;
@@ -181,13 +183,13 @@ if [ "$features" = "true" ]; then
     source $PWD/assets/scripts/features_es.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 fi
 
-if [[ "$deploy_service" == "true" || "$deploy_service" == "delete" || "$deploy_service" == "force" ]]; then
-    if [[ "$service" == "all" || "$service" == "kafka" ]]; then
-        source $PWD/utils/kafka/install.sh -v $PWD/utils/kafka/values.yaml
+if [ "$prereq" == "true" ]; then
+    source $PWD/utils/kafka/install.sh -v $PWD/utils/kafka/values.yaml
 
-        source $PWD/assets/scripts/integration_packages.sh
-        install_integration_package "kafka_otel" $elasticsearch_kibana_endpoint $elasticsearch_api_key
-    fi
+    source $PWD/assets/scripts/integration_packages.sh
+    install_integration_package "kafka_otel" $elasticsearch_kibana_endpoint $elasticsearch_api_key
+
+    kubectl apply -f utils/redis/redis.yml
 fi
 
 printf "deploying services...\n"
