@@ -1,0 +1,5 @@
+{
+    "id": "kafka_queue_clear",
+    "title": "best practice to clear kafka queues",
+    "text": "If you are asked to clear kafka queues, use the kafka-delete-records command."
+}

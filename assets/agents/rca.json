@@ -19,6 +19,7 @@
                 "tool_ids": [
                     "platform.core.cases",
                     "platform.core.get_workflow_execution_status",
+                    "platform.core.resume_workflow_execution",
                     "observability.run_log_rate_analysis",
                     "observability.get_hosts",
                     "search_traces_error",

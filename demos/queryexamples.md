@@ -36,3 +36,12 @@ FROM traces-* | WHERE attributes.com.example.customer_id == "q.bert" | STATS avg
 # db breakdown
 
 FROM traces-* | WHERE attributes.span.type == "db" | WHERE attributes.db.operation IS NOT NULL | STATS avg = AVG(span.duration.us) BY TBUCKET(1m), attributes.db.operation, attributes.db.system
+
+
+
+
+
+
+
+can you write ESQL for me that looks at my postgres logs and graphs the top query patterns by frequency
+

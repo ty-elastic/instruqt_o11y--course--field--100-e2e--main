@@ -21,6 +21,8 @@ spec:
     metadata:
       labels:
         name: elastic-synthetics
+      annotations:
+        io.opentelemetry.discovery.logs/enabled: "false"
     spec:
       containers:
         - name: elastic-agent
