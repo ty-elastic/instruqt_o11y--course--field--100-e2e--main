@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:24-alpine
 
 RUN mkdir -p /home/node/app/node_modules
 WORKDIR /home/node/app
