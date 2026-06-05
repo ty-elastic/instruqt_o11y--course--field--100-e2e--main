@@ -234,7 +234,7 @@ After the agent is done, let's verify that the case was updated:
 3. Open the case
 4. Scroll down to the last comments in the case and note that it now includes our log rate analysis
 
-### Remediation
+### Remediation (service restart)
 
 We intentionally make remediation a Human-In-the-Loop (HIL) activity, though of course we could have told our agent to automatically take this step if we wanted. You'll recall that the RCA analysis suggested we could remediate the issue by restarting the `monkey` service. Let's do it!
 
@@ -248,28 +248,7 @@ We intentionally make remediation a Human-In-the-Loop (HIL) activity, though of 
 can you restart the monkey service?
 ```
 
-After the agent has completed the task, let's verify that the service was restarted with elastic-ramen!
-
-1. Open the [button label="Services Host"](tab-6) Instruqt tab
-2. Enter the following `kubectl` command:
-```bash,run
-elastic-ramen
-```
-3. In elastic ramen, enter the following command:
-```
-/kibana-conversations
-```
-4. Select the `RCA for Case...` conversation
-5. Enter the following into the ramen prompt:
-```
-can you validate with k8s that the monkey pod was restarted?
-```
-6. Accept the escalations
-7. Enter the following into the ramen prompt:
-```
-can you update the case with this validation evidence?
-```
-
+In this case, we used a workflow on Elasticsearch to remotely call a tool in our cluster to affect a service restart. We could have also moved the conversation over to a jump-box where we could have used `elastic-ramen` to help us remotely execute the service restart. We will see an exemplary use of ramen in the next remediation step.
 
 #### (Optional) How does this work?
 
@@ -298,3 +277,53 @@ remediation
 7. Open the most recent execution
 8. Click on `call_remote` and select `Input`
 9. Note the http call to restart the `monkey` service
+
+### Remediation (clearing kafka queues)
+
+The agentic rca process further recommended that we clear the appropriate Kafka queues. We don't have a workflow for Elastic to do that yet, and it is invasive and complex enough that we really want to have a human oversee the recommended operations.
+
+Fortunately, we can use the `elastic-ramen` tool to move the conversation associated with this case (along with all of the context) to a jump-box where we have CLI access to tools that can clear kafka queues.
+
+1. Open the [button label="Services Host"](tab-6) Instruqt tab
+2. run the following program from `/root`
+```bash,run
+elastic-ramen
+```
+3. In the `Ask anything...` box, enter:
+```
+/kibana-conversations
+```
+4. Take over the `RCA for Case ...` conversation
+5. Enter the following the `Investigate` prompt
+```
+use our best practices to clear kafka queues
+```
+6. (Allow all of the requested operations)
+7. Enter the following the `Investigate` prompt
+```
+can you update the case with a note of the remediation work we just performed?
+```
+
+Note that ramen crafted all of the `kubectl` commands required to execute the requested operation locally with HIL approval. Moreover, it followed our best practices for clearing Kafka queues, documented in our knowledgebase.
+
+Let's have a look at the knowledgebase:
+
+1. Open the [button label="Wiki"](tab-7) Instruqt tab
+2. Find the corresponding KB article regarding Kafka queues
+
+We asked ramen to update our case with our actions; let's have a look at the case:
+
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
+2. Navigate to `Observability` > `Cases`
+3. Open the case
+4. Scroll down to the bottom and note the comment left by ramen
+
+Further, all of the steps taken by ramen are recorded in the agentic conversation associated with this case. 
+
+1. Scroll up a bit, find the `You can continue your investigation or take remediation action here(external, opens in a new tab or window).` comment
+2. Click the link to the conversation
+3. Scroll toward the bottom and expand the reasoning step below `use our best practices to clear the kafka queues`
+
+
+
+
