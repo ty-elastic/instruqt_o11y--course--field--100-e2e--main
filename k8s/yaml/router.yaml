@@ -28,6 +28,8 @@ spec:
       containers:
         - name: router
           env:
+            - name: OTEL_NODE_ENABLED_INSTRUMENTATIONS
+              value: "http,redis"
             - name: REDIS_HOST
               value: "redis-service.infra.svc.cluster.local:6379"
             - name: RECORDER_HOST_1
