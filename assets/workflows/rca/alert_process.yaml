@@ -150,4 +150,5 @@ steps:
         type: workflow.executeAsync
         with:
           workflow-id: "case-process"
-          inputs: {}
+          inputs:
+            alerts_ready: true

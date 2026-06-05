@@ -11,7 +11,7 @@ The goal of this demo is to show that the metrics experience in Elastic is optim
 > [!NOTE]
 > Typically, you would demo the Grafana comparison only if the customer is an existing Prometheus/Grafana user.
 
-We are sending the same set of node.js metrics to both Prometheus/Grafana and Elasticsearch.
+We are sending the same set of redis and node.js metrics to both Prometheus/Grafana and Elasticsearch. Redis and node.js are being scrapped by Prometheus. Prometheus is configured to remote_write metrics to Elasticsearch. Grafana is configured to read from both Prometheus directly and from Elasticsearch.
 
 1. Open the [button label="Grafana"](tab-9) tab
 2. Navigate to `Drilldown` > `Metrics`
@@ -131,6 +131,29 @@ The goal of this demo is to show OOTB support for popular, native OTel metrics. 
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Dashboards`
 3. Open dashboard `[Metrics Nginx OTEL] Overview`
+
+# Using Grafana on top of Elasticsearch
+
+If you have a customer using Grafana with Victoria Metrics or Mimir or other Prometheus-compatible datastore, you can directly replace that datasource with Elasticsearch.
+
+In this case, we are scrapping Prometheus-style metrics from redis (via redis_exporter). A small Prometheus server is scrapping from redis_exporter and doing a remote_write to Elasticsearch. Grafana is configured with Elasticsearch as a Prometheus-compatible backend.
+
+1. Open the [button label="Grafana"](tab-9) tab
+2. Navigate to `Dashboards` > `Infra`
+3. Select the `Redis` dashboard
+4. At the top, change the datasource between Prometheus and Elasticsearch; note there is no difference
+
+# Migrating Grafana dashboards to Elasticsearch
+
+1. Open the [button label="Grafana"](tab-9) tab
+2. Navigate to `Dashboards` > `Infra`
+3. Select the `Redis` dashboard
+
+We ran the [Elastic Observability Migration Platform](https://github.com/elastic/observability-migration-platform) using the API mode to migrate all Grafana dashboards to Kibana. It has already run, and converted the Redis dashboard.
+
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
+2. Navigate to `Dashboards`
+3. Select the `Redis` dashboard
 
 # Advanced ES|QL
 
