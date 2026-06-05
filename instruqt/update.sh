@@ -96,11 +96,11 @@ if [ "$build" = "true" ]; then
 
   cd ../utils/prometheus-grafana
   ./build.sh -c $course
-  cd ../instruqt
+  cd ../../instruqt
 
   cd ../utils/prometheus-grafana/mig-to-kbn
   ./build.sh -c $course
-  cd ../../instruqt
+  cd ../../../instruqt
 
   cd ..
   ./build.sh -c $course -b true -x true -s all
