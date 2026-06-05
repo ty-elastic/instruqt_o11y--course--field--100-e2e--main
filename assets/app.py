@@ -783,7 +783,7 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, 
 
     elif action == 'load':
         load_workflows(kibana_host, auth, es_host, remote_host)
-        load_new_knowledge(es_host, auth)
+        #load_new_knowledge(es_host, auth)
         load_agent_tools(kibana_host, auth)
         load_skills(kibana_host, auth)
         load_agents(kibana_host, auth)
