@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: mig-to-kbn
-  namespace: grafana
+  namespace: infra
 spec:
   template:
     spec:

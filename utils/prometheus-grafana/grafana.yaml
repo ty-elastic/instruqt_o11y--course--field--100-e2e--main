@@ -25,7 +25,7 @@ data:
         jsonData:
           httpMethod: GET
           httpHeaderName1: "Authorization"
-          timeInterval: 60s  # Prometheus scrape interval (default: 15s)
+          timeInterval: 15s  # Prometheus scrape interval (default: 15s)
         secureJsonData:
           httpHeaderValue1: "ApiKey $elasticsearch_api_key"
 kind: ConfigMap
@@ -164,8 +164,8 @@ data:
         scheme: http
         static_configs:
         - targets:
-          - router.trading-na.svc.cluster.local:9000
-          - router.trading-emea.svc.cluster.local:9000
+          # - router.trading-na.svc.cluster.local:9000
+          # - router.trading-emea.svc.cluster.local:9000
           - redis-service.infra.svc.cluster.local:9000
     remote_write:
       - url: "$elasticsearch_es_endpoint/_prometheus/api/v1/write"

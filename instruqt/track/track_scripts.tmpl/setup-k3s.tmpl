@@ -53,6 +53,9 @@ tar -xzf $COURSE.tgz
 
 source $WORKING_DIR/instruqt/scripts/vars.sh -w true
 
+# infra
+$WORKING_DIR/build.sh -z $WORKING_DIR -t $FLEET_URL -c $COURSE -1 true -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443
+
 # services
 $WORKING_DIR/build.sh -z $WORKING_DIR -o serverless -t $FLEET_URL -c $COURSE -d true -n true -b false -s all -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443
 
