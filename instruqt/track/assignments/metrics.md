@@ -140,20 +140,20 @@ In this case, we are scrapping Prometheus-style metrics from redis (via redis_ex
 
 1. Open the [button label="Grafana"](tab-9) tab
 2. Navigate to `Dashboards` > `Infra`
-3. Select the `Redis` dashboard
+3. Select the `Redis Dashboard for Prometheus Redis Exporter` dashboard
 4. At the top, change the datasource between Prometheus and Elasticsearch; note there is no difference
 
 # Migrating Grafana dashboards to Elasticsearch
 
 1. Open the [button label="Grafana"](tab-9) tab
 2. Navigate to `Dashboards` > `Infra`
-3. Select the `Redis` dashboard
+3. Select the `Redis Dashboard for Prometheus Redis Exporter` dashboard
 
 We ran the [Elastic Observability Migration Platform](https://github.com/elastic/observability-migration-platform) using the API mode to migrate all Grafana dashboards to Kibana. It has already run, and converted the Redis dashboard.
 
 1. Open the [button label="Elastic"](tab-0) Instruqt tab
 2. Navigate to `Dashboards`
-3. Select the `Redis` dashboard
+3. Select the `Redis Dashboard for Prometheus Redis Exporter` dashboard
 
 # Advanced ES|QL
 
