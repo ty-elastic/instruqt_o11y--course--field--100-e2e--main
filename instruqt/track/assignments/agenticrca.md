@@ -200,7 +200,7 @@ In the next step, we will have the opportunity to see the reasoning steps the Ag
 8. Scroll down to the last comments in the case
 9. Note the detailed Root Cause Analysis w/ dependency map, explanation of correlation, and analysis of logs, traces, and metrics
 10. Note that the Agent matched this problem with a known issue
-11. Where did this issue come from? Open the [button label="GitHub Issues"](tab-7) Instruqt tab and open the corresponding GitHub issue.
+11. Where did this issue come from? Open the [button label="Wiki"](tab-7) Instruqt tab and find the corresponding KB article
 12. Note also that the Agent recommended for us to restart the monkey service to resolve this issue
 
 ### Continue the Investigation
