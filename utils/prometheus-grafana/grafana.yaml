@@ -19,7 +19,7 @@ data:
       - name: Elasticsearch
         type: prometheus
         access: proxy
-        url: "$elasticsearch_es_endpoint/_prometheus"
+        url: "$elasticsearch_es_endpoint/_prometheus/metrics-generic.prometheus-default"
         isDefault: true
         uid: elasticsearch-prometheus
         jsonData:
@@ -158,15 +158,15 @@ data:
     scrape_configs:
       - job_name: prometheus
         honor_timestamps: true
-        scrape_interval: 15s
-        scrape_timeout: 10s
         metrics_path: /metrics
         scheme: http
         static_configs:
         - targets:
-          # - router.trading-na.svc.cluster.local:9000
-          # - router.trading-emea.svc.cluster.local:9000
+          - router.trading-na.svc.cluster.local:9000
+          - router.trading-emea.svc.cluster.local:9000
           - redis-service.infra.svc.cluster.local:9000
+          labels:
+            namespace: 'infra'
     remote_write:
       - url: "$elasticsearch_es_endpoint/_prometheus/api/v1/write"
         authorization:
