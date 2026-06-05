@@ -324,6 +324,16 @@ Further, all of the steps taken by ramen are recorded in the agentic conversatio
 2. Click the link to the conversation
 3. Scroll toward the bottom and expand the reasoning step below `use our best practices to clear the kafka queues`
 
+### Integration with ITSM
 
+We can now push our incident to our ITSM. For this demo, we are using a service that mocks ServiceNow's ITSM.
 
+1. Open the [button label="Elastic"](tab-0) Instruqt tab
+2. Navigate to `Observability` > `Cases`
+3. Open the case
+4. On the right, click `Push as a snowem incident`
 
+and let's verify that is was pushed:
+
+1. Open the [button label="ITSM"](tab-8) Instruqt tab
+2. Navigate to `Incidents`
