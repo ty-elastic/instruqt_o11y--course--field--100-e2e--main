@@ -2,7 +2,6 @@ version: '1'
 name: a2a
 description: Allows agent to agent communication
 enabled: true
-tags:
 triggers:
 - type: manual
   inputs:
