@@ -239,9 +239,9 @@ server {
     proxy_set_header Host $KIBANA_URL_WITHOUT_PROTOCOL;
     proxy_set_header Authorization "Basic $ELASTICSEARCH_AUTH_BASE64";
 
-    proxy_set_header traceparent $http_traceparent;
-    proxy_set_header tracestate  $http_tracestate;
-    proxy_set_header baggage     $http_baggage;
+    proxy_set_header traceparent \$http_traceparent;
+    proxy_set_header tracestate  \$http_tracestate;
+    proxy_set_header baggage     \$http_baggage;
 
     proxy_set_header Connection "";
     proxy_http_version 1.1;
