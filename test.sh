@@ -25,7 +25,7 @@ export REMOTE_HOSTNAME=$(kubectl -n trading-na get svc proxy-ext -o jsonpath='{.
 export REMOTE_PORT=$(kubectl -n trading-na get svc proxy-ext -o jsonpath='{.spec.ports[0].port}')
 
 # assets
-./build.sh -o false -c $COURSE -x true -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $MOTEL_INGEST_URL -w true -e http://$REMOTE_HOSTNAME:$REMOTE_PORT
+./build.sh -o false -c $COURSE -x true -d false -b true -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $MOTEL_INGEST_URL -w true -e http://$REMOTE_HOSTNAME:$REMOTE_PORT
 
 # grafana
 ./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $MOTEL_INGEST_URL -g true
