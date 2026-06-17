@@ -7,6 +7,11 @@ loghub
 bin
 out
 
+.auth
+playwright-report
+test-results
+
+
 _local/
 src/hostmetrics-sim/
 agents/apm/measure.yaml
