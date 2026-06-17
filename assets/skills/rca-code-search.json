@@ -1,0 +1,16 @@
+{
+    "id": "rca-code-search",
+    "name": "Reference Source Code",
+    "description": "Use this skill when analyzing exceptions, stack traces, and error messages to understand where in the codebase the issue is occurring",
+    "content": "Use the A2A tool to access the `scs.code_researcher` agent.",
+    "referenced_content": [],
+    "tool_ids": [
+        "a2a"
+    ],
+    "readonly": false,
+    "experimental": false,
+    "x-add-to-agents": [
+        "elastic-ai-agent",
+        "rca"
+    ]
+}

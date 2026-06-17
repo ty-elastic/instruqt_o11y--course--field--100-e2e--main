@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: code-indexer-12
+  namespace: infra
+spec:
+  template:
+    spec:
+      containers:
+        - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/scs:latest
+          name: code-indexer
+          imagePullPolicy: Always
+          env:
+            - name: ELASTICSEARCH_ENDPOINT
+              value: "$elasticsearch_es_endpoint"
+            - name : ELASTICSEARCH_API_KEY
+              value: "$elasticsearch_api_key"
+
+            - name: SCS_ELASTICSEARCH_INFERENCE_ID
+              value: ".elser-2-elastic"
+
+          args:
+            - "index"
+            - "https://github.com//ty-elastic/instruqt_o11y--course--field--100-e2e--main"
+            - "--pull"
+        - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/scs:latest
+          name: setup
+          imagePullPolicy: Always
+          env:
+            - name: ELASTICSEARCH_ENDPOINT
+              value: "$elasticsearch_es_endpoint"
+            - name : ELASTICSEARCH_API_KEY
+              value: "$elasticsearch_api_key"
+            - name : KIBANA_ENDPOINT
+              value: "$elasticsearch_kibana_endpoint"
+
+            - name: SCS_ELASTICSEARCH_INFERENCE_ID
+              value: ".elser-2-elastic"
+
+          args:
+            - "install-agentic-interfaces"
+      restartPolicy: Never
+---

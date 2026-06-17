@@ -85,6 +85,7 @@ create_wiki_connector() {
 
    # Extract HTTP status code
    http_code=$(echo "$output" | tail -n1)
+   echo $http_code
    http_response=$(echo "$output" | sed '$d')
    if [[ "$http_code" != "201" && "$http_code" != "400" ]]; then
       printf "$FUNCNAME...ERROR $http_code: $http_response\n"

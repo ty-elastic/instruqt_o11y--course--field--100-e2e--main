@@ -137,7 +137,7 @@ def delete_existing_workflow(kibana_server, kibana_auth, es_host, workflow_name)
     print("search workflows...")
     resp = requests.get(f"{kibana_server}/api/workflows?size=50&page=1",
                         headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
-    print(resp.json())
+    #print(resp.json())
     print("done")
     
     for workflow in resp.json()['results']:
