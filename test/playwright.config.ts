@@ -49,7 +49,7 @@ export default defineConfig({
       use: { 
         ...devices['Desktop Chrome'],
         // Use prepared auth state.
-        //storageState: './.auth/session.json',
+        storageState: './.auth/session.json',
       },
     },
 
