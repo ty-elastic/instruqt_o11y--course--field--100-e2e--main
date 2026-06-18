@@ -673,6 +673,7 @@ def load_skills(kibana_server, kibana_auth):
                                             headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json"})
                         #print(resp1.json())
                         existing = resp1.json()
+                        print(existing)
 
                         update_json = {
                             "configuration": {
