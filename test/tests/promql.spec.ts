@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import 'dotenv/config'
 import { trace, context } from '@opentelemetry/api';
+import { annotationLabel } from "@aergonaut/playwright-opentelemetry-reporter";
 
 function getTraceParent() {
   const span = trace.getSpan(context.active());
@@ -19,6 +20,11 @@ test.beforeEach(async ({ page }) => {
   if (traceparent) {
     await page.setExtraHTTPHeaders({ traceparent });
   }
+
+  test.info().annotations.push({
+    type: annotationLabel("project_id"),
+    description: "Serverless project id",
+  });
 
   await page.goto(process.env.INSTRUQT_INVITE);
 
