@@ -67,7 +67,7 @@ gcp_terraform: true
 k8s:
   enabled: true
   provider: "{{ $provider }}"
-  certmanager: false
+  certmanager: true
   ingress: true
   static_ip: true
 
