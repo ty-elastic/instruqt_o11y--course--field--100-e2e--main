@@ -2,15 +2,17 @@ arch=linux/amd64
 build=true
 docs=false
 branch=test
+ziponly=false
 
 OPTIND=1
-while getopts "a:b:c:r:d:" opt
+while getopts "a:b:c:r:d:z:" opt
 do
    case "$opt" in
       a ) arch="$OPTARG" ;;
       b ) build="$OPTARG" ;;
       r ) branch="$OPTARG" ;;
       d ) docs="$OPTARG" ;;
+      z ) ziponly="$OPTARG" ;;
    esac
 done
 
@@ -71,6 +73,10 @@ upload_bundle() {
   cd instruqt
 }
 upload_bundle
+
+if [ "$ziponly" = "true" ]; then
+  exit 0
+fi
 
 if [ "$build" = "true" ]; then
 

@@ -29,11 +29,6 @@ config_apm_ml() {
 config_apm_dv() {
    printf "$FUNCNAME to $elasticsearch_kibana_endpoint...\n"
 
-   curl -X POST "$elasticsearch_kibana_endpoint/internal/apm/data_view/static" \
-      -H 'kbn-xsrf: true' \
-      -H 'x-elastic-internal-origin: Kibana' \
-      -H "Authorization: ApiKey ${elasticsearch_api_key}"
-
    output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/internal/apm/data_view/static" \
       -w "\n%{http_code}" \
       -H 'kbn-xsrf: true' \
