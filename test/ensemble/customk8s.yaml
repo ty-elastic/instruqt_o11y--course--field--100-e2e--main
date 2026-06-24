@@ -1,0 +1,92 @@
+# last update {{ .Date }}
+template_name: customk8s
+template_description: |
+  K8s deployment.
+  Parameters:
+    - ClusterName: Name for the new oblt cluster (automatic).
+    - SlackChannel: SlackChannel name or Slack member ID to send the credentials of the cluster (#my-channel, @MIDNUM)(automatic)
+    - K8sProvider: Type of K8s provider: aws, gcp, autopilot or azure (default: gcp)
+  Usage:
+    oblt-cli cluster create custom --template k8s
+    oblt-cli cluster create custom --template k8s --parameters '{"K8sProvider": "autopilot"}
+
+#{{- $username := (or .User (or .Username "unknown")) }}
+#{{- $slackChannel := (or .SlackChannel "#observablt-bots") }}
+#{{- $provider := (or .K8sProvider "gcp") }}
+#{{- $ephemeralCluster := (or .EphemeralCluster "false") | toString | lower }}
+#{{- $obltCliVersion := (or .ObltCliVersion "<7.9.8") }}
+#{{- $gitOps := (or .GitOps "false") | toString | lower }}
+#{{- $githubCommit := ((or .GitHubCommit "") | toString) }}
+#{{- $githubIssue := ((or .GitHubIssue "") | toString) }}
+#{{- $githubPullRequest := ((or .GitHubPullRequest "") | toString) }}
+#{{- $githubRepository := (or .GitHubRepository "") }}
+#{{- $githubRef := ((or .GitHubRef "") | toString) }}
+#{{- $workflow := (or .Workflow "") }}
+#{{- $workflowRef := (or .WorkflowRef "") }}
+#{{- $githubRepositoryOwner := (or .GitHubRepositoryOwner "") }}
+#{{- $githubRunId := (or .GitHubRunId "") }}
+#{{- $githubActor := (or .GitHubActor "") }}
+#{{- $githubEvent := (or .GitHubEvent "") }}
+#{{- $runnerArch := (or .RunnerArch "") }}
+#{{- $runnerOS := (or .RunnerOS "") }}
+#{{- $ciType := (or .CiType "") }}
+#{{- $githubCommentId := (or .GitHubCommentId "") }}
+#{{- $hasCommitInfo := or (ne $githubCommit "") (ne $githubCommentId "") }}
+#{{- $hasIssueInfo := or (ne $githubIssue "") (ne $githubPullRequest "") (ne $githubRepository "") }}
+#{{- $hasRefInfo := or (ne $githubRef "") (ne $workflow "") (ne $workflowRef "") }}
+#{{- $hasRunInfo := or (ne $githubRunId "") (ne $githubActor "") (ne $githubEvent "") }}
+#{{- $hasRepoInfo := or (ne $githubRepository "") (ne $githubRepositoryOwner "") }}
+#{{- $hasRunnerInfo := or (ne $runnerArch "") (ne $runnerOS "") (ne $ciType "") }}
+#{{- $hasWorkflowInfo := or $hasRefInfo $hasRunInfo $hasRepoInfo $hasRunnerInfo }}
+#{{- $enableGitOps := or $hasCommitInfo $hasIssueInfo $hasWorkflowInfo (eq $gitOps "true") }}
+#{{- $expireInHours := (or .ExpireInHours "720") }}
+#{{- $expiryDate := (or .ExpiryDate (now | mustDateModify (printf "+%sh" $expireInHours) | date "2006-01-02T15:04:05-07:00")) }}
+#{{- $creationDate := (now | date "2006-01-02T15:04:05-07:00") }}
+#{{- $elasticDivision := (or .ElasticDivision "engineering") }}
+#{{- $elasticOrg := (or .ElasticOrg "obs") }}
+#{{- $elasticTeam := (or .ElasticTeam "eng-prod") }}
+#{{- $elasticProject := (or .ElasticProject "oblt-clusters") }}
+#{{- $elasticOwner := (or .ElasticOwner "") }}
+
+oblt_cli_version: "{{ $obltCliVersion }}"
+cluster_name: "{{ .ClusterName }}"
+ephemeral_cluster: "{{ $ephemeralCluster }}"
+oblt_username: "{{ $username }}"
+slack_channel: "{{ $slackChannel }}"
+expiry_date: "{{ $expiryDate }}"
+creation_date: "{{ $creationDate }}"
+
+elastic:
+  division: "{{ $elasticDivision }}"
+  org: "{{ $elasticOrg }}"
+  team: "{{ $elasticTeam }}"
+  project: "{{ $elasticProject }}"
+  owner: "{{ $elasticOwner }}"
+
+gcp_terraform: true
+k8s:
+  enabled: true
+  provider: "{{ $provider }}"
+  certmanager: false
+  ingress: false
+  static_ip: false
+
+#{{- if $enableGitOps }}
+gitops:
+  enabled: "{{ $gitOps }}"
+  commit: "{{ $githubCommit }}"
+  issue: "{{ $githubIssue }}"
+  pull_request: "{{ $githubPullRequest }}"
+  repository: "{{ $githubRepository }}"
+  repository_owner: "{{ $githubRepositoryOwner }}"
+  comment_id: "{{ $githubCommentId }}"
+  ref: "{{ $githubRef }}"
+  workflow: "{{ $workflow }}"
+  workflow_ref: "{{ $workflowRef }}"
+  run_id: "{{ $githubRunId }}"
+  actor: "{{ $githubActor }}"
+  event: "{{ $githubEvent }}"
+  runner_arch: "{{ $runnerArch }}"
+  runner_os: "{{ $runnerOS }}"
+  ci_type: "{{ $ciType }}"
+#{{- end }}
