@@ -576,6 +576,54 @@ def delete_existing_agent(kibana_server, kibana_auth, agent_id):
     except Exception as e:
         print(e)        
 
+def load_dashboards(kibana_server, kibana_auth):
+
+    directory_path = "dashboards"
+    target_extension = ".json"
+
+    #print("here")
+
+    print("search dbs...")
+    resp = requests.get(f"{kibana_server}/api/dashboards?per_page=1000",
+                        headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+    #print(resp.json())
+
+
+    for root, dirs, files in os.walk(directory_path):
+        for file in files:
+            if file.endswith(target_extension):
+                full_path = os.path.join(root, file)
+                with open(full_path, 'r') as fileo:
+
+                    newdb = json.load(fileo)
+
+                    created = False
+                    for db in resp.json()['dashboards']:
+                        id = None
+                        try:
+                            #print(db)
+                            #print(db['data']['title'])
+                            if db['data']['title'] == newdb['title']:
+                                id = db['id']
+                                print(f"found {id}")
+                        except Exception as e:
+                            print("exception")
+                            #print(e)  
+
+                        if id is not None:
+                            resp = requests.put(f"{kibana_server}/api/dashboards/{id}",
+                                                json=newdb,
+                                                headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+                            #print(resp.json())
+                            print(f"updated {id}")
+                            created = True
+                    if created is False:
+                        resp = requests.post(f"{kibana_server}/api/dashboards",
+                                            json=newdb,
+                                            headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+                        #print(resp.json())
+                        print(f"new")
+
 def delete_existing_skill(kibana_server, kibana_auth, skill_id):
 
     try:
@@ -780,6 +828,9 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, 
     elif action == 'load_objects':
         load_objects(kibana_host, auth)
         print('done')
+    elif action == 'load_dashboards':
+        load_dashboards(kibana_host, auth)
+        print('done')
 
     elif action == 'load':
         load_workflows(kibana_host, auth, es_host, remote_host)
@@ -796,6 +847,7 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, 
         load_rules(kibana_host, auth, es_host, connect_alerts)
 
         load_objects(kibana_host, auth)
+        load_dashboards(kibana_host, auth)
 
         load_slos(kibana_host, auth, services_split)
         print('done')

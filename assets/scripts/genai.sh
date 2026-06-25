@@ -45,6 +45,7 @@ config_o11y_ai_docs() {
    printf "$FUNCNAME...\n"
 
    output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/internal/product_doc_base/install" \
+      -m 0.5 \
       -w "\n%{http_code}" \
       -H 'kbn-xsrf: true' \
       -H 'x-elastic-internal-origin: Kibana' \

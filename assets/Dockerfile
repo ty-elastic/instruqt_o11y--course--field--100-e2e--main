@@ -6,6 +6,7 @@ WORKDIR /python-docker
 COPY requirements.txt .
 RUN --mount=type=cache,target=/root/.cache/pip pip3 install --root-user-action=ignore -r requirements.txt
 
+
 COPY app.py .
 COPY workflows workflows
 COPY rules_enable rules_enable
@@ -20,6 +21,7 @@ COPY ml ml
 COPY objects objects
 COPY skills skills
 COPY slos slos
+COPY dashboards dashboards
 
 ENV PYTHONUNBUFFERED=1
 
