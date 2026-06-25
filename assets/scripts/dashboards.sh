@@ -16,4 +16,4 @@ do
    esac
 done
 
-install_integration_package "profilingmetrics_otel" $elasticsearch_kibana_endpoint $elasticsearch_api_key
+install_integration_package "otel_rum_dashboards" $elasticsearch_kibana_endpoint $elasticsearch_api_key
