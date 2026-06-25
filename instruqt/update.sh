@@ -25,7 +25,7 @@ else
   exit 1
 fi
 
-if [ -n "$(git status --porcelain)" ]; then
+if [ -n "$(git status --porcelain -uno)" ]; then
   echo "🔴 There are modified or untracked files."
   # Optional: list the modified files
   git status --porcelain
