@@ -283,7 +283,7 @@ def es_sync(connector_id, es_url, es_api_key):
 @click.option('--es_apikey', default="", help='es api key')
 @click.option('--action', default="", help='wiki or es')
 def main(wiki_public_url, wiki_private_url, es_host, es_apikey, action):
-    if action == "wiki":
+    if action == "wiki_config":
         wiki_finalize(wiki_public_url, wiki_private_url)
         jwt = wiki_get_jwt(wiki_private_url)
         wiki_load_knowledge(wiki_private_url, jwt, "knowledge")

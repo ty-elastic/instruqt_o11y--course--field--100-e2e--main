@@ -74,10 +74,6 @@ upload_bundle() {
 }
 upload_bundle
 
-if [ "$ziponly" = "true" ]; then
-  exit 0
-fi
-
 if [ "$build" = "true" ]; then
 
   cd ../assets
@@ -100,6 +96,10 @@ if [ "$build" = "true" ]; then
   ./build.sh -c $course
   cd ../../../instruqt
 
+  cd ../utils/wiki.js/install
+  ./build.sh -c $course
+  cd ../../../instruqt
+
   cd ../utils/prometheus-grafana
   ./build.sh -c $course
   cd ../../instruqt
@@ -111,6 +111,10 @@ if [ "$build" = "true" ]; then
   cd ..
   ./build.sh -c $course -b true -x true -s all
   cd instruqt
+fi
+
+if [ "$ziponly" = "true" ]; then
+  exit 0
 fi
 
 cd track

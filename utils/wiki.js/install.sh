@@ -1,7 +1,7 @@
 
 root="../../"
-repo=us-central1-docker.pkg.dev/elastic-sa/tbekiares
-course=latest
+export repo=us-central1-docker.pkg.dev/elastic-sa/tbekiares
+export course=latest
 
 OPTIND=1
 while getopts "s:c:r:i:j:h:" opt
@@ -19,18 +19,6 @@ done
 
 source $root/assets/scripts/retry.sh
 
-get_lb_address() {
-   printf "$FUNCNAME...\n"
-    export SERVICE_IP=$(kubectl -n $1 get service $2 -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-    export SERVICE_PORT=$(kubectl -n $1 get service $2 -o jsonpath='{.spec.ports[0].port}')
-    if [ -z "$SERVICE_IP" ]; then
-      printf "$FUNCNAME...ERROR $http_code: $http_response\n"
-      return 1
-   fi
-   printf "$FUNCNAME...SUCCESS $SERVICE_IP $SERVICE_PORT\n"
-   return 0
-}
-
 helm repo add requarks https://charts.js.wiki
 kubectl create namespace wiki
 helm install wiki \
@@ -39,40 +27,12 @@ helm install wiki \
     --set postgresql.image.repository=$repo/postgresql \
     --set postgresql.image.tag=$course \
     --set postgresql.image.pullPolicy=Always \
-    --set ingress.enabled=false \
     requarks/wiki
 
-kubectl apply -f $root/utils/wiki.js/service.yaml -n wiki
+envsubst '$course,$repo' < $root/utils/wiki.js/install/wikijs.yaml | kubectl apply -f -
 
 # wait
-kubectl wait --for=condition=Ready pods --all -n wiki --timeout=120s
-
-finalize() {
-   printf "$FUNCNAME...\n"
-   get_lb_address wiki wiki-ext
-
-   output=$(curl -s -X POST "http://$SERVICE_IP:$SERVICE_PORT/finalize" \
-         -w "\n%{http_code}" \
-         -H 'Content-Type: application/json' \
-         -d '{
-            "adminEmail": "admin@example.com",
-            "adminPassword": "password123",
-            "adminPasswordConfirm": "password123",
-            "siteUrl": "http://'$SERVICE_IP':'$SERVICE_PORT'",
-            "telemetry": false
-        }')
-
-   # Extract HTTP status code
-   http_code=$(echo "$output" | tail -n1)
-   http_response=$(echo "$output" | sed '$d')
-   if [[ "$http_code" != "200" && "$http_code" != "404" ]]; then
-      printf "$FUNCNAME...ERROR $http_code: $http_response\n"
-      return 1
-   fi
-   printf "$FUNCNAME...SUCCESS\n"
-   return 0
-}
-retry_command_lin finalize
+kubectl wait --for=condition=complete job/wikijs-config22 -n wiki --timeout=120s
 
 create_wiki_connector() {
    printf "$FUNCNAME...\n"
@@ -85,14 +45,26 @@ create_wiki_connector() {
 
    # Extract HTTP status code
    http_code=$(echo "$output" | tail -n1)
-   echo $http_code
+   #echo $http_code
    http_response=$(echo "$output" | sed '$d')
    if [[ "$http_code" != "201" && "$http_code" != "400" ]]; then
       printf "$FUNCNAME...ERROR $http_code: $http_response\n"
       return 1
    fi
 
-   CONNECTOR_ID=$(echo $http_response | jq -r '.id')
+   if [ "$http_code" = "400" ]; then
+      output=$(curl -s -X GET "$elasticsearch_es_endpoint/_connector" \
+            -w "\n%{http_code}" \
+            -H "Authorization: ApiKey ${elasticsearch_api_key}" \
+            -H 'Content-Type: application/json')
+      http_code=$(echo "$output" | tail -n1)
+      http_response=$(echo "$output" | sed '$d')
+      CONNECTOR=$(echo $http_response | jq -r '.results.[] | select (.name == "wiki")')
+      CONNECTOR_ID=$(echo $CONNECTOR | jq -r '.id')
+      printf $CONNECTOR_ID
+   else
+      CONNECTOR_ID=$(echo $http_response | jq -r '.id')
+   fi
 
    printf "$FUNCNAME...SUCCESS id=$CONNECTOR_ID\n"
    return 0
@@ -102,7 +74,7 @@ retry_command_lin create_wiki_connector
 export CONNECTOR_ID=$CONNECTOR_ID
 export elasticsearch_es_endpoint=$elasticsearch_es_endpoint
 export elasticsearch_api_key=$elasticsearch_api_key
-envsubst '$elasticsearch_es_endpoint,$elasticsearch_api_key,$CONNECTOR_ID' < $root/utils/wiki.js/connector.yaml | kubectl apply -f -
+envsubst '$elasticsearch_es_endpoint,$elasticsearch_api_key,$CONNECTOR_ID' < $root/utils/wiki.js/install/connector.yaml | kubectl apply -f -
 kubectl -n wiki rollout restart deployment/connector
 
 set_mapping() {
@@ -130,13 +102,11 @@ retry_command_lin set_mapping
 create_wiki_config() {
    printf "$FUNCNAME...\n"
 
-   output=$(curl -s -X POST "$elasticsearch_kibana_endpoint/internal/content_connectors/connectors/$CONNECTOR_ID/configuration" \
+   output=$(curl -s -X PUT "$elasticsearch_es_endpoint/_connector/$CONNECTOR_ID/_configuration" \
          -w "\n%{http_code}" \
-         -H 'kbn-xsrf: true' \
-         -H 'x-elastic-internal-origin: Kibana' \
          -H "Authorization: ApiKey ${elasticsearch_api_key}" \
          -H 'Content-Type: application/json' \
-         -d '{"fetch_size":"","retry_count":"","host":"wiki-postgresql","port":5432,"username":"postgres","password":"postgres","database":"wiki","schema":"public","tables":"pages","ssl_enabled":false}')
+         -d '{"values": {"host":"wiki-postgresql","port":5432,"username":"postgres","password":"postgres","database":"wiki","schema":"public","tables":"pages","ssl_enabled":false}}')
 
    # Extract HTTP status code
    http_code=$(echo "$output" | tail -n1)
@@ -150,122 +120,6 @@ create_wiki_config() {
    return 0
 }
 retry_command_lin create_wiki_config
-
-
-get_jwt() {
-   printf "$FUNCNAME...\n"
-   # Define the raw GraphQL query text
-   gql_query='
-   mutation ($username: String!, $password: String!, $strategy: String!) {
-      authentication {
-         login(username: $username, password: $password, strategy: $strategy) {
-            responseResult {
-               succeeded
-               errorCode
-               message
-            }
-            jwt
-            continuationToken
-         }
-      }
-   }'
-
-   # Define variables as a JSON string
-   gql_variables='{"username":"admin@example.com","password":"password123","strategy":"local"}'
-
-   body="$(jq -n --arg q "$gql_query" --argjson v "$gql_variables" '{query: $q, variables: $v}')"
-   echo $body
-   echo "http://$SERVICE_IP:$SERVICE_PORT/graphql"
-
-   output=$(curl -s -X POST "http://$SERVICE_IP:$SERVICE_PORT/graphql" \
-         -w "\n%{http_code}" \
-         -H 'Content-Type: application/json' \
-         -d "$body")
-
-   # Extract HTTP status code
-   http_code=$(echo "$output" | tail -n1)
-   http_response=$(echo "$output" | sed '$d')
-   if [ "$http_code" != "200" ]; then
-      printf "$FUNCNAME...ERROR $http_code: $http_response\n"
-      return 1
-   fi
-
-   JWT=$(echo $http_response | jq -r '.data.authentication.login.jwt')
-
-   printf "$FUNCNAME...JWT=$JWT\n"
-   return 0
-}
-retry_command_lin get_jwt
-export JWT=$JWT
-
-add_content() {
-   printf "$FUNCNAME...\n"
-   # Define the raw GraphQL query text
-   gql_query='
-    mutation ($title: String!, $content: String!, $description: String!, $path: String!){
-        pages {
-            create(
-                title: $title
-                content: $content
-                description: $description
-                editor: "markdown"
-                isPublished:true
-                isPrivate: false
-                locale: "en"
-                path: $path
-                tags:[ "knowledge"]
-            ) {
-                responseResult {
-                    succeeded
-                    errorCode
-                    message
-                }
-                page {
-                    id
-                    path
-                    contentType
-                }
-            }
-        }
-    }'
-
-   # Define variables as a JSON string
-   gql_variables='{"title":"'$1'","content":"'$2'","description":"'$3'","path":"'$4'"}'
-
-   body="$(jq -n --arg q "$gql_query" --argjson v "$gql_variables" '{query: $q, variables: $v}')"
-   #echo $body
-
-   output=$(curl -s -X POST "http://$SERVICE_IP:$SERVICE_PORT/graphql" \
-         -w "\n%{http_code}" \
-         -H "Authorization: Bearer $JWT" \
-         -H 'Content-Type: application/json' \
-         -d "$body")
-
-   # Extract HTTP status code
-   http_code=$(echo "$output" | tail -n1)
-   http_response=$(echo "$output" | sed '$d')
-   if [ "$http_code" != "200" ]; then
-      printf "$FUNCNAME...ERROR $http_code: $http_response\n"
-      return 1
-   fi
-
-   printf "$FUNCNAME...SUCCESS\n"
-   return 0
-}
-
-for file in $root/assets/knowledge/*; do
-    # Ensure it's a file, not a directory
-    if [ -f "$file" ]; then
-        echo "$file"
-        ID=$(jq -r '.id' $file)
-        TITLE=$(jq -r '.title' $file)
-        TEXT=$(jq -r '.text' $file)
-        echo $ID
-        echo $TITLE
-        echo $TEXT
-        add_content "$TITLE" "$TEXT" "$TITLE" "$ID"
-    fi
-done
 
 sync() {
    printf "$FUNCNAME...\n"

@@ -31,3 +31,25 @@ spec:
             name: wiki
             port:
               number: 3000
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wikijs-config22
+  namespace: wiki
+spec:
+  template:
+    spec:
+      containers:
+        - image: $repo/wikijs:$course
+          name: wikijs
+          imagePullPolicy: Always
+          args:
+            - "--action"
+            - "wiki_config"
+            - "--wiki_public_url"
+            - "http://wiki.wiki.svc.cluster.local:80"
+            - "--wiki_private_url"
+            - "http://wiki.wiki.svc.cluster.local:80"
+      restartPolicy: Never
+---
