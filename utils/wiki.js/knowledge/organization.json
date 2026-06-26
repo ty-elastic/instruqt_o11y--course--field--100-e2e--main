@@ -1,0 +1,5 @@
+{
+    "id": "organization",
+    "title": "k8s.annotations.pod.example.com/org",
+    "text": "We tag our telemetry with a field `k8s.annotations.pod.example.com/org` to denote the organization."
+}

@@ -15,3 +15,19 @@ spec:
     app.kubernetes.io/instance: wiki
     app.kubernetes.io/name: wiki
 ---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wiki
+  namespace: wiki
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /wiki
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: wiki
+            port:
+              number: 3000
