@@ -70,7 +70,9 @@ k8s:
   certmanager: false
   ingress: true
   static_ip: false
-
+  machine_type: "n2-standard-16"
+  max_node_count: "1"
+  
 #{{- if $enableGitOps }}
 gitops:
   enabled: "{{ $gitOps }}"
