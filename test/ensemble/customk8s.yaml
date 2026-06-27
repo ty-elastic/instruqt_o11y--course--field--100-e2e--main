@@ -68,8 +68,8 @@ k8s:
   enabled: true
   provider: "{{ $provider }}"
   certmanager: false
-  ingress: false
-  static_ip: true
+  ingress: true
+  static_ip: false
 
 #{{- if $enableGitOps }}
 gitops:

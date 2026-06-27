@@ -1,0 +1,332 @@
+x-anchors:
+  - &oblt_cli_common
+    gcp_app_credentials: ".secrets/credentials.json"
+    github_username: "{{ param.github_username }}"
+    github_email: "{{ param.github_email }}"
+    github_token: "{{ param.github_token }}"
+
+  - &gcp_credentials_file
+    type: file
+    content: "{{ param.gcp_app_credentials }}"
+    filename: ".secrets/credentials.json"
+
+name: Kibana Onboarding (Kubernetes EA)
+description: Test
+
+params:
+  - name: github_username
+    description: GitHub Username
+    type: exec
+    command: gh
+    args:
+      - api
+      - user
+      - -q
+      - ".login"
+
+  - name: github_email
+    description: GitHub Email
+    type: exec
+    command: git
+    args:
+      - config
+      - user.email
+
+  - name: github_token
+    description: GitHub Token
+    type: exec
+    command: gh
+    args:
+      - auth
+      - token
+
+  - name: gcp_app_credentials
+    description: GCP Credentials
+    type: automation
+    automation: gcp_auth
+
+
+steps:
+  - name: set
+    id: const
+    type: builtin.set_data
+    with:
+      COURSE: "o11y--course--field--100-e2e--test"
+      ARTIFACTS_REPO: "elastic-sa/locations/us-central1/repositories/tbekiares-instruqt"
+      ARTIFACT_VERSION: "1.0"
+      ESS_TARGET: "production"
+
+  - name: Download code
+    type: providers.shell.run
+    with:
+      script_file: "clone_code.sh"
+    resources:
+      - type: file
+        filename: clone_code.sh
+        content: |
+          #!/bin/bash
+          export COURSE={{ step.const.data.COURSE }}
+          export ARTIFACTS_REPO={{ step.const.data.ARTIFACTS_REPO }}
+          export ARTIFACT_VERSION={{ step.const.data.ARTIFACT_VERSION }}
+
+          printf "download: https://artifactregistry.googleapis.com/download/v1/projects/$ARTIFACTS_REPO/files/$COURSE%3A$ARTIFACT_VERSION%3A$COURSE.tgz:download?alt=media\n"
+          curl -X GET \
+              -o o11y--course--field--100-e2e--serverless.tgz \
+              "https://artifactregistry.googleapis.com/download/v1/projects/$ARTIFACTS_REPO/files/$COURSE%3A$ARTIFACT_VERSION%3A$COURSE.tgz:download?alt=media"
+          mkdir o11y--course--field--100-e2e--serverless
+          tar -xzf o11y--course--field--100-e2e--serverless.tgz -C o11y--course--field--100-e2e--serverless
+    artifacts:
+      - name: source_code
+        paths:
+          - o11y--course--field--100-e2e--serverless
+
+  - name: Create apps k8s cluster
+    id: k8s
+    type: providers.oblt_cli.create_custom_cluster
+    with:
+      <<: *oblt_cli_common
+      template_file: "o11y--course--field--100-e2e--serverless/test/ensemble/customk8s.yaml"
+      parameters:
+        EphemeralCluster: true
+        ExpiryDate: '{{ (now() + timedelta(hours=4)) | isoformat }}'
+        GitOps: "{{ 'true' if param.github_repository is defined else 'false' }}"
+        GitHubRepository: "{{ param.github_repository | default('') }}"
+        GitHubRepositoryOwner: "{{ param.github_repository_owner | default('') }}"
+        GitHubRef: "{{ param.github_ref | default('') }}"
+        Workflow: "{{ param.ci_workflow | default('') }}"
+        WorkflowRef: "{{ param.ci_workflow_ref | default('') }}"
+        GitHubRunId: "{{ param.ci_run_id | default('') }}"
+        GitHubActor: "{{ param.github_actor | default('') }}"
+        GitHubEvent: "{{ param.github_event | default('') }}"
+        RunnerArch: "{{ param.runner_arch | default('') }}"
+        RunnerOS: "{{ param.runner_os | default('') }}"
+        CiType: GitHub
+        ElasticDivision: "field"
+        ElasticOrg: "sa"
+        ElasticTeam: "amer-strat"
+        ElasticProject: "tyronebekiares"
+        ElasticOwner: "ensemble"
+    retry:
+      max: 3
+      interval: 5
+    resources:
+      - *gcp_credentials_file
+    needs:
+      - source_code
+
+  - name: Create serverless cluster
+    id: cluster
+    type: providers.oblt_cli.create_custom_cluster
+    with:
+      <<: *oblt_cli_common
+      template: serverless
+      parameters:
+        Target: "{{ step.const.data.ESS_TARGET }}"
+        ProjectType: "observability"
+        EphemeralCluster: true
+        ExpiryDate: '{{ (now() + timedelta(hours=4)) | isoformat }}'
+        GitOps: "{{ 'true' if param.github_repository is defined else 'false' }}"
+        GitHubRepository: "{{ param.github_repository | default('') }}"
+        GitHubRepositoryOwner: "{{ param.github_repository_owner | default('') }}"
+        GitHubRef: "{{ param.github_ref | default('') }}"
+        Workflow: "{{ param.ci_workflow | default('') }}"
+        WorkflowRef: "{{ param.ci_workflow_ref | default('') }}"
+        GitHubRunId: "{{ param.ci_run_id | default('') }}"
+        GitHubActor: "{{ param.github_actor | default('') }}"
+        GitHubEvent: "{{ param.github_event | default('') }}"
+        RunnerArch: "{{ param.runner_arch | default('') }}"
+        RunnerOS: "{{ param.runner_os | default('') }}"
+        CiType: GitHub
+        ElasticDivision: "field"
+        ElasticOrg: "sa"
+        ElasticTeam: "amer-strat"
+        ElasticProject: "tyronebekiares"
+        ElasticOwner: "ensemble"
+    resources:
+      - *gcp_credentials_file
+    retry:
+      max: 3
+      interval: 5
+
+  # - name: Create k8s cluster
+  #   id: k8s
+  #   type: providers.oblt_cli.create_k8s_cluster
+  #   with:
+  #     <<: *oblt_cli_common
+  #     expiry_date: '{{ (now() + timedelta(hours=4)) | isoformat }}'
+  #     github_repository: "{{ param.github_repository | default('') }}"
+  #     github_repository_owner: "{{ param.github_repository_owner | default('') }}"
+  #     github_ref: "{{ param.github_ref | default('') }}"
+  #     workflow: "{{ param.ci_workflow | default('') }}"
+  #     workflow_ref: "{{ param.ci_workflow_ref | default('') }}"
+  #     github_run_id: "{{ param.ci_run_id | default('') }}"
+  #     github_actor: "{{ param.github_actor | default('') }}"
+  #     github_event: "{{ param.github_event | default('') }}"
+  #     runner_arch: "{{ param.runner_arch | default('') }}"
+  #     runner_os: "{{ param.runner_os | default('') }}"
+  #     ci_type: GitHub
+  #     elastic_division: "field"
+  #     elastic_org: "sa"
+  #     elastic_team: "amer-strat"
+  #     elastic_project: "tyronebekiares"
+  #     elastic_owner: "ensemble"
+  #   resources:
+  #     - *gcp_credentials_file
+  #   retry:
+  #     max: 3
+  #     interval: 5
+
+  # - name: Enable workload identity
+  #   type: services.gke.enable_workload_identity
+  #   with:
+  #     gcp_app_credentials: ".secrets/credentials.json"
+  #     project_id: "{{ step.k8s.data.k8s_project }}"
+  #     location: "{{ step.k8s.data.k8s_region }}"
+  #     cluster_id: "{{ step.k8s.data.cluster_name }}"
+  #   resources:
+  #     - *gcp_credentials_file
+
+  - name: Refresh kubeconfig
+    id: k8s
+    type: providers.oblt_cli.search_cluster
+    with:
+      <<: *oblt_cli_common
+      cluster_name: "{{ step.k8s.data.cluster_name }}"
+    resources:
+      - *gcp_credentials_file
+
+
+  - name: debug
+    type: providers.shell.run
+    with:
+      script_file: "debug.sh"
+    resources:
+      - type: file
+        filename: debug.sh
+        content: |
+          #!/bin/bash
+          export KUBECONFIG=$PWD/kubeconfig
+
+          kubectl get nodes
+      - type: env
+        variables:
+          KUBECONFIG: "kubeconfig"
+      - type: file
+        content: "{{ step.k8s.data.kube_config }}"
+        filename: "kubeconfig"
+    needs:
+      - source_code
+
+  - name: es_setup_1
+    type: providers.shell.run
+    with:
+      script_file: "setup.sh"
+    resources:
+      - type: file
+        filename: setup.sh
+        content: |
+          #!/bin/bash
+          export COURSE={{ step.const.data.COURSE }}
+
+          export ELASTICSEARCH_URL={{ step.cluster.data.elasticsearch_url }}
+          export KIBANA_URL={{ step.cluster.data.kibana_url }}
+          export ELASTICSEARCH_APIKEY={{ step.cluster.data.elasticsearch_apikey }}
+          export INGEST_URL={{ step.cluster.data.ingest_url }}
+
+          cd o11y--course--field--100-e2e--serverless
+          ./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -f true
+    needs:
+      - source_code
+
+  - name: infra_1
+    type: providers.shell.run
+    with:
+      script_file: "setup1.sh"
+    resources:
+      - type: file
+        filename: setup1.sh
+        content: |
+          #!/bin/bash
+          export KUBECONFIG=$PWD/kubeconfig
+
+          export COURSE={{ step.const.data.COURSE }}
+
+          export ELASTICSEARCH_URL={{ step.cluster.data.elasticsearch_url }}
+          export KIBANA_URL={{ step.cluster.data.kibana_url }}
+          export ELASTICSEARCH_APIKEY={{ step.cluster.data.elasticsearch_apikey }}
+          export INGEST_URL={{ step.cluster.data.ingest_url }}
+          export FLEET_URL={{ step.cluster.data.fleet_url }}
+
+          cd o11y--course--field--100-e2e--serverless
+
+          # infra
+          ./build.sh -t $FLEET_URL -c $COURSE -1 true -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443
+
+          # services
+          ./build.sh -o serverless -t $FLEET_URL -c $COURSE -d true -n true -b false -s all -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443
+
+          # synthetics, profiling
+          ./build.sh -o false -t $FLEET_URL -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -p true -m true
+
+          # assets
+          ./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -w true
+
+      - type: env
+        variables:
+          KUBECONFIG: "kubeconfig"
+      - type: file
+        content: "{{ step.k8s.data.kube_config }}"
+        filename: "kubeconfig"
+    needs:
+      - source_code
+
+  - name: infra_2
+    type: providers.shell.run
+    with:
+      script_file: "setup1.sh"
+    resources:
+      - type: file
+        filename: setup1.sh
+        content: |
+          #!/bin/bash
+          export KUBECONFIG=$PWD/kubeconfig
+
+          export COURSE={{ step.const.data.COURSE }}
+
+          export ELASTICSEARCH_URL={{ step.cluster.data.elasticsearch_url }}
+          export KIBANA_URL={{ step.cluster.data.kibana_url }}
+          export ELASTICSEARCH_APIKEY={{ step.cluster.data.elasticsearch_apikey }}
+          export INGEST_URL={{ step.cluster.data.ingest_url }}
+          export FLEET_URL={{ step.cluster.data.fleet_url }}
+
+          cd o11y--course--field--100-e2e--serverless
+
+          # grafana
+          ./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -g true
+
+      - type: env
+        variables:
+          KUBECONFIG: "kubeconfig"
+      - type: file
+        content: "{{ step.k8s.data.kube_config }}"
+        filename: "kubeconfig"
+    needs:
+      - source_code
+
+  # - name: Delete k8s cluster
+  #   type: providers.oblt_cli.delete_cluster
+  #   with:
+  #     <<: *oblt_cli_common
+  #     cluster_name: "{{ step.k8s.data.cluster_name }}"
+  #   resources:
+  #     - *gcp_credentials_file
+  #   when: always
+
+  # - name: Delete ess cluster
+  #   type: providers.oblt_cli.delete_cluster
+  #   with:
+  #     <<: *oblt_cli_common
+  #     cluster_name: "{{ step.cluster.data.cluster_name }}"
+  #   resources:
+  #     - *gcp_credentials_file
+  #   when: always
