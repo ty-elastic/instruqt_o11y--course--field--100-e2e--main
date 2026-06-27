@@ -54,7 +54,7 @@ steps:
       COURSE: "o11y--course--field--100-e2e--test"
       ARTIFACTS_REPO: "elastic-sa/locations/us-central1/repositories/tbekiares-instruqt"
       ARTIFACT_VERSION: "1.0"
-      ESS_TARGET: "production"
+      ESS_TARGET: "staging"
 
   - name: Download code
     type: providers.shell.run
