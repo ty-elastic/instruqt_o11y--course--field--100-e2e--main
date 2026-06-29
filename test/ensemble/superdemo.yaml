@@ -80,8 +80,8 @@ steps:
         paths:
           - o11y--course--field--100-e2e--serverless
 
-  - name: Create apps k8s cluster
-    id: k8s
+  - name: Create clusters
+    id: cluster
     type: providers.oblt_cli.create_custom_cluster
     with:
       <<: *oblt_cli_common
@@ -181,9 +181,9 @@ steps:
   #   type: services.gke.enable_workload_identity
   #   with:
   #     gcp_app_credentials: ".secrets/credentials.json"
-  #     project_id: "{{ step.k8s.data.k8s_project }}"
-  #     location: "{{ step.k8s.data.k8s_region }}"
-  #     cluster_id: "{{ step.k8s.data.cluster_name }}"
+  #     project_id: "{{ step.cluster.data.k8s_project }}"
+  #     location: "{{ step.cluster.data.k8s_region }}"
+  #     cluster_id: "{{ step.cluster.data.cluster_name }}"
   #   resources:
   #     - *gcp_credentials_file
 
@@ -192,7 +192,7 @@ steps:
     type: providers.oblt_cli.search_cluster
     with:
       <<: *oblt_cli_common
-      cluster_name: "{{ step.k8s.data.cluster_name }}"
+      cluster_name: "{{ step.cluster.data.cluster_name }}"
     resources:
       - *gcp_credentials_file
 
@@ -213,7 +213,7 @@ steps:
         variables:
           KUBECONFIG: "kubeconfig"
       - type: file
-        content: "{{ step.k8s.data.kube_config }}"
+        content: "{{ step.cluster.data.kube_config }}"
         filename: "kubeconfig"
     needs:
       - source_code
@@ -276,7 +276,7 @@ steps:
         variables:
           KUBECONFIG: "kubeconfig"
       - type: file
-        content: "{{ step.k8s.data.kube_config }}"
+        content: "{{ step.cluster.data.kube_config }}"
         filename: "kubeconfig"
     needs:
       - source_code
@@ -309,7 +309,7 @@ steps:
         variables:
           KUBECONFIG: "kubeconfig"
       - type: file
-        content: "{{ step.k8s.data.kube_config }}"
+        content: "{{ step.cluster.data.kube_config }}"
         filename: "kubeconfig"
     needs:
       - source_code
@@ -318,7 +318,7 @@ steps:
   #   type: providers.oblt_cli.delete_cluster
   #   with:
   #     <<: *oblt_cli_common
-  #     cluster_name: "{{ step.k8s.data.cluster_name }}"
+  #     cluster_name: "{{ step.cluster.data.cluster_name }}"
   #   resources:
   #     - *gcp_credentials_file
   #   when: always
