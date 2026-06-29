@@ -10,11 +10,8 @@ template_description: |
     oblt-cli cluster create custom --template k8s
     oblt-cli cluster create custom --template k8s --parameters '{"K8sProvider": "autopilot"}
 
-#{{- $username := (or .User (or .Username "unknown")) }}
+#{{- $username := (or .User .Username "unknown") }}
 #{{- $slackChannel := (or .SlackChannel "#observablt-bots") }}
-#{{- $provider := (or .K8sProvider "gcp") }}
-#{{- $ephemeralCluster := (or .EphemeralCluster "false") | toString | lower }}
-#{{- $obltCliVersion := (or .ObltCliVersion "<7.9.8") }}
 #{{- $gitOps := (or .GitOps "false") | toString | lower }}
 #{{- $githubCommit := ((or .GitHubCommit "") | toString) }}
 #{{- $githubIssue := ((or .GitHubIssue "") | toString) }}
@@ -39,9 +36,25 @@ template_description: |
 #{{- $hasRunnerInfo := or (ne $runnerArch "") (ne $runnerOS "") (ne $ciType "") }}
 #{{- $hasWorkflowInfo := or $hasRefInfo $hasRunInfo $hasRepoInfo $hasRunnerInfo }}
 #{{- $enableGitOps := or $hasCommitInfo $hasIssueInfo $hasWorkflowInfo (eq $gitOps "true") }}
-#{{- $expireInHours := (or .ExpireInHours "720") }}
+#{{- $template := (or .ProjectType "observability") }}
+#{{- $target := (or .Target "qa") }}
+#{{- $updateMode := (or .UpdateMode "recreate") }}
+#{{- $provider := (or .Provider "aws") }}
+#{{- $clusterNameFQDN := trimPrefix "keep_" .ClusterName }}
+#{{- $clusterHash := `{{ cluster_hash }}` }}
+#{{- $deploymentDir := `{{ deployment_dir }}` }}
+#{{- $helmDeploymentDir := `{{ helm_deployment_dir }}` }}
+#{{- $obltCliVersion := (or .ObltCliVersion "<7.9.8") }}
+#{{- $expireInHours := (or .ExpireInHours "70") }}
 #{{- $expiryDate := (or .ExpiryDate (now | mustDateModify (printf "+%sh" $expireInHours) | date "2006-01-02T15:04:05-07:00")) }}
 #{{- $creationDate := (now | date "2006-01-02T15:04:05-07:00") }}
+#{{- $genData := (or .GenData "true") }}
+#{{- $goldenCluster := "keep_serverless-qa-oblt" }}
+#{{- if eq $target "production" }}
+#{{-   $goldenCluster = "serverless-production-oblt" }}
+#{{- else if eq $target "staging" }}
+#{{-   $goldenCluster = "" }}
+#{{- end }}
 #{{- $elasticDivision := (or .ElasticDivision "engineering") }}
 #{{- $elasticOrg := (or .ElasticOrg "obs") }}
 #{{- $elasticTeam := (or .ElasticTeam "eng-prod") }}
@@ -49,10 +62,16 @@ template_description: |
 #{{- $elasticOwner := (or .ElasticOwner "") }}
 
 oblt_cli_version: "{{ $obltCliVersion }}"
-cluster_name: "{{ .ClusterName }}"
-ephemeral_cluster: "{{ $ephemeralCluster }}"
+slack_channel: "{{ .SlackChannel }}"
 oblt_username: "{{ $username }}"
-slack_channel: "{{ $slackChannel }}"
+#{{- if .EphemeralCluster }}
+ephemeral_cluster: "{{ .EphemeralCluster }}"
+#{{- end }}
+grab_cluster_info: false
+create_ilm: false
+create_users: false
+cluster_name: "{{ .ClusterName }}"
+
 expiry_date: "{{ $expiryDate }}"
 creation_date: "{{ $creationDate }}"
 
@@ -63,15 +82,49 @@ elastic:
   project: "{{ $elasticProject }}"
   owner: "{{ $elasticOwner }}"
 
-gcp_terraform: true
 k8s:
   enabled: true
   provider: "{{ $provider }}"
   certmanager: false
-  ingress: true
+  ingress: false
   static_ip: false
   machine_type: "n2-standard-16"
   max_node_count: 1
+  region: us-central1
+
+stack:
+  mode: "serverless"
+  template: "{{ $template }}"
+  target: "{{ $target }}"
+  update_mode: "{{ $updateMode }}"
+  serverless:
+#{{- if .Region }}
+    region: "{{ .Region }}"
+#{{- end }}
+#{{- if not .Region }}
+    provider: "{{ $provider }}"
+#{{- end }}
+#{{- if .ElasticsearchDockerImage }}
+    elasticsearch:
+      image: "{{ .ElasticsearchDockerImage }}"
+#{{- end }}
+#{{- if .KibanaDockerImage }}
+    kibana:
+      image: "{{ .KibanaDockerImage }}"
+#{{- end }}
+#{{- if .FleetDockerImage }}
+    fleet:
+      image: "{{ .FleetDockerImage }}"
+#{{- end }}
+#{{- if or (ne $goldenCluster "") .RemoteClusters }}
+    cps_linked_clusters:
+#{{- if ne $goldenCluster "" }}
+      - "{{ $goldenCluster }}"
+#{{- end }}
+#{{- range .RemoteClusters }}
+      - "{{ . }}"
+#{{- end }}
+#{{- end }}
 
 #{{- if $enableGitOps }}
 gitops:
