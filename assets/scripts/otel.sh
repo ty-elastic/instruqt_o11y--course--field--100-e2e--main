@@ -101,6 +101,8 @@ deploy_otel() {
 
     kubectl create namespace opentelemetry-operator-system
 
+    echo elasticsearch_fleet_endpoint=$elasticsearch_fleet_endpoint
+
     kubectl --namespace opentelemetry-operator-system delete secret generic elastic-secret-otel
     kubectl create secret generic elastic-secret-otel \
         --namespace opentelemetry-operator-system \
