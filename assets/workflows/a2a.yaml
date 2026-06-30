@@ -47,5 +47,4 @@ steps:
       with:
         method: POST
         path: /api/agent_builder/a2a/{{ inputs.agentId }}
-        body: {{inputs.body}}
-
+        body: '{{inputs.body}}'

@@ -199,8 +199,7 @@ steps:
           export ELASTICSEARCH_APIKEY={{ step.cluster.data.elasticsearch_apikey }}
           export INGEST_URL={{ step.cluster.data.ingest_url }}
 
-          cd o11y--course--field--100-e2e--serverless
-          ./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL -f true
+
     needs:
       - source_code
 
@@ -225,6 +224,9 @@ steps:
 
           cd o11y--course--field--100-e2e--serverless
 
+          # es bootstrap
+          ./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL -f true
+
           # infra
           ./build.sh -t $FLEET_URL -c $COURSE -1 true -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL
 
@@ -237,39 +239,8 @@ steps:
           # assets
           ./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL -w true
 
-      - type: env
-        variables:
-          KUBECONFIG: "kubeconfig"
-      - type: file
-        content: "{{ step.k8s.data.kube_config }}"
-        filename: "kubeconfig"
-    needs:
-      - source_code
-
-  - name: infra_2
-    type: providers.shell.run
-    with:
-      script_file: "setup1.sh"
-    resources:
-      - type: file
-        filename: setup1.sh
-        content: |
-          #!/bin/bash
-          export KUBECONFIG=$PWD/kubeconfig
-
-          export COURSE={{ step.const.data.COURSE }}
-
-          export ELASTICSEARCH_URL={{ step.cluster.data.elasticsearch_url }}
-          export KIBANA_URL={{ step.cluster.data.kibana_url }}
-          export ELASTICSEARCH_APIKEY={{ step.cluster.data.elasticsearch_apikey }}
-          export INGEST_URL={{ step.cluster.data.ingest_url }}
-          export FLEET_URL={{ step.cluster.data.fleet_url }}
-
-          cd o11y--course--field--100-e2e--serverless
-
           # grafana
           ./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL -g true
-
       - type: env
         variables:
           KUBECONFIG: "kubeconfig"
