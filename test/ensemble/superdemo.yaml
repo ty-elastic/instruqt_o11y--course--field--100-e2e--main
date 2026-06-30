@@ -142,7 +142,6 @@ steps:
         ElasticTeam: "amer-strat"
         ElasticProject: "tyronebekiares"
         ElasticOwner: "elastic"
-        Username: "ty-elastic"
     retry:
       max: 3
       interval: 5
@@ -150,44 +149,6 @@ steps:
       - *gcp_credentials_file
     needs:
       - source_code
-
-  # - name: Create k8s cluster
-  #   id: k8s
-  #   type: providers.oblt_cli.create_k8s_cluster
-  #   with:
-  #     <<: *oblt_cli_common
-  #     expiry_date: '{{ (now() + timedelta(hours=4)) | isoformat }}'
-  #     github_repository: "{{ param.github_repository | default('') }}"
-  #     github_repository_owner: "{{ param.github_repository_owner | default('') }}"
-  #     github_ref: "{{ param.github_ref | default('') }}"
-  #     workflow: "{{ param.ci_workflow | default('') }}"
-  #     workflow_ref: "{{ param.ci_workflow_ref | default('') }}"
-  #     github_run_id: "{{ param.ci_run_id | default('') }}"
-  #     github_actor: "{{ param.github_actor | default('') }}"
-  #     github_event: "{{ param.github_event | default('') }}"
-  #     runner_arch: "{{ param.runner_arch | default('') }}"
-  #     runner_os: "{{ param.runner_os | default('') }}"
-  #     ci_type: GitHub
-  #     elastic_division: "field"
-  #     elastic_org: "sa"
-  #     elastic_team: "amer-strat"
-  #     elastic_project: "tyronebekiares"
-  #     elastic_owner: "ensemble"
-  #   resources:
-  #     - *gcp_credentials_file
-  #   retry:
-  #     max: 3
-  #     interval: 5
-
-  # - name: Enable workload identity
-  #   type: services.gke.enable_workload_identity
-  #   with:
-  #     gcp_app_credentials: ".secrets/credentials.json"
-  #     project_id: "{{ step.cluster.data.k8s_project }}"
-  #     location: "{{ step.cluster.data.k8s_region }}"
-  #     cluster_id: "{{ step.cluster.data.cluster_name }}"
-  #   resources:
-  #     - *gcp_credentials_file
 
   - name: Refresh kubeconfig
     id: k8s
