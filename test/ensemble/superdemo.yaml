@@ -85,8 +85,9 @@ steps:
     type: providers.oblt_cli.create_custom_cluster
     with:
       <<: *oblt_cli_common
-      template_file: "o11y--course--field--100-e2e--serverless/test/ensemble/customserverless.yaml"
+      template: "serverless"
       parameters:
+        GenData: false
         Target: "{{ step.const.data.ESS_TARGET }}"
         ProjectType: "observability"
         EphemeralCluster: true
@@ -198,7 +199,7 @@ steps:
           export INGEST_URL={{ step.cluster.data.ingest_url }}
 
           cd o11y--course--field--100-e2e--serverless
-          ./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -f true
+          ./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL -f true
     needs:
       - source_code
 
@@ -224,16 +225,16 @@ steps:
           cd o11y--course--field--100-e2e--serverless
 
           # infra
-          ./build.sh -t $FLEET_URL -c $COURSE -1 true -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443
+          ./build.sh -t $FLEET_URL -c $COURSE -1 true -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL
 
           # services
-          ./build.sh -o serverless -t $FLEET_URL -c $COURSE -d true -n true -b false -s all -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443
+          ./build.sh -o serverless -t $FLEET_URL -c $COURSE -d true -n true -b false -s all -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL
 
           # synthetics, profiling
-          ./build.sh -o false -t $FLEET_URL -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -p true -m true
+          ./build.sh -o false -t $FLEET_URL -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL -p true -m true
 
           # assets
-          ./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -w true
+          ./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL -w true
 
       - type: env
         variables:
@@ -266,7 +267,7 @@ steps:
           cd o11y--course--field--100-e2e--serverless
 
           # grafana
-          ./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL:443 -g true
+          ./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL -g true
 
       - type: env
         variables:
