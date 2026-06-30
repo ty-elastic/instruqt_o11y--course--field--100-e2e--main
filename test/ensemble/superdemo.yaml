@@ -4,6 +4,7 @@ x-anchors:
     github_username: "{{ param.github_username }}"
     github_email: "{{ param.github_email }}"
     github_token: "{{ param.github_token }}"
+    username: "{{ param.github_username }}"
 
   - &gcp_credentials_file
     type: file
