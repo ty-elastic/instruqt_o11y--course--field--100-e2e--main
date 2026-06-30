@@ -109,7 +109,8 @@ steps:
         ElasticOrg: "sa"
         ElasticTeam: "amer-strat"
         ElasticProject: "tyronebekiares"
-        ElasticOwner: "elastic"
+        ElasticOwner: "ty-elastic"
+        Username: "ty-elastic"
     resources:
       - *gcp_credentials_file
     retry:
@@ -162,47 +163,6 @@ steps:
     resources:
       - *gcp_credentials_file
 
-  - name: debug
-    type: providers.shell.run
-    with:
-      script_file: "debug.sh"
-    resources:
-      - type: file
-        filename: debug.sh
-        content: |
-          #!/bin/bash
-          export KUBECONFIG=$PWD/kubeconfig
-
-          kubectl get nodes
-      - type: env
-        variables:
-          KUBECONFIG: "kubeconfig"
-      - type: file
-        content: "{{ step.k8s.data.kube_config }}"
-        filename: "kubeconfig"
-    needs:
-      - source_code
-
-  - name: es_setup_1
-    type: providers.shell.run
-    with:
-      script_file: "setup.sh"
-    resources:
-      - type: file
-        filename: setup.sh
-        content: |
-          #!/bin/bash
-          export COURSE={{ step.const.data.COURSE }}
-
-          export ELASTICSEARCH_URL={{ step.cluster.data.elasticsearch_url }}
-          export KIBANA_URL={{ step.cluster.data.kibana_url }}
-          export ELASTICSEARCH_APIKEY={{ step.cluster.data.elasticsearch_apikey }}
-          export INGEST_URL={{ step.cluster.data.ingest_url }}
-
-
-    needs:
-      - source_code
-
   - name: infra_1
     type: providers.shell.run
     with:
@@ -249,6 +209,75 @@ steps:
         filename: "kubeconfig"
     needs:
       - source_code
+
+  - name: services
+    type: providers.shell.run
+    with:
+      script_file: "services.sh"
+    resources:
+      - type: file
+        filename: services.sh
+        content: |
+          #!/bin/bash
+          export KUBECONFIG=$PWD/kubeconfig
+
+          get_lb_address() {
+            printf "$FUNCNAME...\n"
+              export SERVICE_IP=$(kubectl -n $1 get service $2 -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+              export SERVICE_PORT=$(kubectl -n $1 get service $2 -o jsonpath='{.spec.ports[0].port}')
+              if [ -z "$SERVICE_IP" ]; then
+                printf "$FUNCNAME...ERROR $http_code: $http_response\n"
+                return 1
+            fi
+            printf "$FUNCNAME...SUCCESS $SERVICE_IP $SERVICE_PORT\n"
+            return 0
+          }
+
+          get_lb_address wiki wiki-ext
+          export WIKI_SERVICE_IP=$SERVICE_IP
+          export WIKI_SERVICE_PORT=$SERVICE_PORT
+          get_lb_address trading-na proxy-ext
+          export TRADER_SERVICE_IP=$SERVICE_IP
+          export TRADER_SERVICE_PORT=$SERVICE_PORT
+          get_lb_address infra grafana-ext
+          export GRAFANA_SERVICE_IP=$SERVICE_IP
+          export GRAFANA_SERVICE_PORT=$SERVICE_PORT
+
+          cat > ".env" <<EOF
+          WIKI_URL=http://$WIKI_SERVICE_IP:$WIKI_SERVICE_PORT
+          TRADER_URL=http://$TRADER_SERVICE_IP:$TRADER_SERVICE_PORT
+          GRAFANA_URL=http://$GRAFANA_SERVICE_IP:$GRAFANA_SERVICE_PORT
+          ELASTICSEARCH_URL={{ step.cluster.data.elasticsearch_url }}
+          ELASTICSEARCH_AUTH_BASE64=$(echo -n "{{ step.cluster.data.elasticsearch_username }}:{{ step.cluster.data.elasticsearch_password }}" | base64)
+          EOF
+      - type: env
+        variables:
+          KUBECONFIG: "kubeconfig"
+      - type: file
+        content: "{{ step.k8s.data.kube_config }}"
+        filename: "kubeconfig"
+    artifacts:
+      - name: env
+        paths:
+          - .env
+
+  - id: onboarding
+    name: Run playwright test
+    type: providers.playwright.test
+    with:
+      config: "o11y--course--field--100-e2e--serverless/test/playwright/playwright.config.ts"
+      spec_file: "o11y--course--field--100-e2e--serverless/test/playwright/tests/example.spec.js"
+      node_version: ".nvmrc"
+    async: true
+    needs:
+      - env
+    artifacts:
+      - name: test_results
+        paths:
+          - "o11y--course--field--100-e2e--serverless/test/playwright/.playwright/"
+    retry:
+      max: 3
+      interval: 5
 
   # - name: Delete k8s cluster
   #   type: providers.oblt_cli.delete_cluster
