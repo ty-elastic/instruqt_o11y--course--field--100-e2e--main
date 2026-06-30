@@ -113,6 +113,8 @@ steps:
     retry:
       max: 3
       interval: 5
+    needs:
+      - source_code
 
   - name: Create k8s cluster
     id: k8s
@@ -140,7 +142,7 @@ steps:
         ElasticTeam: "amer-strat"
         ElasticProject: "tyronebekiares"
         ElasticOwner: "elastic"
-        #Username: "ty-elastic"
+        Username: "ty-elastic"
     retry:
       max: 3
       interval: 5
