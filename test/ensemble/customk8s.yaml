@@ -92,40 +92,6 @@ k8s:
   max_node_count: 1
   region: us-central1
 
-stack:
-  mode: "serverless"
-  template: "{{ $template }}"
-  target: "{{ $target }}"
-  update_mode: "{{ $updateMode }}"
-  serverless:
-#{{- if .Region }}
-    region: "{{ .Region }}"
-#{{- end }}
-#{{- if not .Region }}
-    provider: "{{ $provider }}"
-#{{- end }}
-#{{- if .ElasticsearchDockerImage }}
-    elasticsearch:
-      image: "{{ .ElasticsearchDockerImage }}"
-#{{- end }}
-#{{- if .KibanaDockerImage }}
-    kibana:
-      image: "{{ .KibanaDockerImage }}"
-#{{- end }}
-#{{- if .FleetDockerImage }}
-    fleet:
-      image: "{{ .FleetDockerImage }}"
-#{{- end }}
-#{{- if or (ne $goldenCluster "") .RemoteClusters }}
-    cps_linked_clusters:
-#{{- if ne $goldenCluster "" }}
-      - "{{ $goldenCluster }}"
-#{{- end }}
-#{{- range .RemoteClusters }}
-      - "{{ . }}"
-#{{- end }}
-#{{- end }}
-
 #{{- if $enableGitOps }}
 gitops:
   enabled: "{{ $gitOps }}"

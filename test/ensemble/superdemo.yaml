@@ -80,8 +80,42 @@ steps:
         paths:
           - o11y--course--field--100-e2e--serverless
 
-  - name: Create clusters
+  - name: Create serverless cluster
     id: cluster
+    type: providers.oblt_cli.create_custom_cluster
+    with:
+      <<: *oblt_cli_common
+      template_file: "o11y--course--field--100-e2e--serverless/test/ensemble/customserverless.yaml"
+      parameters:
+        Target: "{{ step.const.data.ESS_TARGET }}"
+        ProjectType: "observability"
+        EphemeralCluster: true
+        ExpiryDate: '{{ (now() + timedelta(hours=4)) | isoformat }}'
+        GitOps: "{{ 'true' if param.github_repository is defined else 'false' }}"
+        GitHubRepository: "{{ param.github_repository | default('') }}"
+        GitHubRepositoryOwner: "{{ param.github_repository_owner | default('') }}"
+        GitHubRef: "{{ param.github_ref | default('') }}"
+        Workflow: "{{ param.ci_workflow | default('') }}"
+        WorkflowRef: "{{ param.ci_workflow_ref | default('') }}"
+        GitHubRunId: "{{ param.ci_run_id | default('') }}"
+        GitHubActor: "{{ param.github_actor | default('') }}"
+        GitHubEvent: "{{ param.github_event | default('') }}"
+        RunnerArch: "{{ param.runner_arch | default('') }}"
+        RunnerOS: "{{ param.runner_os | default('') }}"
+        CiType: GitHub
+        ElasticDivision: "field"
+        ElasticOrg: "sa"
+        ElasticTeam: "amer-strat"
+        ElasticProject: "tyronebekiares"
+        ElasticOwner: "ty-elastic"
+    resources:
+      - *gcp_credentials_file
+    retry:
+      max: 3
+      interval: 5
+
+  - name: Create k8s cluster
+    id: k8s
     type: providers.oblt_cli.create_custom_cluster
     with:
       <<: *oblt_cli_common
@@ -106,7 +140,7 @@ steps:
         ElasticTeam: "amer-strat"
         ElasticProject: "tyronebekiares"
         ElasticOwner: "elastic"
-        Username: "ty-elastic"
+        #Username: "ty-elastic"
     retry:
       max: 3
       interval: 5
@@ -114,40 +148,6 @@ steps:
       - *gcp_credentials_file
     needs:
       - source_code
-
-  # - name: Create serverless cluster
-  #   id: cluster
-  #   type: providers.oblt_cli.create_custom_cluster
-  #   with:
-  #     <<: *oblt_cli_common
-  #     template: serverless
-  #     parameters:
-  #       Target: "{{ step.const.data.ESS_TARGET }}"
-  #       ProjectType: "observability"
-  #       EphemeralCluster: true
-  #       ExpiryDate: '{{ (now() + timedelta(hours=4)) | isoformat }}'
-  #       GitOps: "{{ 'true' if param.github_repository is defined else 'false' }}"
-  #       GitHubRepository: "{{ param.github_repository | default('') }}"
-  #       GitHubRepositoryOwner: "{{ param.github_repository_owner | default('') }}"
-  #       GitHubRef: "{{ param.github_ref | default('') }}"
-  #       Workflow: "{{ param.ci_workflow | default('') }}"
-  #       WorkflowRef: "{{ param.ci_workflow_ref | default('') }}"
-  #       GitHubRunId: "{{ param.ci_run_id | default('') }}"
-  #       GitHubActor: "{{ param.github_actor | default('') }}"
-  #       GitHubEvent: "{{ param.github_event | default('') }}"
-  #       RunnerArch: "{{ param.runner_arch | default('') }}"
-  #       RunnerOS: "{{ param.runner_os | default('') }}"
-  #       CiType: GitHub
-  #       ElasticDivision: "field"
-  #       ElasticOrg: "sa"
-  #       ElasticTeam: "amer-strat"
-  #       ElasticProject: "tyronebekiares"
-  #       ElasticOwner: "ty-elastic"
-  #   resources:
-  #     - *gcp_credentials_file
-  #   retry:
-  #     max: 3
-  #     interval: 5
 
   # - name: Create k8s cluster
   #   id: k8s
@@ -192,10 +192,9 @@ steps:
     type: providers.oblt_cli.search_cluster
     with:
       <<: *oblt_cli_common
-      cluster_name: "{{ step.cluster.data.cluster_name }}"
+      cluster_name: "{{ step.k8s.data.cluster_name }}"
     resources:
       - *gcp_credentials_file
-
 
   - name: debug
     type: providers.shell.run

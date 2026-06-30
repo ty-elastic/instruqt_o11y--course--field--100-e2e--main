@@ -1,30 +1,19 @@
----
 # last update {{ .Date }}
-template_name: vm-gcp
+template_name: customk8s
 template_description: |
-  Deploy a virtual machine on Google Cloud Platform (GCP) with external stack monitoring (monitoring-oblt) and shared k8s cluster (autopilot-oblt).
+  K8s deployment.
   Parameters:
     - ClusterName: Name for the new oblt cluster (automatic).
     - SlackChannel: SlackChannel name or Slack member ID to send the credentials of the cluster (#my-channel, @MIDNUM)(automatic)
-    - MachineType: GCP machine type for the VM (optional, default: "e2-medium")
-    - Image: GCP image for the VM (optional, default: "debian-cloud/debian-11")
-    - Zone: GCP zone for the VM (optional, default: "us-central1-a")
-    - VmUser: Username to access the VM (optional, default: "debian")
-    - StartupScript: Script code to run on VM initialization (optional, default: "")
+    - K8sProvider: Type of K8s provider: aws, gcp, autopilot or azure (default: gcp)
   Usage:
-    oblt-cli cluster create custom --template vm-gcp
-    oblt-cli cluster create custom --template vm-gcp \
-        --parameter MachineType=e2-standard-4
-    oblt-cli cluster create custom --template vm-gcp \
-        --parameter StartupScript='#!/bin/bash
-    echo Hello > /tmp/hello.txt'
-    oblt-cli cluster create custom --template vm-gcp \
-        --parameter-from-file StartupScript=/path/to/script.sh
-  For further information, please refer to the [documentation](https://elastic.github.io/observability-test-environments/user-guide/cluster-templates/#vm-gcp)
+    oblt-cli cluster create custom --template k8s
+    oblt-cli cluster create custom --template k8s --parameters '{"K8sProvider": "autopilot"}
 
+#{{- $username := (or .User .Username "unknown") }}
+#{{- $slackChannel := (or .SlackChannel "#observablt-bots") }}
 #{{- $gitOps := (or .GitOps "false") | toString | lower }}
 #{{- $githubCommit := ((or .GitHubCommit "") | toString) }}
-#{{- $githubCommentId := (or .GitHubCommentId "") }}
 #{{- $githubIssue := ((or .GitHubIssue "") | toString) }}
 #{{- $githubPullRequest := ((or .GitHubPullRequest "") | toString) }}
 #{{- $githubRepository := (or .GitHubRepository "") }}
@@ -38,6 +27,7 @@ template_description: |
 #{{- $runnerArch := (or .RunnerArch "") }}
 #{{- $runnerOS := (or .RunnerOS "") }}
 #{{- $ciType := (or .CiType "") }}
+#{{- $githubCommentId := (or .GitHubCommentId "") }}
 #{{- $hasCommitInfo := or (ne $githubCommit "") (ne $githubCommentId "") }}
 #{{- $hasIssueInfo := or (ne $githubIssue "") (ne $githubPullRequest "") (ne $githubRepository "") }}
 #{{- $hasRefInfo := or (ne $githubRef "") (ne $workflow "") (ne $workflowRef "") }}
@@ -46,27 +36,44 @@ template_description: |
 #{{- $hasRunnerInfo := or (ne $runnerArch "") (ne $runnerOS "") (ne $ciType "") }}
 #{{- $hasWorkflowInfo := or $hasRefInfo $hasRunInfo $hasRepoInfo $hasRunnerInfo }}
 #{{- $enableGitOps := or $hasCommitInfo $hasIssueInfo $hasWorkflowInfo (eq $gitOps "true") }}
-#{{- $machineType := (or .MachineType "c4-standard-8") }}
-#{{- $image := (or .Image "debian-cloud/debian-11") }}
+#{{- $template := (or .ProjectType "observability") }}
+#{{- $target := (or .Target "qa") }}
+#{{- $updateMode := (or .UpdateMode "recreate") }}
+#{{- $provider := (or .Provider "aws") }}
+#{{- $clusterNameFQDN := trimPrefix "keep_" .ClusterName }}
+#{{- $clusterHash := `{{ cluster_hash }}` }}
+#{{- $deploymentDir := `{{ deployment_dir }}` }}
+#{{- $helmDeploymentDir := `{{ helm_deployment_dir }}` }}
 #{{- $obltCliVersion := (or .ObltCliVersion "<7.9.8") }}
-#{{- $slackChannel := (or .SlackChannel "#observablt-bots") }}
-#{{- $username := (or .User (or .Username "unknown")) }}
-#{{- $vmUser := (or .VmUser "debian") }}
-#{{- $zone := (or .Zone "us-central1-a") }}
-#{{- $startupScript := (or .StartupScript "curl -sfL https://get.k3s.io | sh -") }}
-#{{- $expireInHours := (or .ExpireInHours "720") }}
+#{{- $expireInHours := (or .ExpireInHours "70") }}
 #{{- $expiryDate := (or .ExpiryDate (now | mustDateModify (printf "+%sh" $expireInHours) | date "2006-01-02T15:04:05-07:00")) }}
+#{{- $creationDate := (now | date "2006-01-02T15:04:05-07:00") }}
+#{{- $genData := (or .GenData "true") }}
+#{{- $goldenCluster := "keep_serverless-qa-oblt" }}
+#{{- if eq $target "production" }}
+#{{-   $goldenCluster = "serverless-production-oblt" }}
+#{{- else if eq $target "staging" }}
+#{{-   $goldenCluster = "" }}
+#{{- end }}
 #{{- $elasticDivision := (or .ElasticDivision "engineering") }}
 #{{- $elasticOrg := (or .ElasticOrg "obs") }}
 #{{- $elasticTeam := (or .ElasticTeam "eng-prod") }}
 #{{- $elasticProject := (or .ElasticProject "oblt-clusters") }}
 #{{- $elasticOwner := (or .ElasticOwner "") }}
 
-cluster_name: "{{ .ClusterName }}"
-slack_channel: "{{ $slackChannel }}"
+oblt_cli_version: "{{ $obltCliVersion }}"
+slack_channel: "{{ .SlackChannel }}"
 oblt_username: "{{ $username }}"
-oblt_cli_version: '{{ $obltCliVersion }}'
-expiry_date: '{{ $expiryDate }}'
+#{{- if .EphemeralCluster }}
+ephemeral_cluster: "{{ .EphemeralCluster }}"
+#{{- end }}
+grab_cluster_info: false
+create_ilm: false
+create_users: false
+cluster_name: "{{ .ClusterName }}"
+
+expiry_date: "{{ $expiryDate }}"
+creation_date: "{{ $creationDate }}"
 
 elastic:
   division: "{{ $elasticDivision }}"
@@ -75,19 +82,38 @@ elastic:
   project: "{{ $elasticProject }}"
   owner: "{{ $elasticOwner }}"
 
-virtual_machines:
-  - name: "{{ .ClusterName }}-vm"
-    provider: gcp
-    machine_type: "{{ $machineType }}"
-    disk_size: 100GB
-    image: "{{ $image }}"
-    user: "{{ $vmUser }}"
-    os: linux
-    zone: "{{ $zone }}"
-    vpc: "oblt-clusters-vpc"
-#{{- if ne $startupScript "" }}
-    startup_script: |
-      {{- $startupScript | nindent 6 }}
+stack:
+  mode: "serverless"
+  template: "{{ $template }}"
+  target: "{{ $target }}"
+  update_mode: "{{ $updateMode }}"
+  serverless:
+#{{- if .Region }}
+    region: "{{ .Region }}"
+#{{- end }}
+#{{- if not .Region }}
+    provider: "{{ $provider }}"
+#{{- end }}
+#{{- if .ElasticsearchDockerImage }}
+    elasticsearch:
+      image: "{{ .ElasticsearchDockerImage }}"
+#{{- end }}
+#{{- if .KibanaDockerImage }}
+    kibana:
+      image: "{{ .KibanaDockerImage }}"
+#{{- end }}
+#{{- if .FleetDockerImage }}
+    fleet:
+      image: "{{ .FleetDockerImage }}"
+#{{- end }}
+#{{- if or (ne $goldenCluster "") .RemoteClusters }}
+    cps_linked_clusters:
+#{{- if ne $goldenCluster "" }}
+      - "{{ $goldenCluster }}"
+#{{- end }}
+#{{- range .RemoteClusters }}
+      - "{{ . }}"
+#{{- end }}
 #{{- end }}
 
 #{{- if $enableGitOps }}
