@@ -339,7 +339,7 @@ if [ "$grafana" = "true" ]; then
     export REPO=$repo
 
     envsubst '$COURSE,$REPO,$elasticsearch_es_endpoint,$elasticsearch_api_key' < grafana.yaml | kubectl apply -f -
-    check_services grafana
+    check_services infra
     envsubst '$elasticsearch_kibana_endpoint,$elasticsearch_es_endpoint,$elasticsearch_api_key,$COURSE,$REPO' < migrate.yaml | kubectl apply -f -
 
     cd ../..
