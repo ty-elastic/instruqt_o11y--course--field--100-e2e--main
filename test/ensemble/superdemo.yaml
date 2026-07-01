@@ -109,7 +109,7 @@ steps:
         ElasticOrg: "sa"
         ElasticTeam: "amer-strat"
         ElasticProject: "tyronebekiares"
-        ElasticOwner: "ty-elastic"
+        ElasticOwner: "elastic"
         Username: "ty-elastic"
     resources:
       - *gcp_credentials_file
@@ -250,6 +250,8 @@ steps:
           ELASTICSEARCH_URL={{ step.cluster.data.elasticsearch_url }}
           ELASTICSEARCH_AUTH_BASE64=$(echo -n "{{ step.cluster.data.elasticsearch_username }}:{{ step.cluster.data.elasticsearch_password }}" | base64)
           EOF
+
+          cat .env
       - type: env
         variables:
           KUBECONFIG: "kubeconfig"
@@ -269,12 +271,17 @@ steps:
       spec_file: "o11y--course--field--100-e2e--serverless/test/playwright/tests/example.spec.js"
       node_version: ".nvmrc"
     async: true
+    resources:
+      - type: env
+        variables:
+          ARTIFACTS_FOLDER: "test_results"
     needs:
       - env
+      - source_code
     artifacts:
       - name: test_results
         paths:
-          - "o11y--course--field--100-e2e--serverless/test/playwright/.playwright/"
+          - "o11y--course--field--100-e2e--serverless/test/playwright/test_results"
     retry:
       max: 3
       interval: 5
