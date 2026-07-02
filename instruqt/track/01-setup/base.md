@@ -48,10 +48,8 @@ tabs:
   new_window: true
 - id: ppfqqvaqdevy
   title: ITSM
-  type: service
-  hostname: k3s
-  path: /
-  port: 43211
+  type: website
+  url: https://tickets.elasticsa.co/
   new_window: true
 - id: ppfqqvaqdevp
   title: Grafana

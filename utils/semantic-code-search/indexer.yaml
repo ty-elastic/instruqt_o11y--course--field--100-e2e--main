@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: code-indexer-12
+  name: code-indexer-13
   namespace: infra
 spec:
   template:
@@ -44,7 +44,6 @@ spec:
                   name: elastic-secret-otel
                   key: elastic_api_key
             - name : KIBANA_ENDPOINT
-              value: "$elasticsearch_kibana_endpoint"
               valueFrom:
                 secretKeyRef:
                   name: elastic-secret-otel
