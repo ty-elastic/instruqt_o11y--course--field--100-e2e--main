@@ -1,0 +1,40 @@
+{
+    "@timestamp": "2026-07-01T19:04:41.642Z",
+    "attributes": {
+      "aws.elb.connection_trace_id": "TID_5e79d0b2412fcf4ebd29cb6c027e96de",
+      "aws.elb.request_processing_time": -1,
+      "aws.elb.response_processing_time": -1,
+      "aws.elb.status.code": 400,
+      "aws.elb.target_processing_time": -1,
+      "client.address": "18.116.101.220",
+      "client.port": 32456,
+      "http.request.method": "-",
+      "http.request.size": 0,
+      "http.response.size": 0,
+      "network.protocol.name": "http",
+      "network.protocol.version": "-",
+      "url.full": "http://tbekiares-1882268001.us-east-2.elb.amazonaws.com:80-"
+    },
+    "data_stream": {
+      "dataset": "aws.elbaccess.otel",
+      "namespace": "default",
+      "type": "logs"
+    },
+    "observed_timestamp": "2026-07-01T19:08:26.403Z",
+    "resource": {
+      "attributes": {
+        "aws.s3.bucket.arn": "arn:aws:s3:::tbekiares-al",
+        "aws.s3.bucket.name": "tbekiares-al",
+        "aws.s3.key": "AWSLogs/461485115270/elasticloadbalancing/us-east-2/2026/07/01/461485115270_elasticloadbalancing_us-east-2_app.tbekiares.02825fbca8b4ec33_20260701T1905Z_3.13.148.253_1ccf0417.log.gz",
+        "cloud.provider": "aws",
+        "cloud.region": "us-east-2",
+        "cloud.resource_id": "app/tbekiares/02825fbca8b4ec33"
+      }
+    },
+    "scope": {
+      "attributes": {
+        "encoding.format": "aws.elbaccess"
+      },
+      "name": "github.com/open-telemetry/opentelemetry-collector-contrib/extension/encoding/awslogsencodingextension"
+    }
+  }

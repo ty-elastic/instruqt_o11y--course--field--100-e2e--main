@@ -1,0 +1,117 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elb-config
+  namespace: $NAMESPACE
+data:
+  config.yaml: |-
+    # ELB Load Balancer Configuration
+    # Environment variable references (${VAR} or $VAR) are expanded at startup.
+    elasticsearch:
+      url: ${ELASTIC_ENDPOINT}
+      api_key: ${ELASTIC_API_KEY}
+      # Target data streams must exist in Elasticsearch.
+      # Use "create" bulk action (data-stream safe, which this service uses).
+      logs_datastream: logs-aws.elbaccess.otel-default
+      metrics_datastream: metrics-aws.elb.otel-default
+      insecure_skip_verify: false
+
+    # Resource attributes written into every telemetry document.
+    resource:
+      cloud_account_id: "4815162342"
+      cloud_region: ${REGION}
+      # Metric docs with an AvailabilityZone dimension are emitted once per AZ.
+      availability_zones:
+        - ${REGION}-2a
+      # S3 fields appear in access-log resource attributes (synthetic path generated per request).
+      s3_bucket_name: my-elb-logs
+      s3_bucket_arn: arn:aws:s3:::my-elb-logs
+      s3_key_prefix: AWSLogs
+
+    # Global health check defaults (can be overridden per load balancer).
+    health_check:
+      path: /
+      interval: 10s
+      timeout: 2s
+
+    # One entry per logical load balancer. Each listens on its own port.
+    load_balancers:
+      - name: app/trader-${REGION}/02825fbca8b4ec33
+        target_group: targetgroup/trader-${REGION}-targets/0123456789abcdef
+        port: 9001
+        backends:
+          - http://trader:9001
+        health_check:
+          path: /health
+          interval: 5s
+          timeout: 2s
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: trading
+    service: elb
+  name: elb
+  namespace: $NAMESPACE
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trading
+      service: elb
+  template:
+    metadata:
+      labels:
+        app: trading
+        service: elb
+      annotations:
+        io.opentelemetry.discovery.logs/enabled: "false"
+    spec:
+      containers:
+        - name: elb
+          volumeMounts:
+            - name: config-volume
+              mountPath: /usr/src/app/config.yaml
+              subPath: config.yaml
+          env:
+            - name: ELASTIC_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: elastic-secret-otel
+                  key: elastic_endpoint
+            - name: ELASTIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: elastic-secret-otel
+                  key: elastic_api_key
+            - name: REGION
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          image: $REPO/elb:$COURSE
+      volumes:
+        - name: config-volume
+          configMap:
+            name: elb-config
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: trading
+    service: elb
+  name: elb
+  namespace: $NAMESPACE
+spec:
+  ports:
+    - name: elb
+      port: 9001
+      targetPort: 9001
+      protocol: TCP
+  selector:
+    app: trading
+    service: elb
+---

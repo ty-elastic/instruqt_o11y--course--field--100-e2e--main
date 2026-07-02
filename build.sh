@@ -211,6 +211,14 @@ for current_region in "${regions[@]}"; do
         export JOB_ID=$(( $RANDOM ))
         #echo $JOB_ID
 
+        kubectl --namespace $NAMESPACE delete secret generic elastic-secret-otel
+        kubectl create secret generic elastic-secret-otel \
+            --namespace $NAMESPACE \
+            --from-literal=elastic_otlp_endpoint="$elasticsearch_otlp_endpoint" \
+            --from-literal=elastic_endpoint="$elasticsearch_es_endpoint" \
+            --from-literal=elastic_fleet_endpoint="$elasticsearch_fleet_endpoint" \
+            --from-literal=elastic_fleet_opamp_api_key="$OPAMP_API_KEY" \
+            --from-literal=elastic_api_key="$elasticsearch_api_key"
 
         envsubst '$NAMESPACE' < k8s/yaml/_namespace.yaml | kubectl apply -f -
 

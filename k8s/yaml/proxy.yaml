@@ -171,7 +171,7 @@ data:
             proxy_set_header traceparent      "00-$otel_trace_id-$otel_span_id-$trace_flags";
             proxy_set_header tracestate       $http_tracestate;
 
-            proxy_pass http://trader:9001/;
+            proxy_pass http://elb:9001/;
         }
 
         location /monkey/ {

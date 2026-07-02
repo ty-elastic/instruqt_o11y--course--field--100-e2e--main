@@ -1,0 +1,198 @@
+package main
+
+// sourceKind describes how a metric value is derived from a WindowSnapshot.
+type sourceKind int
+
+const (
+	srcRequestCount          sourceKind = iota // total request count
+	srcRequestCountPerTarget                   // per-backend count (fans out per backend)
+	srcTgt2XX                                  // HTTP 2xx from backends
+	srcTgt3XX                                  // HTTP 3xx from backends
+	srcTgt4XX                                  // HTTP 4xx from backends
+	srcELB3XX                                  // ELB-generated 3xx
+	srcELB4XX                                  // ELB-generated 4xx
+	srcELB5XX                                  // ELB-generated 5xx
+	srcELB503                                  // ELB 503 (no healthy backend)
+	srcTargetResponseTime                      // max backend response time (float64, seconds)
+	srcProcessedBytes                          // total bytes in + out
+	srcActiveConnectionCount                   // in-flight requests (gauge)
+	srcHealthyHostCount                        // healthy backend count
+	srcUnHealthyHostCount                      // unhealthy backend count
+	srcHealthyStateDNS                         // 1 if any healthy backend, else 0
+	srcHealthyStateRouting                     // 1 if any healthy backend, else 0
+	srcUnhealthyStateDNS                       // 1 if any unhealthy backend, else 0
+	srcUnhealthyStateRouting                   // 1 if any unhealthy backend, else 0
+	srcConstZero                               // always 0 (not measurable by a simple proxy)
+	srcConstOne                                // always 1 (PeakLCUs placeholder)
+)
+
+// DimSet describes one CloudWatch dimension combination for a metric series.
+type DimSet struct {
+	HasLB bool // include LoadBalancer dimension
+	HasAZ bool // include AvailabilityZone dimension (fans out per configured AZ)
+	HasTG bool // include TargetGroup dimension
+}
+
+// Reusable dimension set combinations matching the AWS ApplicationELB docs.
+var (
+	dimLB     = DimSet{HasLB: true}
+	dimLBAZ   = DimSet{HasLB: true, HasAZ: true}
+	dimLBTG   = DimSet{HasLB: true, HasTG: true}
+	dimLBAZTG = DimSet{HasLB: true, HasAZ: true, HasTG: true}
+	dimTG     = DimSet{HasTG: true}
+	dimTGAZ   = DimSet{HasAZ: true, HasTG: true}
+)
+
+// metricDef describes one AWS ApplicationELB CloudWatch metric series.
+type metricDef struct {
+	Name    string     // CloudWatch metric name
+	Stat    string     // "Sum" | "Average" | "Maximum"
+	DimSets []DimSet   // dimension combinations to emit; AZ-bearing sets fan out per configured AZ
+	Float   bool       // whether the metric value is float64 (TargetResponseTime)
+	Source  sourceKind // how the value is derived
+}
+
+// metricDefs enumerates all AWS ApplicationELB metrics we emit, with the
+// dimension sets prescribed by the AWS CloudWatch documentation.
+var metricDefs = []metricDef{
+	{
+		Name:    "ActiveConnectionCount",
+		Stat:    "Sum",
+		DimSets: []DimSet{dimLB, dimLBAZ},
+		Source:  srcActiveConnectionCount,
+	},
+	{
+		Name:    "AnomalousHostCount",
+		Stat:    "Maximum",
+		DimSets: []DimSet{dimLBTG, dimLBAZTG},
+		Source:  srcConstZero,
+	},
+	{
+		Name:    "DesyncMitigationMode_NonCompliant_Request_Count",
+		Stat:    "Average",
+		DimSets: []DimSet{dimLB, dimLBAZ},
+		Source:  srcConstZero,
+	},
+	{
+		Name:    "HTTPCode_ELB_3XX_Count",
+		Stat:    "Sum",
+		DimSets: []DimSet{dimLB, dimLBAZ},
+		Source:  srcELB3XX,
+	},
+	{
+		Name:    "HTTPCode_ELB_4XX_Count",
+		Stat:    "Sum",
+		DimSets: []DimSet{dimLB, dimLBAZ},
+		Source:  srcELB4XX,
+	},
+	{
+		Name:    "HTTPCode_ELB_503_Count",
+		Stat:    "Sum",
+		DimSets: []DimSet{dimLB, dimLBAZ},
+		Source:  srcELB503,
+	},
+	{
+		Name:    "HTTPCode_ELB_5XX_Count",
+		Stat:    "Sum",
+		DimSets: []DimSet{dimLB, dimLBAZ},
+		Source:  srcELB5XX,
+	},
+	{
+		Name:    "HTTPCode_Target_2XX_Count",
+		Stat:    "Sum",
+		DimSets: []DimSet{dimLB, dimLBAZ, dimLBTG, dimLBAZTG},
+		Source:  srcTgt2XX,
+	},
+	{
+		Name:    "HTTPCode_Target_3XX_Count",
+		Stat:    "Sum",
+		DimSets: []DimSet{dimLB, dimLBAZ, dimLBTG, dimLBAZTG},
+		Source:  srcTgt3XX,
+	},
+	{
+		Name:    "HTTPCode_Target_4XX_Count",
+		Stat:    "Sum",
+		DimSets: []DimSet{dimLB, dimLBAZ, dimLBTG, dimLBAZTG},
+		Source:  srcTgt4XX,
+	},
+	{
+		Name:    "HealthyHostCount",
+		Stat:    "Average",
+		DimSets: []DimSet{dimLBTG, dimLBAZTG},
+		Source:  srcHealthyHostCount,
+	},
+	{
+		Name:    "HealthyStateDNS",
+		Stat:    "Maximum",
+		DimSets: []DimSet{dimLBTG, dimLBAZTG},
+		Source:  srcHealthyStateDNS,
+	},
+	{
+		Name:    "HealthyStateRouting",
+		Stat:    "Maximum",
+		DimSets: []DimSet{dimLBTG, dimLBAZTG},
+		Source:  srcHealthyStateRouting,
+	},
+	{
+		Name:    "MitigatedHostCount",
+		Stat:    "Average",
+		DimSets: []DimSet{dimLBTG, dimLBAZTG},
+		Source:  srcConstZero,
+	},
+	{
+		Name:    "PeakLCUs",
+		Stat:    "Maximum",
+		DimSets: []DimSet{dimLB},
+		Source:  srcConstOne,
+	},
+	{
+		Name:    "ProcessedBytes",
+		Stat:    "Sum",
+		DimSets: []DimSet{dimLB, dimLBAZ},
+		Source:  srcProcessedBytes,
+	},
+	{
+		Name:    "RequestCount",
+		Stat:    "Sum",
+		DimSets: []DimSet{dimLB, dimLBAZ, dimLBTG, dimLBAZTG},
+		Source:  srcRequestCount,
+	},
+	{
+		// Dimension sets without LoadBalancer ({TG} and {TG,AZ}) are also required per AWS docs.
+		Name:    "RequestCountPerTarget",
+		Stat:    "Sum",
+		DimSets: []DimSet{dimTG, dimTGAZ, dimLBTG, dimLBAZTG},
+		Source:  srcRequestCountPerTarget,
+	},
+	{
+		Name:    "RuleEvaluations",
+		Stat:    "Sum",
+		DimSets: []DimSet{dimLB},
+		Source:  srcConstZero,
+	},
+	{
+		Name:    "TargetResponseTime",
+		Stat:    "Average",
+		Float:   true,
+		DimSets: []DimSet{dimLB, dimLBAZ, dimLBTG, dimLBAZTG},
+		Source:  srcTargetResponseTime,
+	},
+	{
+		Name:    "UnHealthyHostCount",
+		Stat:    "Average",
+		DimSets: []DimSet{dimLBTG, dimLBAZTG},
+		Source:  srcUnHealthyHostCount,
+	},
+	{
+		Name:    "UnhealthyStateDNS",
+		Stat:    "Minimum",
+		DimSets: []DimSet{dimLBTG, dimLBAZTG},
+		Source:  srcUnhealthyStateDNS,
+	},
+	{
+		Name:    "UnhealthyStateRouting",
+		Stat:    "Minimum",
+		DimSets: []DimSet{dimLBTG, dimLBAZTG},
+		Source:  srcUnhealthyStateRouting,
+	},
+}

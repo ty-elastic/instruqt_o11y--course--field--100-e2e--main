@@ -1,0 +1,52 @@
+# ELB Load Balancer Configuration
+# Environment variable references (${VAR} or $VAR) are expanded at startup.
+
+elasticsearch:
+  url: ${ELASTICSEARCH_URL}
+  api_key: ${ELASTIC_API_KEY}
+  # Target data streams must exist in Elasticsearch.
+  # Use "create" bulk action (data-stream safe, which this service uses).
+  logs_datastream: logs-aws.elbaccess.otel-default
+  metrics_datastream: metrics-aws.elb.otel-default
+  insecure_skip_verify: false
+
+# Resource attributes written into every telemetry document.
+resource:
+  cloud_account_id: "461485115270"
+  cloud_region: us-east-2
+  # Metric docs with an AvailabilityZone dimension are emitted once per AZ.
+  availability_zones:
+    - us-east-2a
+    - us-east-2b
+    - us-east-2c
+  # S3 fields appear in access-log resource attributes (synthetic path generated per request).
+  s3_bucket_name: my-elb-logs
+  s3_bucket_arn: arn:aws:s3:::my-elb-logs
+  s3_key_prefix: AWSLogs
+
+# Global health check defaults (can be overridden per load balancer).
+health_check:
+  path: /
+  interval: 10s
+  timeout: 2s
+
+# One entry per logical load balancer. Each listens on its own port.
+load_balancers:
+  - name: app/tbekiares/02825fbca8b4ec33
+    target_group: targetgroup/tbekiares-targets/0123456789abcdef
+    port: 8080
+    backends:
+      - http://backend1:8081
+      - http://backend2:8082
+    health_check:
+      path: /health
+      interval: 5s
+      timeout: 2s
+
+  # Second load balancer example (remove if not needed):
+  # - name: app/tbekiares-internal/abcdef1234567890
+  #   target_group: targetgroup/tbekiares-internal/fedcba9876543210
+  #   port: 8090
+  #   backends:
+  #     - http://internal1:9001
+  #     - http://internal2:9002
