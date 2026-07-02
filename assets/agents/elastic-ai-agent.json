@@ -1,0 +1,28 @@
+{
+    "id": "elastic-ai-agent",
+    "x-update": true,
+    "configuration": {
+        "tools": [
+            {
+                "tool_ids": [
+                    "scs.discover_directories",
+                    "scs.list_indices",
+                    "scs.semantic_search",
+                    "scs.symbol_analysis",
+                    "scs.map_symbols",
+                    "scs.read_file_from_chunks",
+                    "scs.get_file_history",
+                    "scs.get_commit",
+                    "scs.find_introducing_commit",
+                    "scs.get_file_authors",
+                    "scs.search_commit_messages",
+                    "scs.get_cochanges"
+                ]
+            }
+        ],
+        "skill_ids": [
+            "scs-code-history-files",
+            "scs-code-history-search"
+        ]
+    }
+}

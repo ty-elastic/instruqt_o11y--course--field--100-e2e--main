@@ -706,18 +706,58 @@ def load_agents(kibana_server, kibana_auth):
                 with open(full_path, 'r') as fileo:
                     #content = file.read()
                     agent = json.load(fileo)
-                    del agent['readonly']
-                    del agent['type']
-                    if 'created_by' in agent:
-                        del agent['created_by']
 
-                    delete_existing_agent(kibana_server, kibana_auth, agent['id'])
+                    if 'x-update' in agent and agent['x-update'] is True:
 
-                    #print(agent)
-                    resp = requests.post(f"{kibana_server}/api/agent_builder/agents",
-                                        json=agent,
-                                        headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
-                    print(resp.json())     
+                        print("x-update")
+
+                        resp1 = requests.get(f"{kibana_server}/api/agent_builder/agents/{agent['id']}",
+                                            headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json"})
+                        #print(resp1.json())
+                        existing = resp1.json()
+                        print(existing)
+
+                        existing['configuration'] = {
+                                "skill_ids": existing['configuration']['skill_ids'] if 'skill_ids' in existing['configuration'] else [],
+                                "tools": [
+                                    {"tool_ids": existing['configuration']['tools'][0]['tool_ids'] if 'tools' in existing['configuration'] and len(existing['configuration']['tools']) > 0 and 'tool_ids' in existing['configuration']['tools'][0] else []}
+                                ]
+                            }
+                        
+
+                        existing['configuration']['skill_ids'] = list(set(agent['configuration']['skill_ids'] + existing['configuration']['skill_ids']))
+                        existing['configuration']['tools'][0]['tool_ids'] = list(set(agent['configuration']['tools'][0]['tool_ids'] + existing['configuration']['tools'][0]['tool_ids']))
+
+                        del existing['readonly']
+                        del existing['type']
+                        del existing['id']
+                        del existing['access_control']
+                        del existing['permissions']
+                        if 'created_by' in existing:
+                            del existing['created_by']
+
+                        print(existing)
+                        #print('here')
+
+                        resp = requests.put(f"{kibana_server}/api/agent_builder/agents/{agent['id']}",
+                                            json=existing,
+                                            headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json"})
+                        print("updated agent")
+                        print(resp.json())
+
+                    else:
+                        del agent['readonly']
+                        del agent['type']
+                        if 'created_by' in agent:
+                            del agent['created_by']
+
+                        delete_existing_agent(kibana_server, kibana_auth, agent['id'])
+
+                        #print(agent)
+                        resp = requests.post(f"{kibana_server}/api/agent_builder/agents",
+                                            json=agent,
+                                            headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+                        print(resp.json())     
  
 
 def backup_agents(kibana_server, kibana_auth):
