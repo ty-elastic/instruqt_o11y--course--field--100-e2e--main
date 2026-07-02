@@ -12,9 +12,15 @@ spec:
           imagePullPolicy: Always
           env:
             - name: ELASTICSEARCH_ENDPOINT
-              value: "$elasticsearch_es_endpoint"
+              valueFrom:
+                secretKeyRef:
+                  name: elastic-secret-otel
+                  key: elastic_endpoint
             - name : ELASTICSEARCH_API_KEY
-              value: "$elasticsearch_api_key"
+              valueFrom:
+                secretKeyRef:
+                  name: elastic-secret-otel
+                  key: elastic_api_key
 
             - name: SCS_ELASTICSEARCH_INFERENCE_ID
               value: ".elser-2-elastic"
@@ -28,15 +34,24 @@ spec:
           imagePullPolicy: Always
           env:
             - name: ELASTICSEARCH_ENDPOINT
-              value: "$elasticsearch_es_endpoint"
+              valueFrom:
+                secretKeyRef:
+                  name: elastic-secret-otel
+                  key: elastic_endpoint
             - name : ELASTICSEARCH_API_KEY
-              value: "$elasticsearch_api_key"
+              valueFrom:
+                secretKeyRef:
+                  name: elastic-secret-otel
+                  key: elastic_api_key
             - name : KIBANA_ENDPOINT
               value: "$elasticsearch_kibana_endpoint"
+              valueFrom:
+                secretKeyRef:
+                  name: elastic-secret-otel
+                  key: elastic_kibana_endpoint
 
             - name: SCS_ELASTICSEARCH_INFERENCE_ID
               value: ".elser-2-elastic"
-
           args:
             - "install-agentic-interfaces"
       restartPolicy: Never

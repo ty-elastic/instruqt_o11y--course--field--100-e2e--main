@@ -36,8 +36,5 @@ export REMOTE_PORT=$(kubectl -n trading-na get svc proxy-ext -o jsonpath='{.spec
 export REMOTE_HOSTNAME=$(kubectl -n utils get svc snowem-ext -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 export REMOTE_PORT=$(kubectl -n utils get svc snowem-ext -o jsonpath='{.spec.ports[0].port}')
 
-# snowem
-./build.sh -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -j $ELASTICSEARCH_URL -q true -e https://$REMOTE_HOSTNAME:$REMOTE_PORT
-
 # ramen
 assets/scripts/ramen.sh -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -j $ELASTICSEARCH_URL

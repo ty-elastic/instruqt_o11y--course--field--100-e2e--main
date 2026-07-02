@@ -88,10 +88,6 @@ if [ "$build" = "true" ]; then
   ./build.sh -c $course
   cd ../../instruqt
 
-  cd ../utils/snowem
-  ./build.sh -c $course
-  cd ../../instruqt
-
   cd ../utils/wiki.js/postgresql
   ./build.sh -c $course
   cd ../../../instruqt
@@ -107,6 +103,10 @@ if [ "$build" = "true" ]; then
   cd ../utils/prometheus-grafana/mig-to-kbn
   ./build.sh -c $course
   cd ../../../instruqt
+
+  cd ../utils/semantic-code-search
+  ./build.sh -c $course
+  cd ../../instruqt
 
   cd ..
   ./build.sh -c $course -b true -x true -s all

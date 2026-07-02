@@ -65,7 +65,7 @@ case "${unameOut}" in
 esac
 
 OPTIND=1
-while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:n:z:u:q:t:1:" opt
+while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:n:z:u:t:1:" opt
 do
    case "$opt" in 
       1 ) prereq="$OPTARG" ;;
@@ -101,7 +101,6 @@ do
       y ) annotations="$OPTARG" ;;
       z ) working_dir="$OPTARG" ;;
       u ) logen="$OPTARG" ;;
-      q ) snowem="$OPTARG" ;;
    esac
 done
 
@@ -181,15 +180,29 @@ fi
 
 if [ "$features" = "true" ]; then
     source $PWD/assets/scripts/features_es.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
+    source $PWD/assets/scripts/snowem.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -e https://snowem-v2-voldmqr2bq-uc.a.run.app
 fi
 
 if [ "$prereq" == "true" ]; then
+
     source $PWD/utils/kafka/install.sh -v $PWD/utils/kafka/values.yaml
 
     source $PWD/assets/scripts/integration_packages.sh
     install_integration_package "kafka_otel" $elasticsearch_kibana_endpoint $elasticsearch_api_key
 
     kubectl apply -f utils/redis/redis.yml
+
+    kubectl --namespace infra delete secret generic elastic-secret-otel
+    kubectl create secret generic elastic-secret-otel \
+        --namespace infra \
+        --from-literal=elastic_otlp_endpoint="$elasticsearch_otlp_endpoint" \
+        --from-literal=elastic_endpoint="$elasticsearch_es_endpoint" \
+        --from-literal=elastic_fleet_endpoint="$elasticsearch_fleet_endpoint" \
+        --from-literal=elastic_kibana_endpoint="$elasticsearch_kibana_endpoint" \
+        --from-literal=elastic_fleet_opamp_api_key="$OPAMP_API_KEY" \
+        --from-literal=elastic_api_key="$elasticsearch_api_key"
+
+    kubectl apply -f utils/semantic-code-search/indexer.yaml
 fi
 
 printf "deploying services...\n"
@@ -366,22 +379,6 @@ if [ "$logen" = "true" ]; then
 
     envsubst '$COURSE,$REPO' < logen.yaml | kubectl apply -f -
     cd ../..
-fi
-
-if [ "$snowem" = "true" ]; then
-    cd utils/snowem
-
-    export COURSE=$course
-    export REPO=$repo
-
-    if [ "$build_service" = "true" ]; then
-        source $PWD/build.sh -c $course
-    fi
-
-    envsubst '$COURSE,$REPO' < snowem.yaml | kubectl apply -f -
-    cd ../..
-
-    source $PWD/assets/scripts/snowem.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -e $remote_endpoint
 fi
 
 
