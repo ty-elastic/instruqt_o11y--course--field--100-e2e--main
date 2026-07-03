@@ -23,7 +23,20 @@
                     "search_logs_error",
                     "get_topologies",
                     "rca-core.cases",
-                    "remediation_service_action"
+                    "remediation_service_action",
+
+                    "scs.discover_directories",
+                    "scs.list_indices",
+                    "scs.semantic_search",
+                    "scs.symbol_analysis",
+                    "scs.map_symbols",
+                    "scs.read_file_from_chunks",
+                    "scs.get_file_history",
+                    "scs.get_commit",
+                    "scs.find_introducing_commit",
+                    "scs.get_file_authors",
+                    "scs.search_commit_messages",
+                    "scs.get_cochanges"
                 ]
             }
         ],
@@ -31,7 +44,10 @@
             "rca-alert_correlation",
             "rca-topology_builder",
             "rca-search-knowledge",
-            "visualization-creation"
+            "visualization-creation",
+
+            "scs-code-history-files",
+            "scs-code-history-search"
         ],
         "enable_elastic_capabilities": false,
         "workflow_ids": []
