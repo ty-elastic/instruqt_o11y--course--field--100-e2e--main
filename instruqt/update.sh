@@ -75,41 +75,8 @@ upload_bundle() {
 upload_bundle
 
 if [ "$build" = "true" ]; then
-
-  cd ../assets
-  ./build.sh -c $course
-  cd ../instruqt
-
-  cd ../utils/remote
-  ./build.sh -c $course
-  cd ../../instruqt
-
-  cd ../utils/logen
-  ./build.sh -c $course
-  cd ../../instruqt
-
-  cd ../utils/wiki.js/postgresql
-  ./build.sh -c $course
-  cd ../../../instruqt
-
-  cd ../utils/wiki.js/install
-  ./build.sh -c $course
-  cd ../../../instruqt
-
-  cd ../utils/prometheus-grafana
-  ./build.sh -c $course
-  cd ../../instruqt
-
-  cd ../utils/prometheus-grafana/mig-to-kbn
-  ./build.sh -c $course
-  cd ../../../instruqt
-
-  cd ../utils/semantic-code-search
-  ./build.sh -c $course
-  cd ../../instruqt
-
   cd ..
-  ./build.sh -c $course -b true -x true -s all
+  ./build.sh -c $course -q true -b true -x true -s all
   cd instruqt
 fi
 

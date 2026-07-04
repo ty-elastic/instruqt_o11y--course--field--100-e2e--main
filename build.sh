@@ -39,6 +39,7 @@ grafana=false
 features=false
 deploy_ebpf_services=false
 
+build_infra=false
 build_service=false
 build_lib=false
 deploy_otel=false
@@ -65,7 +66,7 @@ case "${unameOut}" in
 esac
 
 OPTIND=1
-while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:n:z:u:t:1:" opt
+while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:n:z:u:t:1:q:" opt
 do
    case "$opt" in 
       1 ) prereq="$OPTARG" ;;
@@ -77,8 +78,10 @@ do
       f ) features="$OPTARG" ;;
       g ) grafana="$OPTARG" ;;
 
+      q ) build_infra="$OPTARG" ;;
       b ) build_service="$OPTARG" ;;
       x ) build_lib="$OPTARG" ;;
+
       o ) deploy_otel="$OPTARG" ;;
       d ) deploy_service="$OPTARG" ;;
       n ) deploy_ebpf_services="$OPTARG" ;;
@@ -155,6 +158,40 @@ else
     if [[ "$build_service" == "true" || "$build_lib" == "true" ]]; then
         gcloud auth configure-docker us-central1-docker.pkg.dev
     fi
+fi
+
+if [ "$build_infra" = "true" ]; then
+  cd ./assets
+  ./build.sh -c $course
+  cd ..
+
+  cd ./utils/remote
+  ./build.sh -c $course
+  cd ../..
+
+  cd ./utils/logen
+  ./build.sh -c $course
+  cd ../..
+
+  cd ./utils/wiki.js/postgresql
+  ./build.sh -c $course
+  cd ../../..
+
+  cd ./utils/wiki.js/install
+  ./build.sh -c $course
+  cd ../../..
+
+  cd ./utils/prometheus-grafana
+  ./build.sh -c $course
+  cd ../..
+
+  cd ./utils/prometheus-grafana/mig-to-kbn
+  ./build.sh -c $course
+  cd ../../..
+
+  cd ./utils/semantic-code-search
+  ./build.sh -c $course
+  cd ../..
 fi
 
 if [ "$build_service" = "true" ]; then
@@ -307,10 +344,6 @@ fi
 if [ "$remote_endpoint" != "na" ]; then
     cd utils/remote
 
-    if [ "$build_lib" = "true" ]; then
-        source $PWD/build.sh -r $repo -c $course -a $arch
-    fi
-
     envsubst '$COURSE,$REPO' < remote.yaml | kubectl apply -f -
     cd ../..
 fi
@@ -318,11 +351,6 @@ fi
 if [ "$assets" = "true" ]; then
     
     cd assets
-
-    if [ "$build_lib" = "true" ]; then
-        echo $course
-        source $PWD/build.sh -r $repo -c $course -a $arch
-    fi
 
     export JOB_ID=$(( $RANDOM ))
     #echo $JOB_ID
@@ -372,10 +400,6 @@ if [ "$logen" = "true" ]; then
 
     export COURSE=$course
     export REPO=$repo
-
-    if [ "$build_service" = "true" ]; then
-        source $PWD/build.sh -c $course
-    fi
 
     envsubst '$COURSE,$REPO' < logen.yaml | kubectl apply -f -
     cd ../..
