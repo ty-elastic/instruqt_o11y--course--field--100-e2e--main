@@ -52,7 +52,7 @@ upload_bundle() {
       --repository=tbekiares-instruqt
 
   gcloud artifacts generic upload \
-      --source=instruqt/bundle/$course.tgz \
+      --source=bundle/$course.tgz \
       --package=$course \
       --version=$ARTIFACT_VERSION \
       --location=us-central1 \
