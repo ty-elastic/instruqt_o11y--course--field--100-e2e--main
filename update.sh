@@ -41,7 +41,6 @@ echo $course
 
 upload_bundle() {
   mkdir -p bundle
-  cd ..
   git archive --format=tgz $branch -o instruqt/bundle/$course.tgz
 
   ARTIFACT_VERSION=1.0
@@ -58,8 +57,6 @@ upload_bundle() {
       --version=$ARTIFACT_VERSION \
       --location=us-central1 \
       --repository=tbekiares-instruqt
-
-  cd instruqt
 }
 upload_bundle
 
