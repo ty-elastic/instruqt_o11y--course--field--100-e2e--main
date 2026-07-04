@@ -41,7 +41,7 @@ echo $course
 
 upload_bundle() {
   mkdir -p bundle
-  git archive --format=tgz $branch -o instruqt/bundle/$course.tgz
+  git archive --format=tgz $branch -o bundle/$course.tgz
 
   ARTIFACT_VERSION=1.0
 
