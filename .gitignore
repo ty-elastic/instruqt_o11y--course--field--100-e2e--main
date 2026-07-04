@@ -6,6 +6,7 @@ __pycache__
 loghub
 bin
 out
+bundle
 
 .auth
 playwright-report
