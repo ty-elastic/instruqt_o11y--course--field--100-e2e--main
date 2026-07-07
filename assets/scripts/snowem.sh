@@ -32,7 +32,7 @@ create_snowem_connector() {
    # Extract HTTP status code
    http_code=$(echo "$output" | tail -n1)
    http_response=$(echo "$output" | sed '$d')
-   if [ "$http_code" != "200" ]; then
+   if [[ "$http_code" != "200" && "$http_code" != "409" ]]; then
       printf "$FUNCNAME...ERROR $http_code: $http_response\n"
       return 1
    fi

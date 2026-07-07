@@ -116,7 +116,8 @@ deploy_otel() {
     helm upgrade --install opentelemetry-kube-stack open-telemetry/opentelemetry-kube-stack \
         --namespace opentelemetry-operator-system \
         --values "$deploy_otel.yaml" \
-        --version '0.12.4'
+        --version '0.12.4' \
+        --set clusterName=k3s
     cd ../..
 
     cd agents/tbs
