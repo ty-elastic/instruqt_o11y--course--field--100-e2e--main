@@ -240,6 +240,8 @@ if [ "$prereq" == "true" ]; then
         --from-literal=elastic_api_key="$elasticsearch_api_key"
 
     kubectl apply -f utils/semantic-code-search/indexer.yaml
+    kubectl -n infra wait --for=condition=complete job/code-setup
+
 fi
 
 printf "deploying services...\n"

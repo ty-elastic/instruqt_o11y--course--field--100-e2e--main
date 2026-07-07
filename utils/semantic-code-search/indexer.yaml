@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: code-indexer-13
+  name: code-indexer
   namespace: infra
 spec:
   template:
@@ -29,6 +29,17 @@ spec:
             - "index"
             - "https://github.com//ty-elastic/instruqt_o11y--course--field--100-e2e--main"
             - "--pull"
+      restartPolicy: Never
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: code-setup
+  namespace: infra
+spec:
+  template:
+    spec:
+      containers:
         - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/scs:latest
           name: setup
           imagePullPolicy: Always
