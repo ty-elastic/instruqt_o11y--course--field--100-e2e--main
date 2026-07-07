@@ -6,17 +6,17 @@
             {
                 "tool_ids": [
                     "scs.discover_directories",
-                    "scs.list_indices",
-                    "scs.semantic_search",
-                    "scs.symbol_analysis",
+                    "scs.find_introducing_commit",
+                    "scs.get_cochanges",
+                    "scs.get_commit",
+                    "scs.get_file_authors",
+                    "scs.get_file_history",
+                    "scs.list_repos",
                     "scs.map_symbols",
                     "scs.read_file_from_chunks",
-                    "scs.get_file_history",
-                    "scs.get_commit",
-                    "scs.find_introducing_commit",
-                    "scs.get_file_authors",
                     "scs.search_commit_messages",
-                    "scs.get_cochanges"
+                    "scs.semantic_search",
+                    "scs.symbol_analysis"
                 ]
             }
         ],
