@@ -1,4 +1,5 @@
 arch=linux/amd64
+repo=us-central1-docker.pkg.dev/elastic-sa/tbekiares
 build=true
 branch=test
 
@@ -62,4 +63,9 @@ upload_bundle
 
 if [ "$build" = "true" ]; then
   ./build.sh -c $course -q true -b true -x true -s all
+
+  docker buildx build --platform $arch \
+    --progress plain -t $repo/install:$course --output "type=registry,name=$repo/install:$course" .
+
 fi
+
