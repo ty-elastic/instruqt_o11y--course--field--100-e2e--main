@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [ -f ".env" ]; then
+    set -o allexport # Automatically export all variables defined after this point
+    source .env
+    set +o allexport # Stop automatic exporting
+fi
+
 # es bootstrap
 ./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL -f true
 

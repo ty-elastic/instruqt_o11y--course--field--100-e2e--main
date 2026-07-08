@@ -144,12 +144,6 @@ done
 namespaces=$(join_by ", " "${namespaces_array[@]}")
 echo $namespaces
 
-if [ -f ".env" ]; then
-    set -o allexport # Automatically export all variables defined after this point
-    source .env
-    set +o allexport # Stop automatic exporting
-fi
-
 repo=us-central1-docker.pkg.dev/elastic-sa/tbekiares
 if [ "$local" = "true" ]; then
     docker run -d -p 5093:5000 --restart=always --name registry registry:2
@@ -240,7 +234,7 @@ if [ "$prereq" == "true" ]; then
         --from-literal=elastic_api_key="$elasticsearch_api_key"
 
     kubectl apply -f utils/semantic-code-search/indexer.yaml
-    kubectl -n infra wait --for=condition=complete job/code-setup
+    kubectl -n infra wait --for=condition=complete job/code-setup --timeout=120s
 
 fi
 

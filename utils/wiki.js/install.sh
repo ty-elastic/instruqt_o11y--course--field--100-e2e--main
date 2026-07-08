@@ -59,7 +59,7 @@ create_wiki_connector() {
             -H 'Content-Type: application/json')
       http_code=$(echo "$output" | tail -n1)
       http_response=$(echo "$output" | sed '$d')
-      CONNECTOR=$(echo $http_response | jq -r '.results.[] | select (.name == "wiki")')
+      CONNECTOR=$(echo $http_response | jq -r '.results[] | select (.name == "wiki")')
       CONNECTOR_ID=$(echo $CONNECTOR | jq -r '.id')
       printf $CONNECTOR_ID
    else
