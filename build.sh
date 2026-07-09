@@ -338,14 +338,19 @@ if [ "$synthetics" = "true" ]; then
 fi
 
 if [ "$remote_endpoint" != "na" ]; then
+    printf "deploying remote_endpoint...\n"
+
     cd utils/remote
 
     envsubst '$COURSE,$REPO' < remote.yaml | kubectl apply -f -
     cd ../..
+
+    printf "deploying remote_endpoint...SUCCESS\n"
 fi
 
 if [ "$assets" = "true" ]; then
-    
+    printf "deploying assets...\n"
+
     cd assets
 
     export JOB_ID=$(( $RANDOM ))
@@ -372,9 +377,13 @@ if [ "$assets" = "true" ]; then
     source $PWD/assets/scripts/features_dep.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 
     source $PWD/utils/wiki.js/install.sh -c $course -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -s $PWD
+
+    printf "deploying assets...SUCCESS\n"
 fi
 
 if [ "$grafana" = "true" ]; then
+    printf "deploying grafana...\n"
+
     cd utils/prometheus-grafana
 
     export elasticsearch_es_endpoint=$elasticsearch_es_endpoint
@@ -389,9 +398,11 @@ if [ "$grafana" = "true" ]; then
     envsubst '$elasticsearch_kibana_endpoint,$elasticsearch_es_endpoint,$elasticsearch_api_key,$COURSE,$REPO' < migrate.yaml | kubectl apply -f -
 
     cd ../..
+    printf "deploying grafana...SUCCESS\n"
 fi
 
 if [ "$logen" = "true" ]; then
+    printf "deploying logen...\n"
     cd utils/logen
 
     export COURSE=$course
@@ -399,6 +410,7 @@ if [ "$logen" = "true" ]; then
 
     envsubst '$COURSE,$REPO' < logen.yaml | kubectl apply -f -
     cd ../..
+    printf "deploying logen...SUCCESS\n"
 fi
 
 
