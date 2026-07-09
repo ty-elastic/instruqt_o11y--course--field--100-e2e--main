@@ -1,6 +1,7 @@
 arch=linux/amd64
 build=true
 branch=test
+repo=us-central1-docker.pkg.dev/elastic-sa/tbekiares
 
 OPTIND=1
 while getopts "a:b:r:" opt
