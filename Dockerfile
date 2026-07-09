@@ -44,6 +44,6 @@ COPY utils utils
 COPY build.sh .
 COPY install.sh .
 
-ENV KUBECONFIG=/kubeconfig
+ENV KUBECONFIG=/superdemo/.kube/kubeconfig
 
 CMD /superdemo/install.sh
