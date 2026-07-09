@@ -325,6 +325,10 @@ for current_region in "${regions[@]}"; do
                                     "message": "service_deployment='$SERVICE_VERSION'"
                                 }'
                         fi
+
+                        if [ "$current_service" = "proxy" ]; then
+                            retry_command_lin get_lb_address $namespace proxy-ext
+                        fi
                     fi
                 fi
             done
@@ -381,6 +385,7 @@ if [ "$assets" = "true" ]; then
     source $PWD/assets/scripts/features_dep.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 
     source $PWD/utils/wiki.js/install.sh -c $course -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -s $PWD
+    retry_command_lin get_lb_address wiki wiki-ext
 
     printf "deploying assets...SUCCESS\n"
 fi
@@ -400,6 +405,8 @@ if [ "$grafana" = "true" ]; then
     check_services infra
     kubectl -n infra wait --for=jsonpath='{.status.loadBalancer.ingress[0].ip}' service/grafana-ext --timeout=300s
     envsubst '$elasticsearch_kibana_endpoint,$elasticsearch_es_endpoint,$elasticsearch_api_key,$COURSE,$REPO' < migrate.yaml | kubectl apply -f -
+
+    retry_command_lin get_lb_address infra grafana-ext
 
     cd ../..
     printf "deploying grafana...SUCCESS\n"
