@@ -200,6 +200,10 @@ if [ "$build_lib" = "true" ]; then
     cd ..
 fi
 
+if [ "$prereq" == "true" ]; then
+    source $PWD/k8s/tools/ksm.sh
+fi
+
 if [ "$deploy_otel" != "false" ]; then
     # ---------- COLLECTOR
     if [ "$deploy_otel" = "true" ]; then
@@ -337,7 +341,7 @@ if [ "$synthetics" = "true" ]; then
     source $PWD/assets/scripts/synthetics.sh -t $elasticsearch_fleet_endpoint -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 fi
 
-if [ "$remote_endpoint" != "na" ]; then
+if [[ "$remote_endpoint" != "na" ]]; then
     printf "deploying remote_endpoint...\n"
 
     cd utils/remote
