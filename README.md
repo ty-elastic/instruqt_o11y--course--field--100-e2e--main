@@ -22,7 +22,7 @@ INGEST_URL="" # this needs to have a port (:443) at the end
 
 Make sure your active k8s context is pointed to your k8s cluster and that you have a `.env` file with the aforementioned environment variables.
 
-`install/run.sh`
+`install.sh`
 
 Wait for job to complete (~15 minutes)
 

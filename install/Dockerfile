@@ -34,8 +34,8 @@ COPY k8s k8s
 COPY utils utils
 
 COPY build.sh .
-COPY install.sh .
+COPY install/package.sh package.sh 
 
 #ENV KUBECONFIG=/superdemo/.kube/kubeconfig
 
-CMD /superdemo/install.sh
+CMD /superdemo/package.sh
