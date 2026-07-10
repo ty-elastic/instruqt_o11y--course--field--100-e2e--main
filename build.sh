@@ -200,6 +200,10 @@ if [ "$build_lib" = "true" ]; then
     cd ..
 fi
 
+if [ "$prereq" == "true" ]; then
+    source $PWD/k8s/tools/ksm.sh
+fi
+
 if [ "$deploy_otel" != "false" ]; then
     # ---------- COLLECTOR
     if [ "$deploy_otel" = "true" ]; then
@@ -321,6 +325,10 @@ for current_region in "${regions[@]}"; do
                                     "message": "service_deployment='$SERVICE_VERSION'"
                                 }'
                         fi
+
+                        if [ "$current_service" = "proxy" ]; then
+                            retry_command_lin get_lb_address $namespace proxy-ext
+                        fi
                     fi
                 fi
             done
@@ -337,15 +345,20 @@ if [ "$synthetics" = "true" ]; then
     source $PWD/assets/scripts/synthetics.sh -t $elasticsearch_fleet_endpoint -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 fi
 
-if [ "$remote_endpoint" != "na" ]; then
+if [[ "$remote_endpoint" != "na" ]]; then
+    printf "deploying remote_endpoint...\n"
+
     cd utils/remote
 
     envsubst '$COURSE,$REPO' < remote.yaml | kubectl apply -f -
     cd ../..
+
+    printf "deploying remote_endpoint...SUCCESS\n"
 fi
 
 if [ "$assets" = "true" ]; then
-    
+    printf "deploying assets...\n"
+
     cd assets
 
     export JOB_ID=$(( $RANDOM ))
@@ -372,9 +385,14 @@ if [ "$assets" = "true" ]; then
     source $PWD/assets/scripts/features_dep.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 
     source $PWD/utils/wiki.js/install.sh -c $course -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -s $PWD
+    retry_command_lin get_lb_address wiki wiki-ext
+
+    printf "deploying assets...SUCCESS\n"
 fi
 
 if [ "$grafana" = "true" ]; then
+    printf "deploying grafana...\n"
+
     cd utils/prometheus-grafana
 
     export elasticsearch_es_endpoint=$elasticsearch_es_endpoint
@@ -388,10 +406,14 @@ if [ "$grafana" = "true" ]; then
     kubectl -n infra wait --for=jsonpath='{.status.loadBalancer.ingress[0].ip}' service/grafana-ext --timeout=300s
     envsubst '$elasticsearch_kibana_endpoint,$elasticsearch_es_endpoint,$elasticsearch_api_key,$COURSE,$REPO' < migrate.yaml | kubectl apply -f -
 
+    retry_command_lin get_lb_address infra grafana-ext
+
     cd ../..
+    printf "deploying grafana...SUCCESS\n"
 fi
 
 if [ "$logen" = "true" ]; then
+    printf "deploying logen...\n"
     cd utils/logen
 
     export COURSE=$course
@@ -399,6 +421,7 @@ if [ "$logen" = "true" ]; then
 
     envsubst '$COURSE,$REPO' < logen.yaml | kubectl apply -f -
     cd ../..
+    printf "deploying logen...SUCCESS\n"
 fi
 
 

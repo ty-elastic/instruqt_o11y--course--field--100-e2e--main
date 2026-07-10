@@ -1,52 +1,67 @@
-# Install
+# Requirements
 
-## Dockerfile
+* modern Elasticsearch cluster accessible to a k8s cluster
 
-Build the dockerfile:
-```
-docker build -t superdemo_install .
-```
+# Bring Your Own k8s Cluster and Elasticsearch cluster
 
-### Environment variables
+Use this method if you already have a suitable app k8s cluster (at least one node with 16vCPUs and 64GB of RAM).
 
-Provide the following env vars to the docker container (e.g., in a `.env` file):
+## Environment variables
 
-```
-ENV ELASTICSEARCH_URL=""
-ENV ELASTICSEARCH_APIKEY=""
-ENV FLEET_URL=""
-ENV KIBANA_URL=""
-ENV INGEST_URL=""
-```
-
-### Kubernetes context
-
-Provide an active kubectl context to the docker container.
-
-### Run
+Put the following env vars into a `.env` file
 
 ```
-docker run --env-file .env -v /Users/tyrone.bekiares/.kube/config:/kubeconfig superdemo_install
+ELASTICSEARCH_URL=""
+ELASTICSEARCH_APIKEY=""
+FLEET_URL=""
+KIBANA_URL=""
+INGEST_URL="" # this needs to have a port (:443) at the end
 ```
 
-## Shell script
+## Install using in-cluster k8s job
 
-### Environment variables
+Make sure your active k8s context is pointed to your k8s cluster and that you have a `.env` file with the aforementioned environment variables.
 
-Define the following env vars:
+`./install.sh`
+
+Wait for job to complete (~15 minutes)
+
+# Bring Your Own Elasticsearch cluster
+
+Use this method if you need to create a suitable app k8s cluster (in GKE). 
+
+## Requirements
+
+* terraform
+* gcloud cli and suitable Google Cloud account
+
+## Environment variables
+
+Create a `terraform.tfvars` file in the `install/terraform` folder with the following variables filled in:
 
 ```
-export ELASTICSEARCH_URL=""
-export ELASTICSEARCH_APIKEY=""
-export FLEET_URL=""
-export KIBANA_URL=""
-export INGEST_URL=""
+project = ""
+region  = ""
+zone    = ""
+
+elasticsearch_url    = ""
+elasticsearch_apikey = ""
+fleet_url            = ""
+kibana_url           = ""
+ingest_url           = "" # this needs to have a port (:443) at the end
+
+labels = {
+  division   = ""
+  org        = ""
+  team       = ""
+  project    = ""
+  keep-until = ""
+}
 ```
 
-### Kubernetes context
+## Install using terraform
 
-Ensure you have an active k8s context pointing to the k8s cluster you want to install the services into.
-
-### Run
-
-./install.sh
+```
+cd terraform
+terraform apply
+```

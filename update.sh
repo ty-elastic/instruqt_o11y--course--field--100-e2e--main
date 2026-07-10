@@ -2,6 +2,7 @@ arch=linux/amd64
 repo=us-central1-docker.pkg.dev/elastic-sa/tbekiares
 build=true
 branch=test
+repo=us-central1-docker.pkg.dev/elastic-sa/tbekiares
 
 OPTIND=1
 while getopts "a:b:r:" opt
@@ -65,7 +66,6 @@ if [ "$build" = "true" ]; then
   ./build.sh -c $course -q true -b true -x true -s all
 
   docker buildx build --platform $arch \
-    --progress plain -t $repo/install:$course --output "type=registry,name=$repo/install:$course" .
-
+    --progress plain -t $repo/install:$course --output "type=registry,name=$repo/install:$course" -f install/Dockerfile .
 fi
 
