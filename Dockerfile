@@ -33,6 +33,7 @@ RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/s
     && rm kubectl
 
 RUN apt-get update && apt-get install -y --no-install-recommends google-cloud-cli-gke-gcloud-auth-plugin
+RUN ln -s /usr/bin/gke-gcloud-auth-plugin /opt/homebrew/share/google-cloud-sdk/bin/gke-gcloud-auth-plugin
 
 WORKDIR /superdemo
 
