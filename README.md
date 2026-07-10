@@ -1,6 +1,6 @@
 # Requirements
 
-* modern Elasticsearch cluster
+* modern Elasticsearch cluster accessible to a k8s cluster
 
 # Bring Your Own k8s Cluster and Elasticsearch cluster
 
@@ -22,7 +22,7 @@ INGEST_URL="" # this needs to have a port (:443) at the end
 
 Make sure your active k8s context is pointed to your k8s cluster and that you have a `.env` file with the aforementioned environment variables.
 
-`install/install.sh`
+`install/run.sh`
 
 Wait for job to complete (~15 minutes)
 
@@ -33,6 +33,7 @@ Use this method if you need to create a suitable k8s cluster (in GKE).
 ## Requirements
 
 * terraform
+* gcloud cli and suitable account
 
 ## Environment variables
 
