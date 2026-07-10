@@ -20,7 +20,7 @@ roleRef:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: superdemo-install-10
+  name: superdemo-install
   namespace: default
 spec:
   template:

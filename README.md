@@ -4,7 +4,7 @@
 
 # Bring Your Own k8s Cluster and Elasticsearch cluster
 
-Use this method if you already have a suitable k8s cluster (at least one node with 16vCPUs and 64GB of RAM).
+Use this method if you already have a suitable app k8s cluster (at least one node with 16vCPUs and 64GB of RAM).
 
 ## Environment variables
 
@@ -28,7 +28,7 @@ Wait for job to complete (~15 minutes)
 
 # Bring Your Own Elasticsearch cluster
 
-Use this method if you need to create a suitable k8s cluster (in GKE). 
+Use this method if you need to create a suitable app k8s cluster (in GKE). 
 
 ## Requirements
 
