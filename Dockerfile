@@ -18,12 +18,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gettext-base jq \
     && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get install ca-certificates curl
-RUN curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
-RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-RUN apt-get update && apt-get install -y google-cloud-cli
-
-
 RUN curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4 \
     && chmod 700 get_helm.sh \
     && ./get_helm.sh
@@ -31,10 +25,6 @@ RUN curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/s
 RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
     && install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl \
     && rm kubectl
-
-RUN apt-get update && apt-get install -y --no-install-recommends google-cloud-cli-gke-gcloud-auth-plugin
-RUN mkdir -p /opt/homebrew/share/google-cloud-sdk/bin
-RUN ln -s /usr/bin/gke-gcloud-auth-plugin /opt/homebrew/share/google-cloud-sdk/bin/gke-gcloud-auth-plugin
 
 WORKDIR /superdemo
 
