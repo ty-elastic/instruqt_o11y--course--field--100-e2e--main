@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubectl-pod-sa
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kubectl-pod-admin-binding
+subjects:
+  - kind: ServiceAccount
+    name: kubectl-pod-sa
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin # Use a more restrictive role in production
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: superdemo-install-10
+  namespace: default
+spec:
+  template:
+    spec:
+      serviceAccountName: kubectl-pod-sa # Binds the RBAC permissions
+      containers:
+        - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/install:$COURSE
+          name: superdemo-install
+          imagePullPolicy: Always
+          env:
+            - name: COURSE
+              value: "$COURSE"
+            - name: ELASTICSEARCH_URL
+              value: "$ELASTICSEARCH_URL"
+            - name: ELASTICSEARCH_APIKEY
+              value: "$ELASTICSEARCH_APIKEY"
+            - name: FLEET_URL
+              value: "$FLEET_URL"
+            - name: KIBANA_URL
+              value: "$KIBANA_URL"
+            - name: INGEST_URL
+              value: "$INGEST_URL"
+      restartPolicy: Never
+---

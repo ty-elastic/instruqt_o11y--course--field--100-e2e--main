@@ -4,7 +4,7 @@ FROM debian:12-slim
 # 2. Prevent interactive prompts during package installation
 ARG DEBIAN_FRONTEND=noninteractive
 
-ENV COURSE=o11y--course--field--100-e2e--serverless
+ENV COURSE=o11y--course--field--100-e2e--test
 ENV ELASTICSEARCH_URL=""
 ENV ELASTICSEARCH_APIKEY=""
 ENV FLEET_URL=""
