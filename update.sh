@@ -65,5 +65,5 @@ if [ "$build" = "true" ]; then
   ./build.sh -c $course -q true -b true -x true -s all
 
   docker buildx build --platform $arch \
-    --progress plain -t $repo/install:$course --output "type=registry,name=$repo/install:$course" install
+    --progress plain -t $repo/install:$course --output "type=registry,name=$repo/install:$course" -f install/Dockerfile .
 fi
