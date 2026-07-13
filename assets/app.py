@@ -728,11 +728,16 @@ def load_agents(kibana_server, kibana_auth):
                         existing['configuration']['skill_ids'] = list(set(agent['configuration']['skill_ids'] + existing['configuration']['skill_ids']))
                         existing['configuration']['tools'][0]['tool_ids'] = list(set(agent['configuration']['tools'][0]['tool_ids'] + existing['configuration']['tools'][0]['tool_ids']))
 
-                        del existing['readonly']
-                        del existing['type']
-                        del existing['id']
-                        del existing['access_control']
-                        del existing['permissions']
+                        if 'readonly' in existing:
+                            del existing['readonly']
+                        if 'type' in existing:
+                            del existing['type']
+                        if 'id' in existing:
+                            del existing['id']
+                        if 'access_control' in existing:
+                            del existing['access_control']
+                        if 'permissions' in existing:
+                            del existing['permissions']
                         if 'created_by' in existing:
                             del existing['created_by']
 
