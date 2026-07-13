@@ -1,0 +1,6 @@
+current-context: default
+contexts:
+  default:
+    elasticsearch_url: "$elasticsearch_es_endpoint"
+    kibana_url: "$elasticsearch_kibana_endpoint"
+    api_key: "$elasticsearch_api_key"

@@ -1,0 +1,145 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: infra
+  labels:
+    name: infra
+---
+apiVersion: v1
+data:
+  config.yaml: |-
+    current-context: default
+    contexts:
+      default:
+        elasticsearch_url: "$elasticsearch_es_endpoint"
+        kibana_url: "$elasticsearch_kibana_endpoint"
+        api_key: "$elasticsearch_api_key"
+kind: ConfigMap
+metadata:
+  labels:
+    service: ramen
+  name: ramen-config-yaml
+  namespace: infra
+---
+apiVersion: v1
+data:
+  elastic_ramen.json: |-
+    {
+      "\$schema": "https://elastic.co/config.json",
+      "provider": {
+        "kibana": {
+          "name": "Kibana LLM Gateway",
+          "id": "kibana",
+          "npm": "@ai-sdk/openai-compatible",
+          "env": [],
+          "models": {
+            "default": {
+              "id": "default",
+              "name": "Default Connector",
+              "attachment": false,
+              "reasoning": false,
+              "temperature": true,
+              "tool_call": true,
+              "release_date": "2025-01-01",
+              "cost": {
+                "input": 0,
+                "output": 0
+              },
+              "limit": {
+                "context": 128000,
+                "output": 8192
+              }
+            }
+          },
+          "options": {
+            "baseURL": "$elasticsearch_kibana_endpoint/internal/elastic_ramen/v1",
+            "apiKey": "ignored",
+            "headers": {
+              "Authorization": "ApiKey $elasticsearch_api_key",
+              "kbn-xsrf": "true",
+              "x-elastic-internal-origin": "kibana",
+              "elastic-api-version": "2023-10-31"
+            }
+          }
+        }
+      },
+      "model": "kibana/default",
+      "mcp": {
+        "eab": {
+          "type": "local",
+          "command": [
+            "elastic",
+            "ab",
+            "mcp",
+            "proxy"
+          ],
+          "enabled": true
+        }
+      },
+      "permission": {
+        "eab_*": "allow"
+      }
+    }
+kind: ConfigMap
+metadata:
+  labels:
+    service: ramen
+  name: ramen-config-json
+  namespace: infra
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ttyd
+  namespace: infra
+  labels:
+    service: ttyd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: ttyd
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        service: ttyd
+      annotations:
+        io.opentelemetry.discovery.logs/enabled: "true"
+    spec:
+      containers:
+          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/ttyd:$COURSE
+          name: ttyd
+          ports:
+            - containerPort: 7681
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /root/.config/elastic/config.yaml
+              name: ramen-config-yaml
+            - mountPath: /root/elastic_ramen.json
+              name: ramen-config-json
+      restartPolicy: Always
+      volumes:
+        - name: ramen-config-yaml
+          configMap:
+            name: ramen-config-yaml
+        - name: ramen-config-json
+          configMap:
+            name: ramen-config-json 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service: ttyd
+  name: ttyd-ext
+  namespace: infra
+spec:
+  ports:
+    - name: "7681"
+      port: 7681
+      targetPort: 7681
+  type: LoadBalancer
+  selector:
+    service: ttyd
