@@ -52,6 +52,11 @@ resource "google_container_node_pool" "primary_nodes" {
       disable-legacy-endpoints = "true"
     }
 
+    advanced_machine_features {
+      threads_per_core = 2
+      enable_nested_virtualization = true
+    }
+
     shielded_instance_config {
       enable_secure_boot          = false
       enable_integrity_monitoring = true

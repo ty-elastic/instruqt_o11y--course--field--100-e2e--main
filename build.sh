@@ -355,7 +355,7 @@ if [ "$remote" = "true"  ]; then
 
     retry_command_lin get_lb_address utils remote-ext
 
-    export remote_endpoint=http://SERVICE_IP:SERVICE_PORT
+    export remote_endpoint=http://$SERVICE_IP:$SERVICE_PORT
 
     printf "deploying remote_endpoint $remote_endpoint...SUCCESS\n"
 fi
