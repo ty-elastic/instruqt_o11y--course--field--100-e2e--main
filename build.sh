@@ -47,13 +47,13 @@ deploy_service=false
 annotations=false
 synthetics=false
 prereq=false
+remote=false
 
 elasticsearch_es_endpoint="na"
 elasticsearch_kibana_endpoint="na"
 elasticsearch_api_key="na"
 elasticsearch_otlp_endpoint="na"
 elasticsearch_fleet_endpoint="na"
-remote_endpoint="na"
 working_dir="$PWD"
 
 proxy_port=8081
@@ -90,7 +90,7 @@ do
       v ) service_version="$OPTARG" ;;
 
       p ) profiling="$OPTARG" ;;
-      e ) remote_endpoint="$OPTARG" ;;
+      e ) remote="$OPTARG" ;;
 
       h ) elasticsearch_kibana_endpoint="$OPTARG" ;;
       i ) elasticsearch_api_key="$OPTARG" ;;
@@ -345,7 +345,7 @@ if [ "$synthetics" = "true" ]; then
     source $PWD/assets/scripts/synthetics.sh -t $elasticsearch_fleet_endpoint -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 fi
 
-if [[ "$remote_endpoint" != "na" ]]; then
+if [ "$remote" = "true"  ]; then
     printf "deploying remote_endpoint...\n"
 
     cd utils/remote
@@ -353,7 +353,11 @@ if [[ "$remote_endpoint" != "na" ]]; then
     envsubst '$COURSE,$REPO' < remote.yaml | kubectl apply -f -
     cd ../..
 
-    printf "deploying remote_endpoint...SUCCESS\n"
+    retry_command_lin get_lb_address utils remote-ext
+
+    export remote_endpoint=http://SERVICE_IP:SERVICE_PORT
+
+    printf "deploying remote_endpoint $remote_endpoint...SUCCESS\n"
 fi
 
 if [ "$assets" = "true" ]; then
