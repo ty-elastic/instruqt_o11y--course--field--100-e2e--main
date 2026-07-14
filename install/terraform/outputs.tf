@@ -106,5 +106,5 @@ output "ramen_url" {
 }
 
 output "windows_url" {
-  value = "http://${data.kubernetes_service_v1.windows_ext.status[0].load_balancer[0].ingress[0].ip}:${data.kubernetes_service_v1.windows_ext.spec[0].port[0].port}"
+  value = "http://${data.kubernetes_service_v1.windows_ext.status[0].load_balancer[0].ingress[0].ip}:${data.kubernetes_service_v1.windows_ext.spec[0].port[0].port}/guacamole"
 }

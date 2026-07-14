@@ -43,7 +43,7 @@ steps:
 
 - name: check_approval
   type: if
-  condition: "steps.review.output.approved : true"
+  condition: '${{ steps.review.output.response.approved }}'
   steps:
     - name: call_remote
       type: http

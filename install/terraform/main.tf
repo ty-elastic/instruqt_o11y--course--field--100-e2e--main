@@ -126,11 +126,6 @@ resource "google_container_node_pool" "primary_nodes" {
       disable-legacy-endpoints = "true"
     }
 
-    # advanced_machine_features {
-    #   threads_per_core = 2
-    #   enable_nested_virtualization = true
-    # }
-
     shielded_instance_config {
       enable_secure_boot          = false
       enable_integrity_monitoring = true
@@ -248,6 +243,21 @@ resource "kubernetes_job_v1" "install" {
   ]
 }
 
+locals {
+  windows_startup_auth = <<-EOT
+      $username = "win${random_string.windows_username.result}"
+      $password = '${random_password.windows_password.result}'
+      $securePassword = ConvertTo-SecureString $password -AsPlainText -Force
+      if (-not (Get-LocalUser -Name $username -ErrorAction SilentlyContinue)) {
+        New-LocalUser -Name $username -Password $securePassword -PasswordNeverExpires
+        Add-LocalGroupMember -Group "Administrators" -Member $username
+      }
+    EOT
+  windows_startup_setup  = file("${path.module}/../../utils/windows/setup.ps")
+
+  windows_startup_script = "${local.windows_startup_auth}\n${local.windows_startup_setup}\n"
+}
+
 resource "google_compute_instance" "windows_server" {
   name         = "${local.cluster_name}-windows"
   machine_type = "n1-standard-4"
@@ -269,15 +279,7 @@ resource "google_compute_instance" "windows_server" {
   }
 
   metadata = {
-    windows-startup-script-ps1 = <<-EOT
-      $username = "win${random_string.windows_username.result}"
-      $password = '${random_password.windows_password.result}'
-      $securePassword = ConvertTo-SecureString $password -AsPlainText -Force
-      if (-not (Get-LocalUser -Name $username -ErrorAction SilentlyContinue)) {
-        New-LocalUser -Name $username -Password $securePassword -PasswordNeverExpires
-        Add-LocalGroupMember -Group "Administrators" -Member $username
-      }
-    EOT
+    windows-startup-script-ps1 = locals.windows_startup_script
   }
 
   labels = var.labels

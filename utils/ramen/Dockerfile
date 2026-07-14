@@ -15,9 +15,9 @@ FROM debian:13-slim as run
 # 2. Prevent interactive prompts during package installation
 ARG DEBIAN_FRONTEND=noninteractive
 
-WORKDIR /superdemo
+WORKDIR /root
 
-COPY --from=builder /usr/local/bin/ttyd .
+COPY --from=builder /usr/local/bin/ttyd /usr/local/bin/ttyd
 
 # 4. Install required tools and dependencies cleanly
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -37,4 +37,4 @@ RUN mkdir -p "/root/.config/elastic"
 
 RUN curl -fsSL https://raw.githubusercontent.com/elastic/elastic-ramen/dev/install | bash
 
-CMD /superdemo/ttyd -w /root -c user:password --writable bash
+CMD /usr/local/bin/ttyd -w /root -c user:password --writable bash
