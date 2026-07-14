@@ -377,7 +377,7 @@ if [ "$ramen" = "true"  ]; then
     export COURSE=$COURSE
     export REPO=$REPO
 
-    envsubst '$COURSE,$REPO,$elasticsearch_kibana_endpoint,$elasticsearch_api_key,$elasticsearch_es_endpoint' < ramen.yaml  | kubectl apply -f 
+    envsubst '$COURSE,$REPO,$elasticsearch_kibana_endpoint,$elasticsearch_api_key,$elasticsearch_es_endpoint' < ramen.yaml  | kubectl apply -f -
     retry_command_lin get_lb_address infra ramen-ext
     
     cd ../..
