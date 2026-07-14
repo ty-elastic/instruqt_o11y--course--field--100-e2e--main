@@ -1,5 +1,10 @@
+locals {
+  # String interpolation combining both variables
+  cluster_name = "${var.cluster_name}-${var.labels.project}"
+}
+
 resource "google_container_cluster" "primary" {
-  name     = var.cluster_name
+  name     = local.cluster_name
   location = var.zone
 
   release_channel {
@@ -11,8 +16,8 @@ resource "google_container_cluster" "primary" {
   deletion_protection      = false
 
   networking_mode = "VPC_NATIVE"
-  network         = "projects/${var.project}/global/networks/default"
-  subnetwork      = "projects/${var.project}/regions/${var.region}/subnetworks/default"
+  network         = "projects/${var.project}/global/networks/${local.cluster_name}"
+  subnetwork      = "projects/${var.project}/regions/${var.region}/subnetworks/${local.cluster_name}"
 
   # Constrain the pod/service ranges. A /20 (4096 pod IPs) is ample for a 
   # 1-node demo cluster.
@@ -37,7 +42,7 @@ resource "google_container_cluster" "primary" {
 }
 
 resource "google_container_node_pool" "primary_nodes" {
-  name       = "${var.cluster_name}-pool"
+  name       = "${local.cluster_name}-pool"
   cluster    = google_container_cluster.primary.id
   location   = var.zone
   node_count = var.node_count
@@ -52,10 +57,10 @@ resource "google_container_node_pool" "primary_nodes" {
       disable-legacy-endpoints = "true"
     }
 
-    advanced_machine_features {
-      threads_per_core = 2
-      enable_nested_virtualization = true
-    }
+    # advanced_machine_features {
+    #   threads_per_core = 2
+    #   enable_nested_virtualization = true
+    # }
 
     shielded_instance_config {
       enable_secure_boot          = false

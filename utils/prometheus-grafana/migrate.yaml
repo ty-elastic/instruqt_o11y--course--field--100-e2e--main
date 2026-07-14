@@ -25,7 +25,6 @@ spec:
             - "api"
             - "--assets"
             - "all"
-            - "--native-promql"
             - "--upload"
             - "--kibana-url"
             - $elasticsearch_kibana_endpoint

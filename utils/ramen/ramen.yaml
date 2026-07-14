@@ -19,7 +19,7 @@ metadata:
   labels:
     service: ramen
   name: ramen-config-yaml
-  namespace: infra
+  namespace: default
 ---
 apiVersion: v1
 data:
@@ -85,13 +85,13 @@ metadata:
   labels:
     service: ramen
   name: ramen-config-json
-  namespace: infra
+  namespace: default
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: kubectl-pod-sa
-  namespace: infra
+  namespace: default
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -100,7 +100,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: kubectl-pod-sa
-    namespace: infra
+    namespace: default
 roleRef:
   kind: ClusterRole
   name: cluster-admin # Use a more restrictive role in production
@@ -110,7 +110,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ramen
-  namespace: infra
+  namespace: default
   labels:
     service: ramen
 spec:
@@ -157,7 +157,7 @@ metadata:
   labels:
     service: ramen
   name: ramen-ext
-  namespace: infra
+  namespace: default
 spec:
   ports:
     - name: ramen
