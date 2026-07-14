@@ -1,3 +1,16 @@
+output "windows_host" {
+  value = google_compute_instance.windows_server.network_interface[0].network_ip
+}
+
+output "windows_username" {
+  value = "win${random_string.windows_username.result}"
+}
+
+output "windows_password" {
+  value     = random_password.windows_password.result
+  sensitive = true
+}
+
 output "cluster_name" {
   value = google_container_cluster.primary.name
 }
@@ -57,6 +70,15 @@ data "kubernetes_service_v1" "grafana_ext" {
 data "kubernetes_service_v1" "ramen_ext" {
   metadata {
     name      = "ramen-ext"
+    namespace = "default"
+  }
+
+  depends_on = [kubernetes_job_v1.install]
+}
+
+data "kubernetes_service_v1" "windows_ext" {
+  metadata {
+    name      = "windows-ext"
     namespace = "infra"
   }
 
@@ -81,4 +103,8 @@ output "grafana_url" {
 
 output "ramen_url" {
   value = "http://${data.kubernetes_service_v1.ramen_ext.status[0].load_balancer[0].ingress[0].ip}:${data.kubernetes_service_v1.ramen_ext.spec[0].port[0].port}"
+}
+
+output "windows_url" {
+  value = "http://${data.kubernetes_service_v1.windows_ext.status[0].load_balancer[0].ingress[0].ip}:${data.kubernetes_service_v1.windows_ext.spec[0].port[0].port}"
 }

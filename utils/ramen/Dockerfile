@@ -21,7 +21,7 @@ COPY --from=builder /usr/local/bin/ttyd .
 
 # 4. Install required tools and dependencies cleanly
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
+    curl vim-tiny \
     ca-certificates \
     libjson-c-dev libwebsockets-dev \
     && rm -rf /var/lib/apt/lists/*
@@ -37,4 +37,4 @@ RUN mkdir -p "/root/.config/elastic"
 
 RUN curl -fsSL https://raw.githubusercontent.com/elastic/elastic-ramen/dev/install | bash
 
-CMD /superdemo/ttyd -c user:password --writable bash
+CMD /superdemo/ttyd -w /root -c user:password --writable bash

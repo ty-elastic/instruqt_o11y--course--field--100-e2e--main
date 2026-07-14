@@ -25,7 +25,7 @@ apiVersion: v1
 data:
   elastic_ramen.json: |-
     {
-      "\$schema": "https://elastic.co/config.json",
+      "$schema": "https://elastic.co/config.json",
       "provider": {
         "kibana": {
           "name": "Kibana LLM Gateway",
@@ -165,6 +165,7 @@ spec:
       port: 7681
       targetPort: 7681
   type: LoadBalancer
+  sessionAffinity: ClientIP 
   selector:
     service: ramen
 

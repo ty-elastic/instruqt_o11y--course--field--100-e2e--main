@@ -3,6 +3,77 @@ locals {
   cluster_name = "${var.cluster_name}-${var.labels.project}"
 }
 
+# Windows username: "win" prefix + 8 lowercase letters (max 20 chars, no special chars)
+resource "random_string" "windows_username" {
+  length  = 8
+  upper   = false
+  numeric = false
+  special = false
+}
+
+# Windows password: 24 alphanumeric chars, meets complexity (upper + lower + numeric = 3 categories)
+resource "random_password" "windows_password" {
+  length      = 24
+  upper       = true
+  lower       = true
+  numeric     = true
+  special     = false
+  min_upper   = 4
+  min_lower   = 4
+  min_numeric = 4
+}
+
+resource "google_compute_network" "main" {
+  name                    = local.cluster_name
+  auto_create_subnetworks = false
+}
+
+resource "google_compute_subnetwork" "main" {
+  name          = local.cluster_name
+  ip_cidr_range = "10.0.0.0/24"
+  region        = var.region
+  network       = google_compute_network.main.id
+
+  secondary_ip_range {
+    range_name    = "pods"
+    ip_cidr_range = "10.1.0.0/16"
+  }
+
+  secondary_ip_range {
+    range_name    = "services"
+    ip_cidr_range = "10.2.0.0/20"
+  }
+}
+
+# Allow all internal traffic within the subnet (required for GKE node communication)
+resource "google_compute_firewall" "allow_internal" {
+  name    = "${local.cluster_name}-allow-internal"
+  network = google_compute_network.main.self_link
+
+  allow { protocol = "tcp" }
+  allow { protocol = "udp" }
+  allow { protocol = "icmp" }
+
+  source_ranges = [
+    google_compute_subnetwork.main.ip_cidr_range,
+    google_compute_subnetwork.main.secondary_ip_range[0].ip_cidr_range,
+  ]
+}
+
+# RDP reachable only from within the shared VPC subnet
+resource "google_compute_firewall" "rdp_internal" {
+  name    = "${local.cluster_name}-rdp-internal"
+  network = google_compute_network.main.self_link
+
+  allow {
+    protocol = "tcp"
+    ports    = ["3389"]
+  }
+
+  target_tags   = ["windows-rdp"]
+  source_ranges = [google_compute_subnetwork.main.ip_cidr_range]
+}
+
 resource "google_container_cluster" "primary" {
   name     = local.cluster_name
   location = var.zone
@@ -16,14 +87,12 @@ resource "google_container_cluster" "primary" {
   deletion_protection      = false
 
   networking_mode = "VPC_NATIVE"
-  network         = "projects/${var.project}/global/networks/${local.cluster_name}"
-  subnetwork      = "projects/${var.project}/regions/${var.region}/subnetworks/${local.cluster_name}"
+  network         = google_compute_network.main.self_link
+  subnetwork      = google_compute_subnetwork.main.self_link
 
-  # Constrain the pod/service ranges. A /20 (4096 pod IPs) is ample for a 
-  # 1-node demo cluster.
   ip_allocation_policy {
-    cluster_ipv4_cidr_block  = "/20"
-    services_ipv4_cidr_block = "/24"
+    cluster_secondary_range_name  = "pods"
+    services_secondary_range_name = "services"
   }
 
   addons_config {
@@ -150,6 +219,18 @@ resource "kubernetes_job_v1" "install" {
             name  = "INGEST_URL"
             value = var.ingest_url
           }
+          env {
+            name  = "WINDOWS_HOST_IP"
+            value = google_compute_instance.windows_server.network_interface[0].network_ip
+          }
+          env {
+            name  = "WINDOWS_HOST_USERNAME"
+            value = "win${random_string.windows_username.result}"
+          }
+          env {
+            name  = "WINDOWS_HOST_PASSWORD"
+            value = random_password.windows_password.result
+          }
         }
       }
     }
@@ -161,5 +242,43 @@ resource "kubernetes_job_v1" "install" {
     create = var.job_timeout
   }
 
-  depends_on = [google_container_node_pool.primary_nodes]
+  depends_on = [
+    google_container_node_pool.primary_nodes,
+    google_compute_instance.windows_server,
+  ]
+}
+
+resource "google_compute_instance" "windows_server" {
+  name         = "${local.cluster_name}-windows"
+  machine_type = "n1-standard-4"
+  zone         = var.zone
+
+  tags = ["windows-rdp"]
+
+  boot_disk {
+    initialize_params {
+      image = "windows-cloud/windows-2022"
+      size  = 100
+      type  = "pd-balanced"
+    }
+  }
+
+  network_interface {
+    network    = google_compute_network.main.self_link
+    subnetwork = google_compute_subnetwork.main.self_link
+  }
+
+  metadata = {
+    windows-startup-script-ps1 = <<-EOT
+      $username = "win${random_string.windows_username.result}"
+      $password = '${random_password.windows_password.result}'
+      $securePassword = ConvertTo-SecureString $password -AsPlainText -Force
+      if (-not (Get-LocalUser -Name $username -ErrorAction SilentlyContinue)) {
+        New-LocalUser -Name $username -Password $securePassword -PasswordNeverExpires
+        Add-LocalGroupMember -Group "Administrators" -Member $username
+      }
+    EOT
+  }
+
+  labels = var.labels
 }

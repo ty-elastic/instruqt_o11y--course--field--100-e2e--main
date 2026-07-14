@@ -49,6 +49,7 @@ synthetics=false
 prereq=false
 remote=false
 ramen=false
+windows=false
 
 elasticsearch_es_endpoint="na"
 elasticsearch_kibana_endpoint="na"
@@ -67,11 +68,18 @@ case "${unameOut}" in
 esac
 
 OPTIND=1
-while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:n:z:u:t:1:q:2:" opt
+while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:n:z:u:t:1:q:2:3:4:5:6:" opt
 do
    case "$opt" in 
       1 ) prereq="$OPTARG" ;;
       2 ) ramen="$OPTARG" ;;
+      3 ) windows="$OPTARG" ;;  
+
+      4 ) windows_host_ip="$OPTARG" ;;
+      5 ) windows_username="$OPTARG" ;;
+      6 ) windows_password="$OPTARG" ;;  
+
+
       a ) arch="$OPTARG" ;;
       c ) course="$OPTARG" ;;
       s ) service="$OPTARG" ;;
@@ -378,7 +386,7 @@ if [ "$ramen" = "true"  ]; then
     export REPO=$REPO
 
     envsubst '$COURSE,$REPO,$elasticsearch_kibana_endpoint,$elasticsearch_api_key,$elasticsearch_es_endpoint' < ramen.yaml  | kubectl apply -f -
-    retry_command_lin get_lb_address infra ramen-ext
+    retry_command_lin get_lb_address default ramen-ext
     
     cd ../..
 
@@ -455,5 +463,17 @@ if [ "$logen" = "true" ]; then
     printf "deploying logen...SUCCESS\n"
 fi
 
+if [ "$windows" = "true" ]; then
+    printf "deploying windows...\n"
+    cd utils/windows
 
+    export WINDOWS_HOST=$windows_host_ip
+    export WINDOWS_HOST_USERNAME=$windows_username
+    export WINDOWS_HOST_PASSWORD=$windows_password
 
+    envsubst '$WINDOWS_HOST,$WINDOWS_HOST_USERNAME,$WINDOWS_HOST_PASSWORD' < windows.yaml | kubectl apply -f -
+    retry_command_lin get_lb_address infra windows-ext
+
+    cd ../..
+    printf "deploying windows...SUCCESS\n"
+fi

@@ -26,3 +26,7 @@ fi
 
 # grafana
 ./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL -g true
+
+# windows
+./build.sh -c $COURSE -3 true -4 $WINDOWS_HOST_IP -5 $WINDOWS_HOST_USERNAME -6 $WINDOWS_HOST_PASSWORD
+
