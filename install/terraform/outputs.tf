@@ -54,6 +54,15 @@ data "kubernetes_service_v1" "grafana_ext" {
   depends_on = [kubernetes_job_v1.install]
 }
 
+data "kubernetes_service_v1" "ramen_ext" {
+  metadata {
+    name      = "ramen-ext"
+    namespace = "infra"
+  }
+
+  depends_on = [kubernetes_job_v1.install]
+}
+
 output "wiki_url" {
   value = "http://${data.kubernetes_service_v1.wiki_ext.status[0].load_balancer[0].ingress[0].ip}:${data.kubernetes_service_v1.wiki_ext.spec[0].port[0].port}"
 }
@@ -68,4 +77,8 @@ output "trader_emea_url" {
 
 output "grafana_url" {
   value = "http://${data.kubernetes_service_v1.grafana_ext.status[0].load_balancer[0].ingress[0].ip}:${data.kubernetes_service_v1.grafana_ext.spec[0].port[0].port}"
+}
+
+output "ramen_url" {
+  value = "http://${data.kubernetes_service_v1.ramen_ext.status[0].load_balancer[0].ingress[0].ip}:${data.kubernetes_service_v1.ramen_ext.spec[0].port[0].port}"
 }

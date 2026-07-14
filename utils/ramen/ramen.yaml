@@ -87,38 +87,61 @@ metadata:
   name: ramen-config-json
   namespace: infra
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubectl-pod-sa
+  namespace: infra
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kubectl-pod-admin-binding
+subjects:
+  - kind: ServiceAccount
+    name: kubectl-pod-sa
+    namespace: infra
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin # Use a more restrictive role in production
+  apiGroup: rbac.authorization.k8s.io
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ttyd
+  name: ramen
   namespace: infra
   labels:
-    service: ttyd
+    service: ramen
 spec:
   replicas: 1
   selector:
     matchLabels:
-      service: ttyd
+      service: ramen
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        service: ttyd
+        service: ramen
       annotations:
         io.opentelemetry.discovery.logs/enabled: "true"
     spec:
+      serviceAccountName: kubectl-pod-sa # Binds the RBAC permissions
       containers:
-          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/ttyd:$COURSE
-          name: ttyd
+        - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/ramen:$COURSE
+          imagePullPolicy: Always
+          name: ramen
           ports:
             - containerPort: 7681
               protocol: TCP
           volumeMounts:
             - mountPath: /root/.config/elastic/config.yaml
               name: ramen-config-yaml
+              subPath: config.yaml
             - mountPath: /root/elastic_ramen.json
               name: ramen-config-json
+              subPath: elastic_ramen.json
       restartPolicy: Always
       volumes:
         - name: ramen-config-yaml
@@ -132,14 +155,16 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    service: ttyd
-  name: ttyd-ext
+    service: ramen
+  name: ramen-ext
   namespace: infra
 spec:
   ports:
-    - name: "7681"
+    - name: ramen
+      protocol: TCP
       port: 7681
       targetPort: 7681
   type: LoadBalancer
   selector:
-    service: ttyd
+    service: ramen
+

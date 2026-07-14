@@ -48,6 +48,7 @@ annotations=false
 synthetics=false
 prereq=false
 remote=false
+ramen=false
 
 elasticsearch_es_endpoint="na"
 elasticsearch_kibana_endpoint="na"
@@ -66,10 +67,11 @@ case "${unameOut}" in
 esac
 
 OPTIND=1
-while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:n:z:u:t:1:q:" opt
+while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:n:z:u:t:1:q:2:" opt
 do
    case "$opt" in 
       1 ) prereq="$OPTARG" ;;
+      2 ) ramen="$OPTARG" ;;
       a ) arch="$OPTARG" ;;
       c ) course="$OPTARG" ;;
       s ) service="$OPTARG" ;;
@@ -164,6 +166,10 @@ if [ "$build_infra" = "true" ]; then
   cd ../..
 
   cd ./utils/logen
+  ./build.sh -c $course
+  cd ../..
+
+  cd ./utils/ramen
   ./build.sh -c $course
   cd ../..
 
@@ -358,6 +364,27 @@ if [ "$remote" = "true"  ]; then
     export remote_endpoint=http://$SERVICE_IP:$SERVICE_PORT
 
     printf "deploying remote_endpoint $remote_endpoint...SUCCESS\n"
+fi
+
+if [ "$ramen" = "true"  ]; then
+    printf "deploying ramen...\n"
+
+    cd utils/ramen
+
+    export elasticsearch_kibana_endpoint=$elasticsearch_kibana_endpoint
+    export elasticsearch_es_endpoint=$elasticsearch_es_endpoint
+    export elasticsearch_api_key=$elasticsearch_api_key 
+    export COURSE=$COURSE
+    export REPO=$REPO
+
+    envsubst '$COURSE,$REPO,$elasticsearch_kibana_endpoint,$elasticsearch_api_key,$elasticsearch_es_endpoint' < ramen.yaml  | kubectl apply -f 
+    retry_command_lin get_lb_address infra ramen-ext
+    
+    cd ../..
+
+    source $PWD/assets/scripts/ramen.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint 
+
+    printf "deploying ramen...SUCCESS\n"
 fi
 
 if [ "$assets" = "true" ]; then

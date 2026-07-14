@@ -33,6 +33,7 @@ RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/s
 # RAMEN
 RUN mkdir -p "/root/.config/elastic-ramen"
 COPY AGENTS.md /root/.config/elastic-ramen/AGENTS.md
+RUN mkdir -p "/root/.config/elastic"
 
 RUN curl -fsSL https://raw.githubusercontent.com/elastic/elastic-ramen/dev/install | bash
 
