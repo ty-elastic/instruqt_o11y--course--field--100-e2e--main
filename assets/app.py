@@ -221,7 +221,7 @@ def load_workflows(kibana_server, kibana_auth, es_host, remote_host = None):
 
 #
 
-def load_synthetics(kibana_server, kibana_auth, namespaces):
+def load_synthetics(kibana_server, kibana_auth, namespaces, iis_endpoint):
 
     directory_path = "synthetics"
     target_extension = ".json"
@@ -254,6 +254,9 @@ def load_synthetics(kibana_server, kibana_auth, namespaces):
                         print("one namespace")
                         with open(full_path, 'r') as fileo:
                             synthetic = json.load(fileo)
+
+                            synthetic['inline_script'] = synthetic['inline_script'].replace('$IIS_ENDPOINT', iis_endpoint)
+
                             #print(synthetic)
                             resp = requests.post(f"{kibana_server}/api/synthetics/monitors",
                                                 json=synthetic,
@@ -796,6 +799,7 @@ def run_workflow(kibana_server, kibana_auth, workflow_name):
 
 @click.command()
 @click.option('--kibana_host', default="", help='address of kibana server')
+@click.option('--iis_endpoint', default="", help='address of iis server')
 @click.option('--es_host', default="", help='address of elasticsearch server')
 @click.option('--es_apikey', default="", help='apikey for auth')
 @click.option('--es_authbasic', default="", help='basic for auth')
@@ -804,7 +808,7 @@ def run_workflow(kibana_server, kibana_auth, workflow_name):
 @click.option('--namespaces', default="trading-na,trading-emea", help='namespaces')
 @click.option('--services', default="trader,router,recorder-java,recorder-go", help='services')
 @click.argument('action')
-def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, remote_host, namespaces, services):
+def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, remote_host, namespaces, services, iis_endpoint):
     
 
     namespaces_split = namespaces.split(',')
@@ -844,7 +848,7 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, 
         load_new_knowledge(es_host, auth)
         print('done')
     elif action == 'load_synthetics':
-        load_synthetics(kibana_host, auth, namespaces_split)
+        load_synthetics(kibana_host, auth, namespaces_split, iis_endpoint)
         print('done')
     elif action == 'backup_tools':
         backup_agent_tools(kibana_host, auth)

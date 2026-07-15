@@ -4,5 +4,5 @@
   "tags": ["iis"],
   "private_locations": ["host-1"],
   "schedule": 1,
-  "inline_script": "step('Go to http://windows', async () => {await page.goto('http://windows');});"
+  "inline_script": "step('Go to http://$IIS_HOST', async () => {await page.goto('http://$IIS_HOST');});"
 }

@@ -21,6 +21,8 @@ spec:
             - "$elasticsearch_api_key"    
             - "--remote_host"
             - "$remote_endpoint"
+            - "--iis_endpoint"
+            - "$iis_endpoint"
             - "--namespaces"
             - "$namespaces"
             - "load"

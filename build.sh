@@ -407,8 +407,9 @@ if [ "$assets" = "true" ]; then
     export elasticsearch_api_key=$elasticsearch_api_key  
     export remote_endpoint=$remote_endpoint
     export namespaces=$namespaces
+    export iis_endpoint="http://$windows_host_ip"
 
-    envsubst '$JOB_ID,$COURSE,$REPO,$elasticsearch_kibana_endpoint,$elasticsearch_es_endpoint,$elasticsearch_api_key,$remote_endpoint,$namespaces' < assets.yaml | kubectl apply -f -
+    envsubst '$JOB_ID,$COURSE,$REPO,$iis_endpoint,$elasticsearch_kibana_endpoint,$elasticsearch_es_endpoint,$elasticsearch_api_key,$remote_endpoint,$namespaces' < assets.yaml | kubectl apply -f -
     cd ..
 
     retry_command_lin check_assets $JOB_ID
