@@ -473,9 +473,9 @@ if [ "$windows" = "true" ]; then
 
     envsubst '$WINDOWS_HOST,$WINDOWS_HOST_USERNAME,$WINDOWS_HOST_PASSWORD' < windows.yaml | kubectl apply -f -
     retry_command_lin get_lb_address infra windows-ext
+    cd ../..
 
     source $PWD/utils/windows/install.sh -4 $windows_host_ip -5 $windows_username -6 $windows_password -7 $PWD/utils/windows/setup.ps1
 
-    cd ../..
     printf "deploying windows...SUCCESS\n"
 fi
