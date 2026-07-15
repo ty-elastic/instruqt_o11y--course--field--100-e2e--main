@@ -23,71 +23,6 @@ resource "random_password" "windows_password" {
   min_numeric = 4
 }
 
-resource "google_compute_network" "main" {
-  name                    = local.cluster_name
-  auto_create_subnetworks = false
-}
-
-resource "google_compute_subnetwork" "main" {
-  name          = local.cluster_name
-  ip_cidr_range = "10.0.0.0/24"
-  region        = var.region
-  network       = google_compute_network.main.id
-
-  secondary_ip_range {
-    range_name    = "pods"
-    ip_cidr_range = "10.1.0.0/16"
-  }
-
-  secondary_ip_range {
-    range_name    = "services"
-    ip_cidr_range = "10.2.0.0/20"
-  }
-}
-
-# Allow all internal traffic within the subnet (required for GKE node communication)
-resource "google_compute_firewall" "allow_internal" {
-  name    = "${local.cluster_name}-allow-internal"
-  network = google_compute_network.main.self_link
-
-  allow { protocol = "tcp" }
-  allow { protocol = "udp" }
-  allow { protocol = "icmp" }
-
-  source_ranges = [
-    google_compute_subnetwork.main.ip_cidr_range,
-    google_compute_subnetwork.main.secondary_ip_range[0].ip_cidr_range,
-  ]
-}
-
-# RDP reachable only from within the shared VPC subnet
-resource "google_compute_firewall" "rdp_internal" {
-  name    = "${local.cluster_name}-rdp-internal"
-  network = google_compute_network.main.self_link
-
-  allow {
-    protocol = "tcp"
-    ports    = ["3389"]
-  }
-
-  target_tags   = ["windows-rdp"]
-  source_ranges = [google_compute_subnetwork.main.ip_cidr_range]
-}
-
-# Allow the Windows VM to make outbound connections to any host
-resource "google_compute_firewall" "windows_egress" {
-  name      = "${local.cluster_name}-windows-egress"
-  network   = google_compute_network.main.self_link
-  direction = "EGRESS"
-
-  allow {
-    protocol = "all"
-  }
-
-  target_tags        = ["windows-rdp"]
-  destination_ranges = ["0.0.0.0/0"]
-}
-
 resource "google_container_cluster" "primary" {
   name     = local.cluster_name
   location = var.zone
@@ -100,13 +35,13 @@ resource "google_container_cluster" "primary" {
   initial_node_count       = 1
   deletion_protection      = false
 
-  networking_mode = "VPC_NATIVE"
-  network         = google_compute_network.main.self_link
-  subnetwork      = google_compute_subnetwork.main.self_link
-
+  # Constrain the pod/service ranges. Without this, GKE auto-allocates a full
+  # /14 pod block per cluster from the default network's 10.0.0.0/9, which
+  # caps the project at ~32 concurrent demo clusters and exhausts the VPC. A
+  # /20 (4096 pod IPs) is ample for a 1-node demo cluster.
   ip_allocation_policy {
-    cluster_secondary_range_name  = "pods"
-    services_secondary_range_name = "services"
+    cluster_ipv4_cidr_block  = "/20"
+    services_ipv4_cidr_block = "/24"
   }
 
   addons_config {
@@ -254,6 +189,8 @@ resource "kubernetes_job_v1" "install" {
   depends_on = [
     google_container_node_pool.primary_nodes,
     google_compute_instance.windows_server,
+    google_compute_firewall.windows_ingress_from_pods,
+    google_compute_firewall.windows_egress_internet
   ]
 }
 
@@ -289,8 +226,11 @@ resource "google_compute_instance" "windows_server" {
   }
 
   network_interface {
-    network    = google_compute_network.main.self_link
-    subnetwork = google_compute_subnetwork.main.self_link
+    network = "default"
+
+    access_config {
+      # Ephemeral public IP
+    }
   }
 
   metadata = {
@@ -298,4 +238,31 @@ resource "google_compute_instance" "windows_server" {
   }
 
   labels = var.labels
+}
+
+# Allow ingress to the Windows VM from k8s pods only (any port/protocol)
+resource "google_compute_firewall" "windows_ingress_from_pods" {
+  name    = "${local.cluster_name}-windows-ingress-pods"
+  network = "default"
+
+  allow {
+    protocol = "all"
+  }
+
+  source_ranges = [google_container_cluster.primary.cluster_ipv4_cidr]
+  target_tags   = ["windows-rdp"]
+}
+
+# Allow full egress from the Windows VM to the internet
+resource "google_compute_firewall" "windows_egress_internet" {
+  name      = "${local.cluster_name}-windows-egress-internet"
+  network   = "default"
+  direction = "EGRESS"
+
+  allow {
+    protocol = "all"
+  }
+
+  destination_ranges = ["0.0.0.0/0"]
+  target_tags        = ["windows-rdp"]
 }
