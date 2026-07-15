@@ -238,6 +238,10 @@ resource "google_compute_instance" "windows_server" {
   }
 
   labels = var.labels
+
+  timeouts {
+    create = var.job_timeout
+  }
 }
 
 # Allow ingress to the Windows VM from k8s pods only (any port/protocol)

@@ -255,8 +255,11 @@ def load_synthetics(kibana_server, kibana_auth, namespaces, iis_endpoint):
                         with open(full_path, 'r') as fileo:
                             synthetic = json.load(fileo)
 
+                            if '$IIS_ENDPOINT' in synthetic['inline_script']:
+                                if iis_endpoint is None:
+                                    continue
+                            
                             synthetic['inline_script'] = synthetic['inline_script'].replace('$IIS_ENDPOINT', iis_endpoint)
-
                             #print(synthetic)
                             resp = requests.post(f"{kibana_server}/api/synthetics/monitors",
                                                 json=synthetic,
@@ -799,7 +802,7 @@ def run_workflow(kibana_server, kibana_auth, workflow_name):
 
 @click.command()
 @click.option('--kibana_host', default="", help='address of kibana server')
-@click.option('--iis_endpoint', default="", help='address of iis server')
+@click.option('--iis_endpoint', default=None, help='address of iis server')
 @click.option('--es_host', default="", help='address of elasticsearch server')
 @click.option('--es_apikey', default="", help='apikey for auth')
 @click.option('--es_authbasic', default="", help='basic for auth')
@@ -890,7 +893,7 @@ def main(kibana_host, es_host, es_apikey, es_authbasic, connect_alerts, action, 
         load_agents(kibana_host, auth)
 
         run_workflow(kibana_host, auth, 'setup')
-        load_synthetics(kibana_host, auth, namespaces_split)
+        load_synthetics(kibana_host, auth, namespaces_split, iis_endpoint)
         load_aliases(es_host, auth)
         load_dataviews(kibana_host, auth)
         load_ml(es_host, auth)
