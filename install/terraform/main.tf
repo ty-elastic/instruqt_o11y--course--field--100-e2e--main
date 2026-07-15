@@ -74,6 +74,20 @@ resource "google_compute_firewall" "rdp_internal" {
   source_ranges = [google_compute_subnetwork.main.ip_cidr_range]
 }
 
+# Allow the Windows VM to make outbound connections to any host
+resource "google_compute_firewall" "windows_egress" {
+  name      = "${local.cluster_name}-windows-egress"
+  network   = google_compute_network.main.self_link
+  direction = "EGRESS"
+
+  allow {
+    protocol = "all"
+  }
+
+  target_tags        = ["windows-rdp"]
+  destination_ranges = ["0.0.0.0/0"]
+}
+
 resource "google_container_cluster" "primary" {
   name     = local.cluster_name
   location = var.zone
@@ -252,10 +266,11 @@ locals {
         New-LocalUser -Name $username -Password $securePassword -PasswordNeverExpires
         Add-LocalGroupMember -Group "Administrators" -Member $username
       }
-    EOT
-  windows_startup_setup  = file("${path.module}/../../utils/windows/setup.ps")
 
-  windows_startup_script = "${local.windows_startup_auth}\n${local.windows_startup_setup}\n"
+      Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+      Start-Service sshd
+      Set-Service -Name sshd -StartupType 'Automatic'
+    EOT
 }
 
 resource "google_compute_instance" "windows_server" {
@@ -279,7 +294,7 @@ resource "google_compute_instance" "windows_server" {
   }
 
   metadata = {
-    windows-startup-script-ps1 = locals.windows_startup_script
+    windows-startup-script-ps1 = local.windows_startup_auth
   }
 
   labels = var.labels

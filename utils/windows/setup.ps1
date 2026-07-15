@@ -14,7 +14,7 @@ Install-WindowsFeature -name Web-Server -IncludeManagementTools
 
 # -- SYSLOG CODE
 
-$env:WORKING_DIR = "C:\Users\instruqt.WINDOWS\workshop"
+$env:WORKING_DIR = $env:HOME
 
 echo $env:COURSE
 $env:COURSE = "o11y--course--field--100-e2e--serverless"
