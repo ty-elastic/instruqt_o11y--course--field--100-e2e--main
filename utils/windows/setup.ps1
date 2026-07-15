@@ -33,4 +33,10 @@ pip install -r requirements.txt
 
 # -- SYSLOG START
 
-Start-Process pythonw.exe -ArgumentList "src/app.py" -WindowStyle Hidden
+#Start-Process pythonw.exe -ArgumentList "src/app.py" -WindowStyle Hidden
+
+$Action = New-ScheduledTaskAction -Execute "pythonw.exe $HOME\utils\logen\src\app.py --config_file $HOME\utils\logen\config\logen.yaml"
+$Principal = New-ScheduledTaskPrincipal -UserId "NT AUTHORITY\SYSTEM" -LogonType ServiceAccount
+Register-ScheduledTask -TaskName "Logen" -Action $Action -Principal $Principal
+Start-ScheduledTask -TaskName "Logen"
+

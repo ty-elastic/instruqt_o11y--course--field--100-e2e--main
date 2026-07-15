@@ -3,6 +3,7 @@ requests
 ua-generator
 Faker
 pyyaml
+click
 
 opentelemetry-api==1.35.0
 opentelemetry-sdk==1.35.0

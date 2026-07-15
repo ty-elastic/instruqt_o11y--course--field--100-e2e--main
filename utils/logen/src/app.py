@@ -5,6 +5,8 @@ from threading import Thread
 import yaml
 import time
 import csv
+import click
+import sys
 
 import log_generator
 import log_emitter_syslog
@@ -153,9 +155,9 @@ def run_schedule(thread, global_metadata, global_state, thread_state):
         elif item['type'] == 'generate_exception':
             metadata_generator.generate_exception(item=item, thread_state=thread_state)
 
-def load_config():
+def load_config(config_file):
     try:
-        with open('config/logen.yaml', 'r') as file:
+        with open(config_file, 'r') as file:
             data = yaml.safe_load(file)
             return data
     except FileNotFoundError:
@@ -173,16 +175,26 @@ def run_threads(config):
     threads = []
     for thread in config['threads']:
         g_thread_state[thread['name']] = metadata_generator.generate_thread_state()
-        t = Thread(target=run_schedule, args=[thread, g_global_metadata, g_global_state, g_thread_state[thread['name']]], daemon=False)
+        t = Thread(target=run_schedule, args=[thread, g_global_metadata, g_global_state, g_thread_state[thread['name']]], daemon=True)
         t.start()
         threads.append(t)
-    for t in threads:
-        t.join()
+    return threads
 
-config = load_config()
-time.sleep(1)
-t = Thread(target=run_threads,  args=[config], daemon=False)
-t.start()
+@click.command()
+@click.option('--config_file', default="config/logen.yaml", help='config file')
+def main(config_file):
 
-if __name__ == "__main__":
-    t.join()
+    config = load_config(config_file)
+
+    threads = run_threads(config)
+
+    # 3. Keep the main thread alive and responsive to interrupts
+    try:
+        while True:
+            time.sleep(0.1) # Tiny sleep allows Ctrl+C to trigger immediately
+    except KeyboardInterrupt:
+        print("\nCtrl+C detected! Exiting program instantly...")
+        sys.exit(0)
+
+if __name__ == '__main__':
+    main()
