@@ -17,7 +17,7 @@ Install-WindowsFeature -name Web-Server -IncludeManagementTools
 $env:WORKING_DIR = $env:HOME
 
 echo $env:COURSE
-$env:COURSE = "o11y--course--field--100-e2e--serverless"
+$env:COURSE = "$COURSE"
 
 $env:ARTIFACTS_REPO = "elastic-sa/locations/us-central1/repositories/tbekiares-instruqt"
 $env:ARTIFACT_VERSION = "1.0"
@@ -33,10 +33,9 @@ pip install -r requirements.txt
 
 # -- SYSLOG START
 
-#Start-Process pythonw.exe -ArgumentList "src/app.py" -WindowStyle Hidden
+#Start-Process pythonw.exe -ArgumentList "src\app.py --config_file config\logen.yaml" -WindowStyle Hidden
 
-$Action = New-ScheduledTaskAction -Execute "pythonw.exe $HOME\utils\logen\src\app.py --config_file $HOME\utils\logen\config\logen.yaml"
+$Action = New-ScheduledTaskAction -WorkingDirectory "$HOME\utils\logen" -Execute "C:\Program Files\Python313\python.exe" -Argument "src\app.py --config_file config\logen.yaml"
 $Principal = New-ScheduledTaskPrincipal -UserId "NT AUTHORITY\SYSTEM" -LogonType ServiceAccount
 Register-ScheduledTask -TaskName "Logen" -Action $Action -Principal $Principal
 Start-ScheduledTask -TaskName "Logen"
-

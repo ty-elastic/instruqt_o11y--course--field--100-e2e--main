@@ -475,7 +475,7 @@ if [ "$windows" = "true" ]; then
     retry_command_lin get_lb_address infra windows-ext
     cd ../..
 
-    source $PWD/utils/windows/install.sh -4 $windows_host_ip -5 $windows_username -6 $windows_password -7 $PWD/utils/windows/setup.ps1
+    source $PWD/utils/windows/install.sh -c $COURSE -4 $windows_host_ip -5 $windows_username -6 $windows_password -7 $PWD/utils/windows/setup.ps1
 
     printf "deploying windows...SUCCESS\n"
 fi
