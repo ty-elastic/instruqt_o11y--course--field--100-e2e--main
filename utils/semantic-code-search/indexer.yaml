@@ -4,6 +4,7 @@ metadata:
   name: code-indexer
   namespace: infra
 spec:
+  backoffLimit: 0 
   template:
     spec:
       containers:
@@ -37,6 +38,7 @@ metadata:
   name: code-setup
   namespace: infra
 spec:
+  backoffLimit: 0 
   template:
     spec:
       containers:

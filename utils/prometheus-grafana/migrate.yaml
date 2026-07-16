@@ -4,6 +4,7 @@ metadata:
   name: mig-to-kbn
   namespace: infra
 spec:
+  backoffLimit: 0 
   template:
     spec:
       containers:

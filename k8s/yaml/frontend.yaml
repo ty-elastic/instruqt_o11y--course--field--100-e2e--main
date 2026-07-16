@@ -17,6 +17,7 @@ metadata:
   name: frontend-$JOB_ID-$SERVICE_VERSION
   namespace: $NAMESPACE
 spec:
+  backoffLimit: 0 
   template:
     spec:
       containers:

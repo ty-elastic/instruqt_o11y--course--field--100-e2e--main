@@ -38,6 +38,7 @@ metadata:
   name: wikijs-config22
   namespace: wiki
 spec:
+  backoffLimit: 0 
   template:
     spec:
       containers:

@@ -67,10 +67,10 @@ variable "job_namespace" {
   default     = "default"
 }
 
-variable "job_image" {
-  description = "Container image run by the Job"
+variable "environment" {
+  description = "test, prod"
   type        = string
-  default     = "us-central1-docker.pkg.dev/elastic-sa/tbekiares/install:o11y--course--field--100-e2e--serverless"
+  default     = "prod"
 }
 
 variable "job_backoff_limit" {

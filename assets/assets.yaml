@@ -3,6 +3,7 @@ kind: Job
 metadata:
   name: assets-$JOB_ID
 spec:
+  backoffLimit: 0 
   template:
     spec:
       hostNetwork: true

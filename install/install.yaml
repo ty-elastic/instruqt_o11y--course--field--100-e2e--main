@@ -23,6 +23,7 @@ metadata:
   name: superdemo-install-$I
   namespace: default
 spec:
+  backoffLimit: 0 
   template:
     spec:
       serviceAccountName: kubectl-pod-sa # Binds the RBAC permissions
