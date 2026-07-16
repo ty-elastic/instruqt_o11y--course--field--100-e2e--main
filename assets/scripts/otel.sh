@@ -117,7 +117,7 @@ deploy_otel() {
         --namespace opentelemetry-operator-system \
         --values "$deploy_otel.yaml" \
         --version '0.12.4' \
-        --set clusterName=k3s
+        --set clusterName=superdemo
     cd ../..
 
     cd agents/tbs

@@ -7,7 +7,7 @@ data:
   user-mapping.xml: |
     <user-mapping>
       <!-- Define the Guacamole web UI admin credentials -->
-      <authorize username="user" password="password">
+      <authorize username="$WINDOWS_HOST_USERNAME" password="$WINDOWS_HOST_PASSWORD">
         <connection name="Windows VM">
           <protocol>rdp</protocol>
           <param name="hostname">$WINDOWS_HOST</param> 
@@ -80,5 +80,3 @@ spec:
   sessionAffinity: ClientIP 
   selector:
     service: windows
-
-

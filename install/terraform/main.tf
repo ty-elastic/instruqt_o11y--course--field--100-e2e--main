@@ -15,7 +15,7 @@ locals {
 
 # Windows username: "win" prefix + 8 lowercase letters (max 20 chars, no special chars)
 resource "random_string" "windows_username" {
-  length  = 8
+  length  = 11
   upper   = false
   numeric = false
   special = false
@@ -179,7 +179,7 @@ resource "kubernetes_job_v1" "install" {
           }
           env {
             name  = "WINDOWS_HOST_USERNAME"
-            value = "win${random_string.windows_username.result}"
+            value = random_string.windows_username.result
           }
           env {
             name  = "WINDOWS_HOST_PASSWORD"
@@ -206,7 +206,7 @@ resource "kubernetes_job_v1" "install" {
 
 locals {
   windows_startup_auth = <<-EOT
-      $username = "win${random_string.windows_username.result}"
+      $username = '${random_string.windows_username.result}'
       $password = '${random_password.windows_password.result}'
       $securePassword = ConvertTo-SecureString $password -AsPlainText -Force
       if (-not (Get-LocalUser -Name $username -ErrorAction SilentlyContinue)) {

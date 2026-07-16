@@ -37,4 +37,4 @@ RUN mkdir -p "/root/.config/elastic"
 
 RUN curl -fsSL https://raw.githubusercontent.com/elastic/elastic-ramen/dev/install | bash
 
-CMD /usr/local/bin/ttyd -w /root --writable bash
+ENTRYPOINT /usr/local/bin/ttyd -w /root --writable bash
