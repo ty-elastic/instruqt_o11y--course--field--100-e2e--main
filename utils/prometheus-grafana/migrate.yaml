@@ -13,7 +13,7 @@ spec:
           imagePullPolicy: Always
           env:
             - name: GRAFANA_URL
-              value: "http://grafana:3000"
+              value: "http://grafana.infra.svc.cluster.local:3000"
             - name: GRAFANA_USER
               value: "admin"
             - name: GRAFANA_PASS

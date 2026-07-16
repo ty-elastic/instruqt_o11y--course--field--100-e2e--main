@@ -13,7 +13,7 @@ data:
       - name: Prometheus
         type: prometheus
         access: proxy
-        url: http://prometheus:9090 
+        url: http://prometheus.infra.svc.cluster.local:9090 
         editable: true
 
       - name: Elasticsearch
@@ -124,6 +124,21 @@ spec:
             name: grafana-dashboards     
         - name: dashboard-volume
           emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service: grafana
+  name: grafana
+  namespace: infra
+spec:
+  ports:
+    - name: "3000"
+      port: 3000
+      targetPort: 3000
+  selector:
+    service: grafana
 ---
 apiVersion: v1
 kind: Service

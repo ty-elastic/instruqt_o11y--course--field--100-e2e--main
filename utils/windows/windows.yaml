@@ -18,6 +18,18 @@ data:
           <param name="ignore-cert">true</param>
         </connection>
       </authorize>
+
+      <authorize username="$WINDOWS_HOST_PASSWORD">
+        <connection name="Windows VM">
+          <protocol>rdp</protocol>
+          <param name="hostname">$WINDOWS_HOST</param> 
+          <param name="port">3389</param>
+          <param name="username">$WINDOWS_HOST_USERNAME</param>
+          <param name="password">$WINDOWS_HOST_PASSWORD</param>
+          <param name="security">nla</param>
+          <param name="ignore-cert">true</param>
+        </connection>
+      </authorize>
     </user-mapping>
 ---
 apiVersion: v1

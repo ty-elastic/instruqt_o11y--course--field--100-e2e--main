@@ -8,7 +8,6 @@ output "windows_username" {
 
 output "windows_password" {
   value     = random_password.windows_password.result
-  sensitive = true
 }
 
 output "cluster_name" {
