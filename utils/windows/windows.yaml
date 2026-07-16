@@ -46,6 +46,8 @@ spec:
           value: "4822"
         - name: GUACAMOLE_HOME
           value: "/etc/guacamole"
+        - name: HTTP_AUTH_ENABLED
+          value: "true"
       resources:
         limits:
           memory: "512Mi"
