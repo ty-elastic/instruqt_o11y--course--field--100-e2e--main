@@ -48,6 +48,8 @@ spec:
           value: "/etc/guacamole"
         - name: HTTP_AUTH_ENABLED
           value: "true"
+        - name: "HTTP_AUTH_HEADER"
+          value: "X-Windows-User"
       resources:
         limits:
           memory: "512Mi"
