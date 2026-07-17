@@ -1,37 +1,4 @@
 apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: guacamole-sa
-  namespace: infra
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: guac-pod-connector
-  namespace: default
-rules:
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: ["get", "list", "watch"]
-- apiGroups: [""]
-  resources: ["pods/attach", "pods/exec"]
-  verbs: ["create", "get"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: guac-pod-connector-binding
-  namespace: infra
-subjects:
-- kind: ServiceAccount
-  name: guacamole-sa
-  namespace: guacamole
-roleRef:
-  kind: Role
-  name: guac-pod-connector
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: v1
 kind: ConfigMap
 metadata:
   name: windows-user-mapping
@@ -50,16 +17,6 @@ data:
           <param name="security">nla</param>
           <param name="ignore-cert">true</param>
         </connection>
-
-        <connection name="Ramen">
-            <protocol>kubernetes</protocol>
-            <param name="hostname">kubernetes.default.svc</param>
-            <param name="namespace">default</param>
-            <param name="pod">ramen</param>
-            <param name="ignore-cert">true</param>
-            <exec-command>"bash"</exec-command>
-        </connection>
-
       </authorize>
 
       <authorize username="eden$WINDOWS_HOST_USERNAME">
