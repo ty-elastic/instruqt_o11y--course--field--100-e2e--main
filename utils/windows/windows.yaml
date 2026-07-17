@@ -2,13 +2,13 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: guacamole-sa
-  namespace: guacamole # Change to your Guacamole namespace
+  namespace: infra
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: guac-pod-connector
-  namespace: target-namespace # Namespace where your target pods live
+  namespace: default
 rules:
 - apiGroups: [""]
   resources: ["pods"]
@@ -21,7 +21,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: guac-pod-connector-binding
-  namespace: target-namespace
+  namespace: infra
 subjects:
 - kind: ServiceAccount
   name: guacamole-sa
