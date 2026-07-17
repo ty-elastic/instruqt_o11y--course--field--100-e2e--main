@@ -19,7 +19,11 @@ fi
 ./build.sh -o false -t $FLEET_URL -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL -p true -m true
 
 # assets
-./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL -w true -e true
+if [[ -n "$WINDOWS_HOST_IP" ]]; then
+    ./build.sh -o false -c $COURSE -d false -b false -s none -4 $WINDOWS_HOST_IP -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL -w true -e true
+else
+    ./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL -w true -e true
+fi
 
 # ramen
 ./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL -2 true
