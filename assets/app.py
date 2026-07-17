@@ -221,6 +221,23 @@ def load_workflows(kibana_server, kibana_auth, es_host, remote_host = None):
 
 #
 
+def delete_synthetic(kibana_server, kibana_auth, synthetic_name):
+    print("search sythetics...")
+    resp = requests.get(f"{kibana_server}/api/synthetics/monitors",
+                        headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+    
+    #print(resp.json())
+    for synthetic in resp.json()['monitors']:
+        try:
+            if synthetic['name'] == synthetic_name:
+                print(f"deleting {synthetic['name']}")
+
+                resp = requests.delete(f"{kibana_server}/api/synthetics/monitors/{synthetic['id']}",
+                                    headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})
+                #print(resp.json())
+        except Exception as e:
+            print(e)   
+    
 def load_synthetics(kibana_server, kibana_auth, namespaces, iis_endpoint):
 
     directory_path = "synthetics"
@@ -244,7 +261,9 @@ def load_synthetics(kibana_server, kibana_auth, namespaces, iis_endpoint):
                                 synthetic['inline_script'] = synthetic['inline_script'].replace('$NAMESPACE', namespace)
                                 port = port+1
                                 synthetic['inline_script'] = synthetic['inline_script'].replace('$PORT', str(port))
-                                
+
+                                delete_synthetic(kibana_server, kibana_auth, synthetic['name'])
+
                                 #print(synthetic)
                                 resp = requests.post(f"{kibana_server}/api/synthetics/monitors",
                                                     json=synthetic,
@@ -257,10 +276,16 @@ def load_synthetics(kibana_server, kibana_auth, namespaces, iis_endpoint):
 
                             if '$IIS_ENDPOINT' in synthetic['inline_script']:
                                 if iis_endpoint is None:
+                                    print("iis_endpoint is None")
                                     continue
-                            
+
+                            print(f"iis_endpoint is {iis_endpoint}")
+                                
                             synthetic['inline_script'] = synthetic['inline_script'].replace('$IIS_ENDPOINT', iis_endpoint)
                             #print(synthetic)
+
+                            delete_synthetic(kibana_server, kibana_auth, synthetic['name'])
+
                             resp = requests.post(f"{kibana_server}/api/synthetics/monitors",
                                                 json=synthetic,
                                                 headers={"origin": kibana_server,f"Authorization": kibana_auth, "kbn-xsrf": "true", "Content-Type": "application/json", "x-elastic-internal-origin": "Kibana"})

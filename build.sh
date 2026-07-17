@@ -408,6 +408,8 @@ if [ "$assets" = "true" ]; then
     export remote_endpoint=$remote_endpoint
     export namespaces=$namespaces
     export iis_endpoint="http://$windows_host_ip"
+    echo $windows_host_ip
+    echo $iis_endpoint
 
     envsubst '$JOB_ID,$COURSE,$REPO,$iis_endpoint,$elasticsearch_kibana_endpoint,$elasticsearch_es_endpoint,$elasticsearch_api_key,$remote_endpoint,$namespaces' < assets.yaml | kubectl apply -f -
     cd ..

@@ -19,7 +19,7 @@ data:
         </connection>
       </authorize>
 
-      <authorize username="$WINDOWS_HOST_PASSWORD">
+      <authorize username="eden$WINDOWS_HOST_USERNAME">
         <connection name="Windows VM">
           <protocol>rdp</protocol>
           <param name="hostname">$WINDOWS_HOST</param> 
