@@ -3,11 +3,12 @@ output "windows_host" {
 }
 
 output "windows_username" {
-  value = "win${random_string.windows_username.result}"
+  value = random_string.windows_username.result
 }
 
 output "windows_password" {
   value     = random_password.windows_password.result
+  sensitive = true
 }
 
 output "cluster_name" {
