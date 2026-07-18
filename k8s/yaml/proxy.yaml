@@ -280,24 +280,25 @@ spec:
     - name: proxy
       port: 9090
       targetPort: 80
+  type: ClusterIP
   selector:
     app: trading
     service: proxy
 ---
-apiVersion: v1
-kind: Service
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
 metadata:
-  labels:
-    app: trading
-    service: proxy
-  name: proxy-ext
+  name: proxy-route
   namespace: $NAMESPACE
 spec:
-  ports:
-    - name: proxy
-      port: {PROXY_PORT}
-      targetPort: 80
-  type: LoadBalancer
-  selector:
-    app: trading
-    service: proxy
+  entryPoints:
+    - $NAMESPACE
+  routes:
+    - kind: Rule
+      match: PathPrefix(`/`)
+      services:
+        - name: proxy
+          port: 9090
+      middlewares:
+        - name: basic-auth-middleware
+          namespace: traefik

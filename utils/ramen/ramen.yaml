@@ -156,7 +156,7 @@ kind: Service
 metadata:
   labels:
     service: ramen
-  name: ramen-ext
+  name: ramen
   namespace: default
 spec:
   ports:
@@ -164,8 +164,25 @@ spec:
       protocol: TCP
       port: 7681
       targetPort: 7681
-  type: LoadBalancer
+  type: ClusterIP
   sessionAffinity: ClientIP 
   selector:
     service: ramen
-
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: ramen-route
+  namespace: default
+spec:
+  entryPoints:
+    - ramen
+  routes:
+    - kind: Rule
+      match: PathPrefix(`/`)
+      services:
+        - name: ramen
+          port: 7681
+      middlewares:
+        - name: basic-auth-middleware
+          namespace: traefik

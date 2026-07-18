@@ -71,15 +71,29 @@ metadata:
   labels:
     app: trading
     service: remote
-  name: remote-ext
+  name: remote
   namespace: utils
 spec:
   ports:
     - name: remote
       port: 43210
       targetPort: 10000
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: trading
     service: remote
 ---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: remote-route
+  namespace: utils
+spec:
+  entryPoints:
+    - remote
+  routes:
+    - kind: Rule
+      match: PathPrefix(`/`)
+      services:
+        - name: proxy
+          port: 43210

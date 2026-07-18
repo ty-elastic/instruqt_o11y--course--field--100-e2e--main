@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: wiki-ext
+  name: wiki
   namespace: wiki
 spec:
   ports:
@@ -10,27 +10,28 @@ spec:
       port: 9082
       protocol: TCP
       targetPort: http
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app.kubernetes.io/instance: wiki
     app.kubernetes.io/name: wiki
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
 metadata:
-  name: wiki
+  name: wiki-route
   namespace: wiki
 spec:
-  rules:
-  - http:
-      paths:
-      - path: /wiki
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: wiki
-            port:
-              number: 3000
+  entryPoints:
+    - wiki
+  routes:
+    - kind: Rule
+      match: PathPrefix(`/`)
+      services:
+        - name: wiki
+          port: 9082
+      middlewares:
+        - name: basic-auth-middleware
+          namespace: traefik
 ---
 apiVersion: batch/v1
 kind: Job

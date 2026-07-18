@@ -1,0 +1,17 @@
+helm repo add traefik https://traefik.github.io/charts
+helm repo update
+helm install traefik traefik/traefik \
+  --namespace traefik \
+  --create-namespace \
+  -f values.yaml
+
+HTTP_PASSWORD=$(openssl rand -base64 12)
+kubectl create secret generic traefik-auth --namespace=traefik \
+  --from-literal=username=admin \
+  --from-literal=password=$HTTP_PASSWORD
+
+kubectl delete secret --namespace=traefik traefik-auth-encoded
+htpasswd -b -c .htpasswd admin $HTTP_PASSWORD
+kubectl create secret generic traefik-auth-encoded --from-file=.htpasswd --namespace=traefik
+rm -rf .htpasswd
+kubectl apply -f auth.yaml

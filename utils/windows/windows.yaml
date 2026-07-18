@@ -85,7 +85,7 @@ kind: Service
 metadata:
   labels:
     service: windows
-  name: windows-ext
+  name: windows
   namespace: infra
 spec:
   ports:
@@ -93,7 +93,25 @@ spec:
       protocol: TCP
       port: 8080
       targetPort: 8080
-  type: LoadBalancer
+  type: ClusterIP
   sessionAffinity: ClientIP 
   selector:
     service: windows
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: windows-route
+  namespace: infra
+spec:
+  entryPoints:
+    - windows
+  routes:
+    - kind: Rule
+      match: PathPrefix(`/`)
+      services:
+        - name: windows
+          port: 8080
+      middlewares:
+        - name: basic-auth-middleware
+          namespace: traefik
