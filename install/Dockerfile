@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl tar gpg \
     ca-certificates \
     gettext-base jq \
-    openssh-client sshpass \
+    openssh-client sshpass htpasswd \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4 \

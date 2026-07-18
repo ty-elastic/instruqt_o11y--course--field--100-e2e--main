@@ -45,10 +45,12 @@ data "kubernetes_secret" "traefik" {
     name      = "traefik-auth"
     namespace = "traefik"
   }
+
+  depends_on = [kubernetes_job_v1.install]
 }
 
 output "traefik_auth" {
-  value       = kubernetes_secret.traefik.data
+  value       = data.kubernetes_secret.traefik.data
   sensitive   = true
 }
 
