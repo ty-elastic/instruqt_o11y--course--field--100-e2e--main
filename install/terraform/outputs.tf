@@ -31,80 +31,47 @@ output "job_name" {
 
 # Services below are created by the install Job, so these data sources must
 # not be read until the Job has finished running.
-data "kubernetes_service_v1" "wiki_ext" {
+data "kubernetes_service_v1" "traefik_ext" {
   metadata {
-    name      = "wiki-ext"
-    namespace = "wiki"
+    name      = "traefik"
+    namespace = "traefik"
   }
 
   depends_on = [kubernetes_job_v1.install]
 }
 
-data "kubernetes_service_v1" "trader_na_ext" {
+data "kubernetes_secret" "traefik" {
   metadata {
-    name      = "proxy-ext"
-    namespace = "trading-na"
+    name      = "traefik-auth"
+    namespace = "traefik"
   }
-
-  depends_on = [kubernetes_job_v1.install]
 }
 
-data "kubernetes_service_v1" "trader_emea_ext" {
-  metadata {
-    name      = "proxy-ext"
-    namespace = "trading-emea"
-  }
-
-  depends_on = [kubernetes_job_v1.install]
-}
-
-data "kubernetes_service_v1" "grafana_ext" {
-  metadata {
-    name      = "grafana-ext"
-    namespace = "infra"
-  }
-
-  depends_on = [kubernetes_job_v1.install]
-}
-
-data "kubernetes_service_v1" "ramen_ext" {
-  metadata {
-    name      = "ramen-ext"
-    namespace = "default"
-  }
-
-  depends_on = [kubernetes_job_v1.install]
-}
-
-data "kubernetes_service_v1" "windows_ext" {
-  metadata {
-    name      = "windows-ext"
-    namespace = "infra"
-  }
-
-  depends_on = [kubernetes_job_v1.install]
+output "traefik_auth" {
+  value       = kubernetes_secret.traefik.data
+  sensitive   = true
 }
 
 output "wiki_url" {
-  value = "http://${data.kubernetes_service_v1.wiki_ext.status[0].load_balancer[0].ingress[0].ip}:${data.kubernetes_service_v1.wiki_ext.spec[0].port[0].port}"
+  value = "http://${data.kubernetes_service_v1.traefik_ext.status[0].load_balancer[0].ingress[0].ip}:9010"
 }
 
 output "trader_na_url" {
-  value = "http://${data.kubernetes_service_v1.trader_na_ext.status[0].load_balancer[0].ingress[0].ip}:${data.kubernetes_service_v1.trader_na_ext.spec[0].port[0].port}"
+  value = "http://${data.kubernetes_service_v1.traefik_ext.status[0].load_balancer[0].ingress[0].ip}:9000"
 }
 
 output "trader_emea_url" {
-  value = "http://${data.kubernetes_service_v1.trader_emea_ext.status[0].load_balancer[0].ingress[0].ip}:${data.kubernetes_service_v1.trader_emea_ext.spec[0].port[0].port}"
+  value = "http://${data.kubernetes_service_v1.traefik_ext.status[0].load_balancer[0].ingress[0].ip}:9001"
 }
 
 output "grafana_url" {
-  value = "http://${data.kubernetes_service_v1.grafana_ext.status[0].load_balancer[0].ingress[0].ip}:${data.kubernetes_service_v1.grafana_ext.spec[0].port[0].port}"
+  value = "http://${data.kubernetes_service_v1.traefik_ext.status[0].load_balancer[0].ingress[0].ip}:9012"
 }
 
 output "ramen_url" {
-  value = "http://${data.kubernetes_service_v1.ramen_ext.status[0].load_balancer[0].ingress[0].ip}:${data.kubernetes_service_v1.ramen_ext.spec[0].port[0].port}"
+  value = "http://${data.kubernetes_service_v1.traefik_ext.status[0].load_balancer[0].ingress[0].ip}:9011"
 }
 
 output "windows_url" {
-  value = "http://${data.kubernetes_service_v1.windows_ext.status[0].load_balancer[0].ingress[0].ip}:${data.kubernetes_service_v1.windows_ext.spec[0].port[0].port}/guacamole"
+  value = "http://${data.kubernetes_service_v1.traefik_ext.status[0].load_balancer[0].ingress[0].ip}:9013/guacamole"
 }
