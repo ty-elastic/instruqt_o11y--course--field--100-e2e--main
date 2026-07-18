@@ -7,7 +7,7 @@ data:
   user-mapping.xml: |
     <user-mapping>
       <!-- Define the Guacamole web UI admin credentials -->
-      <authorize username="traefik">
+      <authorize username="traefik" password="traefik">
         <connection name="Windows Server">
           <protocol>rdp</protocol>
           <param name="hostname">$WINDOWS_HOST</param> 

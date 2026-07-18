@@ -30,8 +30,7 @@ check_grafana() {
    printf "$FUNCNAME...\n"
 
    output=$(curl -s -X GET "http://grafana.infra.svc.cluster.local:3000/" \
-      -w "\n%{http_code}" \
-      -H 'kbn-xsrf: true')
+      -w "\n%{http_code}")
 
    # Extract HTTP status code
    http_code=$(echo "$output" | tail -n1)
