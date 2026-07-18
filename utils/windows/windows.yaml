@@ -7,19 +7,7 @@ data:
   user-mapping.xml: |
     <user-mapping>
       <!-- Define the Guacamole web UI admin credentials -->
-      <authorize username="$WINDOWS_HOST_USERNAME" password="$WINDOWS_HOST_PASSWORD">
-        <connection name="Windows Server">
-          <protocol>rdp</protocol>
-          <param name="hostname">$WINDOWS_HOST</param> 
-          <param name="port">3389</param>
-          <param name="username">$WINDOWS_HOST_USERNAME</param>
-          <param name="password">$WINDOWS_HOST_PASSWORD</param>
-          <param name="security">nla</param>
-          <param name="ignore-cert">true</param>
-        </connection>
-      </authorize>
-
-      <authorize username="eden$WINDOWS_HOST_USERNAME">
+      <authorize username="traefik">
         <connection name="Windows Server">
           <protocol>rdp</protocol>
           <param name="hostname">$WINDOWS_HOST</param> 
@@ -99,6 +87,16 @@ spec:
     service: windows
 ---
 apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: guac-auth-header
+  namespace: infra
+spec:
+  headers:
+    customRequestHeaders:
+      X-Windows-User: "traefik"
+---
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: windows-route
@@ -114,4 +112,6 @@ spec:
           port: 8080
       middlewares:
         - name: basic-auth-middleware
+          namespace: traefik
+        - name: guac-auth-header
           namespace: traefik
