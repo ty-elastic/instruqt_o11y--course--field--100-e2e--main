@@ -114,4 +114,4 @@ spec:
         - name: basic-auth-middleware
           namespace: traefik
         - name: guac-auth-header
-          namespace: traefik
+          namespace: infra
