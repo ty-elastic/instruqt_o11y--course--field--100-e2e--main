@@ -1,11 +1,13 @@
 
 root="../../"
+http_auth=true
 
 OPTIND=1
-while getopts "s:" opt
+while getopts "s:7:" opt
 do
    case "$opt" in
       s ) root="$OPTARG" ;;
+      7 ) http_auth="$OPTARG" ;; 
    esac
 done
 
@@ -27,4 +29,8 @@ htpasswd -b -c .htpasswd admin $HTTP_PASSWORD
 kubectl create secret generic traefik-auth-encoded --from-file=.htpasswd --namespace=traefik
 rm -rf .htpasswd
 
-kubectl apply -f $root/utils/traefik/auth.yaml
+if [ "$http_auth" = "true"  ]; then
+  kubectl apply -f $root/utils/traefik/auth.yaml
+else
+  kubectl apply -f $root/utils/traefik/noauth.yaml
+fi

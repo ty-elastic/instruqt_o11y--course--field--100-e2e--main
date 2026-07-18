@@ -10,6 +10,7 @@ ENV ELASTICSEARCH_APIKEY=""
 ENV FLEET_URL=""
 ENV KIBANA_URL=""
 ENV INGEST_URL=""
+ENV HTTP_AUTH=true
 
 # 4. Install required tools and dependencies cleanly
 RUN apt-get update && apt-get install -y --no-install-recommends \

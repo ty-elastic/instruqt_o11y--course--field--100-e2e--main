@@ -44,5 +44,7 @@ spec:
               value: "$KIBANA_URL"
             - name: INGEST_URL
               value: "$INGEST_URL"
+            - name: HTTP_AUTH
+              value: "$HTTP_AUTH"
       restartPolicy: Never
 ---

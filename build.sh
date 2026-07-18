@@ -50,6 +50,7 @@ prereq=false
 remote=false
 ramen=false
 windows=false
+http_auth=true
 
 elasticsearch_es_endpoint="na"
 elasticsearch_kibana_endpoint="na"
@@ -68,7 +69,7 @@ case "${unameOut}" in
 esac
 
 OPTIND=1
-while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:n:z:u:t:1:q:2:3:4:5:6:" opt
+while getopts "a:c:s:l:b:x:o:d:r:v:g:h:i:j:k:w:y:p:e:m:f:n:z:u:t:1:q:2:3:4:5:6:7:" opt
 do
    case "$opt" in 
       1 ) prereq="$OPTARG" ;;
@@ -78,6 +79,7 @@ do
       4 ) windows_host_ip="$OPTARG" ;;
       5 ) windows_username="$OPTARG" ;;
       6 ) windows_password="$OPTARG" ;;  
+      7 ) http_auth="$OPTARG" ;;  
 
       a ) arch="$OPTARG" ;;
       c ) course="$OPTARG" ;;
@@ -216,7 +218,7 @@ fi
 if [ "$prereq" == "true" ]; then
     source $PWD/k8s/tools/ksm.sh
 
-    source $PWD/utils/traefik/install.sh -s $PWD
+    source $PWD/utils/traefik/install.sh -s $PWD -7 $http_auth
     retry_command_lin get_lb_address traefik traefik
 fi
 
