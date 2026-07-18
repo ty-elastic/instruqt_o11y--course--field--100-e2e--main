@@ -32,7 +32,6 @@ spec:
     - name: guac-config-volume
       configMap:
         name: windows-user-mapping
-  serviceAccountName: guacamole-sa # Crucial for auto-auth
   containers:
     # 1. Guacamole Web Application
     - name: guacamole-client
@@ -106,7 +105,7 @@ spec:
     - windows
   routes:
     - kind: Rule
-      match: PathPrefix(`/`)
+      match: PathPrefix(`/guacamole`)
       services:
         - name: windows
           port: 8080

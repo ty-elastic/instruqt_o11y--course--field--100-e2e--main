@@ -26,6 +26,24 @@ join_by() {
   echo "$*"
 }
 
+check_grafana() {
+   printf "$FUNCNAME...\n"
+
+   output=$(curl -s -X GET "http://grafana.infra.svc.cluster.local:3000/" \
+      -w "\n%{http_code}" \
+      -H 'kbn-xsrf: true')
+
+   # Extract HTTP status code
+   http_code=$(echo "$output" | tail -n1)
+   http_response=$(echo "$output" | sed '$d')
+   if [ "$http_code" != "200" ]; then
+      printf "$FUNCNAME...ERROR $http_code: $http_response\n"
+      return 1
+   fi
+   printf "$FUNCNAME...SUCCESS\n"
+   return 0
+}
+
 arch=linux/amd64
 course=latest
 service=all
@@ -442,6 +460,7 @@ if [ "$grafana" = "true" ]; then
 
     envsubst '$COURSE,$REPO,$elasticsearch_es_endpoint,$elasticsearch_api_key' < grafana.yaml | kubectl apply -f -
     check_services infra
+    retry_command_lin check_grafana
     envsubst '$elasticsearch_kibana_endpoint,$elasticsearch_es_endpoint,$elasticsearch_api_key,$COURSE,$REPO' < migrate.yaml | kubectl apply -f -
 
     cd ../..
