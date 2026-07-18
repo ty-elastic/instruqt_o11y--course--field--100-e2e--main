@@ -79,7 +79,6 @@ do
       5 ) windows_username="$OPTARG" ;;
       6 ) windows_password="$OPTARG" ;;  
 
-
       a ) arch="$OPTARG" ;;
       c ) course="$OPTARG" ;;
       s ) service="$OPTARG" ;;
@@ -216,6 +215,9 @@ fi
 
 if [ "$prereq" == "true" ]; then
     source $PWD/k8s/tools/ksm.sh
+
+    source $PWD/utils/traefik/install.sh -s $PWD
+    retry_command_lin get_lb_address traefik traefik
 fi
 
 if [ "$deploy_otel" != "false" ]; then
@@ -339,10 +341,6 @@ for current_region in "${regions[@]}"; do
                                     "message": "service_deployment='$SERVICE_VERSION'"
                                 }'
                         fi
-
-                        if [ "$current_service" = "proxy" ]; then
-                            retry_command_lin get_lb_address $namespace proxy-ext
-                        fi
                     fi
                 fi
             done
@@ -367,9 +365,8 @@ if [ "$remote" = "true"  ]; then
     envsubst '$COURSE,$REPO' < remote.yaml | kubectl apply -f -
     cd ../..
 
-    retry_command_lin get_lb_address utils remote-ext
-
-    export remote_endpoint=http://$SERVICE_IP:$SERVICE_PORT
+    retry_command_lin get_lb_address traefik traefik
+    export remote_endpoint=http://$SERVICE_IP:9014
 
     printf "deploying remote_endpoint $remote_endpoint...SUCCESS\n"
 fi
@@ -386,7 +383,6 @@ if [ "$ramen" = "true"  ]; then
     export REPO=$REPO
 
     envsubst '$COURSE,$REPO,$elasticsearch_kibana_endpoint,$elasticsearch_api_key,$elasticsearch_es_endpoint' < ramen.yaml  | kubectl apply -f -
-    retry_command_lin get_lb_address default ramen-ext
     
     cd ../..
 
@@ -427,7 +423,6 @@ if [ "$assets" = "true" ]; then
     source $PWD/assets/scripts/features_dep.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 
     source $PWD/utils/wiki.js/install.sh -c $course -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -s $PWD
-    retry_command_lin get_lb_address wiki wiki-ext
 
     printf "deploying assets...SUCCESS\n"
 fi
@@ -445,10 +440,7 @@ if [ "$grafana" = "true" ]; then
 
     envsubst '$COURSE,$REPO,$elasticsearch_es_endpoint,$elasticsearch_api_key' < grafana.yaml | kubectl apply -f -
     check_services infra
-    kubectl -n infra wait --for=jsonpath='{.status.loadBalancer.ingress[0].ip}' service/grafana-ext --timeout=300s
     envsubst '$elasticsearch_kibana_endpoint,$elasticsearch_es_endpoint,$elasticsearch_api_key,$COURSE,$REPO' < migrate.yaml | kubectl apply -f -
-
-    retry_command_lin get_lb_address infra grafana-ext
 
     cd ../..
     printf "deploying grafana...SUCCESS\n"
@@ -475,7 +467,6 @@ if [ "$windows" = "true" ]; then
     export WINDOWS_HOST_PASSWORD=$windows_password
 
     envsubst '$WINDOWS_HOST,$WINDOWS_HOST_USERNAME,$WINDOWS_HOST_PASSWORD' < windows.yaml | kubectl apply -f -
-    retry_command_lin get_lb_address infra windows-ext
     cd ../..
 
     source $PWD/utils/windows/install.sh -c $COURSE -4 $windows_host_ip -5 $windows_username -6 $windows_password -7 $PWD/utils/windows/setup.ps1
