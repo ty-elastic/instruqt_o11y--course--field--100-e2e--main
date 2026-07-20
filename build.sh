@@ -416,6 +416,7 @@ if [ "$assets" = "true" ]; then
     cd ..
 
     retry_command_lin check_assets $JOB_ID
+    #retry_command_lin kubectl logs -f job/assets-$1 
 
     for current_region in "${regions[@]}"; do
         namespace=$namespace_base-$current_region

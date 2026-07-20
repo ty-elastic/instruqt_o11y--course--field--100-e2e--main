@@ -48,5 +48,12 @@ spec:
               value: "$HTTP_AUTH"
             - name: REMOTE_ENDPOINT
               value: "$REMOTE_ENDPOINT"
+
+            - name: WINDOWS_HOST_IP
+              value: "$WINDOWS_HOST_IP"
+            - name: WINDOWS_HOST_USERNAME
+              value: "$WINDOWS_HOST_USERNAME"
+            - name: WINDOWS_HOST_PASSWORD
+              value: "$WINDOWS_HOST_PASSWORD"
       restartPolicy: Never
 ---
