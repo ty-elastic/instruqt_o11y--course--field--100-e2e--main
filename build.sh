@@ -233,7 +233,7 @@ if [ "$build_lib" = "true" ]; then
 fi
 
 if [ "$prereq" == "true" ]; then
-    source $PWD/k8s/tools/ksm.sh
+    source $PWD/utils/ksm/ksm.sh
 
     source $PWD/utils/traefik/install.sh -s $PWD -7 $http_auth
     retry_command_lin get_lb_address traefik traefik
@@ -296,7 +296,7 @@ for current_region in "${regions[@]}"; do
         export JOB_ID=$(( $RANDOM ))
         #echo $JOB_ID
 
-        envsubst '$NAMESPACE' < k8s/yaml/_namespace.yaml | kubectl apply -f -
+        envsubst '$NAMESPACE' < k8s/_namespace.yaml | kubectl apply -f -
 
         kubectl --namespace $NAMESPACE delete secret generic elastic-secret-otel
         kubectl create secret generic elastic-secret-otel \
@@ -308,7 +308,7 @@ for current_region in "${regions[@]}"; do
             --from-literal=elastic_api_key="$elasticsearch_api_key"
 
         if [ "$service" != "none" ]; then
-            for file in k8s/yaml/*.yaml; do
+            for file in k8s/*.yaml; do
                 current_service=$(basename "$file")
                 current_service="${current_service%.*}"
 
@@ -316,21 +316,21 @@ for current_region in "${regions[@]}"; do
 
                     if [[ "$current_service" == "recorder-go-zero" && $deploy_ebpf_services == "false" ]]; then
                         printf "deleting $current_service from region $REGION\n"
-                        envsubst '$MYSQL_HOST,$MYSQL_USER,$MYSQL_PASSWORD,$MYSQL_DBNAME,$MYSQL_PORT,$POSTGRESQL_HOST,$POSTGRESQL_PORT,$POSTGRESQL_DBNAME,$POSTGRESQL_USER,$POSTGRESQL_PASSWORD,$JOB_ID,$SERVICE_VERSION,$COURSE,$REPO,$NAMESPACE,$REGION' < k8s/yaml/$current_service.yaml | kubectl delete -f -
+                        envsubst '$MYSQL_HOST,$MYSQL_USER,$MYSQL_PASSWORD,$MYSQL_DBNAME,$MYSQL_PORT,$POSTGRESQL_HOST,$POSTGRESQL_PORT,$POSTGRESQL_DBNAME,$POSTGRESQL_USER,$POSTGRESQL_PASSWORD,$JOB_ID,$SERVICE_VERSION,$COURSE,$REPO,$NAMESPACE,$REGION' < k8s/$current_service.yaml | kubectl delete -f -
                         printf "skipping recorder-go-zero deployment...\n"
                         continue
                     fi
 
                     if [ "$deploy_service" = "delete" ]; then
                         printf "deleting $current_service from region $REGION\n"
-                        envsubst '$MYSQL_HOST,$MYSQL_USER,$MYSQL_PASSWORD,$MYSQL_DBNAME,$MYSQL_PORT,$POSTGRESQL_HOST,$POSTGRESQL_PORT,$POSTGRESQL_DBNAME,$POSTGRESQL_USER,$POSTGRESQL_PASSWORD,$JOB_ID,$SERVICE_VERSION,$COURSE,$REPO,$NAMESPACE,$REGION' < k8s/yaml/$current_service.yaml | kubectl delete -f -
+                        envsubst '$MYSQL_HOST,$MYSQL_USER,$MYSQL_PASSWORD,$MYSQL_DBNAME,$MYSQL_PORT,$POSTGRESQL_HOST,$POSTGRESQL_PORT,$POSTGRESQL_DBNAME,$POSTGRESQL_USER,$POSTGRESQL_PASSWORD,$JOB_ID,$SERVICE_VERSION,$COURSE,$REPO,$NAMESPACE,$REGION' < k8s/$current_service.yaml | kubectl delete -f -
                     else
 
                         printf "deploying $current_service to region $REGION\n"
                         #echo $PROXY_PORT
-                        #envsubst '$MYSQL_HOST,$MYSQL_USER,$MYSQL_PASSWORD,$MYSQL_DBNAME,$MYSQL_PORT,$POSTGRESQL_HOST,$POSTGRESQL_PORT,$POSTGRESQL_DBNAME,$POSTGRESQL_USER,$POSTGRESQL_PASSWORD,$JOB_ID,$SERVICE_VERSION,$COURSE,$REPO,$NAMESPACE,$REGION' < k8s/yaml/$current_service.yaml | yq '.spec.ports[].port |= to_number'
+                        #envsubst '$MYSQL_HOST,$MYSQL_USER,$MYSQL_PASSWORD,$MYSQL_DBNAME,$MYSQL_PORT,$POSTGRESQL_HOST,$POSTGRESQL_PORT,$POSTGRESQL_DBNAME,$POSTGRESQL_USER,$POSTGRESQL_PASSWORD,$JOB_ID,$SERVICE_VERSION,$COURSE,$REPO,$NAMESPACE,$REGION' < k8s/$current_service.yaml | yq '.spec.ports[].port |= to_number'
 
-                        cat k8s/yaml/$current_service.yaml > tmp.yaml
+                        cat k8s/$current_service.yaml > tmp.yaml
                         sed "s/{PROXY_PORT}/$PROXY_PORT/g" tmp.yaml > tmp2.yaml
                         envsubst '$MYSQL_HOST,$MYSQL_USER,$MYSQL_PASSWORD,$MYSQL_DBNAME,$MYSQL_PORT,$POSTGRESQL_HOST,$POSTGRESQL_PORT,$POSTGRESQL_DBNAME,$POSTGRESQL_USER,$POSTGRESQL_PASSWORD,$JOB_ID,$SERVICE_VERSION,$COURSE,$REPO,$NAMESPACE,$REGION' < tmp2.yaml | kubectl apply -f -
                         rm tmp.yaml

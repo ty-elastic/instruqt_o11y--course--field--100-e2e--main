@@ -1,32 +1,10 @@
-output "windows_host" {
-  value = google_compute_instance.windows_server.network_interface[0].network_ip
-}
-
-output "windows_username" {
-  value = random_string.windows_username.result
-}
-
-output "windows_password" {
-  value     = random_password.windows_password.result
-  sensitive = true
-}
-
 output "cluster_name" {
   value = google_container_cluster.primary.name
-}
-
-output "cluster_endpoint" {
-  value     = google_container_cluster.primary.endpoint
-  sensitive = true
 }
 
 output "get_credentials_command" {
   description = "Run this to point kubectl at the new cluster"
   value       = "gcloud container clusters get-credentials ${google_container_cluster.primary.name} --zone ${var.zone} --project ${var.project}"
-}
-
-output "job_name" {
-  value = kubernetes_job_v1.install.metadata[0].name
 }
 
 # Services below are created by the install Job, so these data sources must

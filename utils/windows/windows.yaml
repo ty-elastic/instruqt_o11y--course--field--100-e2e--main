@@ -7,7 +7,7 @@ data:
   user-mapping.xml: |
     <user-mapping>
       <!-- Define the Guacamole web UI admin credentials -->
-      <authorize username="traefik" password="traefik">
+      <authorize username="user" password="password">
         <connection name="Windows Server">
           <protocol>rdp</protocol>
           <param name="hostname">$WINDOWS_HOST</param> 
@@ -46,10 +46,6 @@ spec:
           value: "4822"
         - name: GUACAMOLE_HOME
           value: "/etc/guacamole"
-        - name: HTTP_AUTH_ENABLED
-          value: "true"
-        - name: "HTTP_AUTH_HEADER"
-          value: "X-Windows-User"
       resources:
         limits:
           memory: "512Mi"
@@ -93,7 +89,7 @@ metadata:
 spec:
   headers:
     customRequestHeaders:
-      X-Windows-User: "traefik"
+      Authorization: "Basic dXNlcjpwYXNzd29yZA=="
 ---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
