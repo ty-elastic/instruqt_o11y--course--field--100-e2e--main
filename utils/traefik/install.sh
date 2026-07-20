@@ -11,6 +11,8 @@ do
    esac
 done
 
+source $root/assets/scripts/retry.sh
+
 if [ "$http_auth" = "true"  ]; then
   helm repo add traefik https://traefik.github.io/charts
   helm repo update
@@ -30,8 +32,13 @@ if [ "$http_auth" = "true"  ]; then
   rm -rf .htpasswd
 
   kubectl apply -f $root/utils/traefik/auth.yaml
+
+  retry_command_lin get_lb_address traefik traefik
 else
   echo "k3s traefik"
+  mkdir -p /var/lib/rancher/k3s/server/manifests
   cp $root/utils/traefik/k3s.yaml /var/lib/rancher/k3s/server/manifests/traefik-config.yaml
   kubectl apply -f $root/utils/traefik/noauth.yaml
+
+  retry_command_lin get_lb_address kube-system traefik
 fi

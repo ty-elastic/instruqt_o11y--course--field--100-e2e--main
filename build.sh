@@ -219,7 +219,6 @@ if [ "$prereq" == "true" ]; then
     source $PWD/utils/ksm/ksm.sh
 
     source $PWD/utils/traefik/install.sh -s $PWD -7 $http_auth
-    retry_command_lin get_lb_address traefik traefik
 fi
 
 if [ "$deploy_otel" != "false" ]; then
