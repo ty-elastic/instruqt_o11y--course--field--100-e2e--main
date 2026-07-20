@@ -1,4 +1,5 @@
 # --- PYTHON
+$ProgressPreference = 'SilentlyContinue'
 
 $env:url = "https://www.python.org/ftp/python/3.13.13/python-3.13.13-amd64.exe"
 $env:outPath = "$env:TEMP\python-installer.exe"
