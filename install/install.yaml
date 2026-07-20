@@ -46,5 +46,7 @@ spec:
               value: "$INGEST_URL"
             - name: HTTP_AUTH
               value: "$HTTP_AUTH"
+            - name: REMOTE_ENDPOINT
+              value: "$REMOTE_ENDPOINT"
       restartPolicy: Never
 ---

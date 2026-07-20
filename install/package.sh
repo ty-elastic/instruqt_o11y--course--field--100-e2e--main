@@ -20,9 +20,9 @@ fi
 
 # assets
 if [[ -n "$WINDOWS_HOST_IP" ]]; then
-    ./build.sh -o false -c $COURSE -d false -b false -s none -4 $WINDOWS_HOST_IP -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL -w true -e true
+    ./build.sh -o false -c $COURSE -d false -b false -s none -4 $WINDOWS_HOST_IP -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL -w true -e $REMOTE_ENDPOINT
 else
-    ./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL -w true -e true
+    ./build.sh -o false -c $COURSE -d false -b false -s none -j $ELASTICSEARCH_URL -h $KIBANA_URL -i $ELASTICSEARCH_APIKEY -k $INGEST_URL -w true -e $REMOTE_ENDPOINT
 fi
 
 # ramen

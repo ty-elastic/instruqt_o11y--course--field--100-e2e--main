@@ -358,7 +358,7 @@ if [ "$synthetics" = "true" ]; then
     source $PWD/assets/scripts/synthetics.sh -t $elasticsearch_fleet_endpoint -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
 fi
 
-if [ "$remote" = "true"  ]; then
+if [[ "$remote" != "false" ]]; then
     printf "deploying remote_endpoint...\n"
 
     cd utils/remote
@@ -366,8 +366,12 @@ if [ "$remote" = "true"  ]; then
     envsubst '$COURSE,$REPO' < remote.yaml | kubectl apply -f -
     cd ../..
 
-    retry_command_lin get_lb_address traefik traefik
-    export remote_endpoint=http://$SERVICE_IP:9014
+    if [ "$remote" = "true"  ]; then
+        retry_command_lin get_lb_address traefik traefik
+        export remote_endpoint=http://$SERVICE_IP:9014
+    else
+        export remote_endpoint=$remote
+    fi
 
     printf "deploying remote_endpoint $remote_endpoint...SUCCESS\n"
 fi
