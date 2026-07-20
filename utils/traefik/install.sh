@@ -40,5 +40,5 @@ else
   cp $root/utils/traefik/k3s.yaml /var/lib/rancher/k3s/server/manifests/traefik-config.yaml
   kubectl apply -f $root/utils/traefik/noauth.yaml
 
-  retry_command_lin get_lb_address kube-system traefik
+  #retry_command_lin get_lb_address kube-system traefik
 fi
