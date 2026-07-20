@@ -54,18 +54,6 @@ resource "google_container_cluster" "primary" {
     services_ipv4_cidr_block = "/24"
   }
 
-  addons_config {
-    horizontal_pod_autoscaling {
-      disabled = false
-    }
-    http_load_balancing {
-      disabled = false
-    }
-    gce_persistent_disk_csi_driver_config {
-      enabled = true
-    }
-  }
-
   resource_labels = var.labels
 }
 

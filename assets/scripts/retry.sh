@@ -56,3 +56,21 @@ retry_command_lin() {
     return $exit_code
 }
 export -f retry_command_lin
+
+check_http() {
+   printf "$FUNCNAME...\n"
+
+   output=$(curl -s -X GET "$1" \
+      -w "\n%{http_code}")
+
+   # Extract HTTP status code
+   http_code=$(echo "$output" | tail -n1)
+   http_response=$(echo "$output" | sed '$d')
+   if [ "$http_code" != "200" ]; then
+      printf "$FUNCNAME...ERROR $http_code: $http_response\n"
+      return 1
+   fi
+   printf "$FUNCNAME...SUCCESS\n"
+   return 0
+}
+export -f check_http

@@ -29,10 +29,12 @@ helm install wiki \
     --set postgresql.image.pullPolicy=Always \
     requarks/wiki
 
+retry_command_lin check_http "http://wiki.wiki.svc.cluster.local:80/"
+
 envsubst '$course,$repo' < $root/utils/wiki.js/install/wikijs.yaml | kubectl apply -f -
 
 # wait
-kubectl wait --for=condition=complete job/wikijs-config22 -n wiki --timeout=120s
+kubectl wait --for=condition=complete job/wikijs-config -n wiki --timeout=120s
 
 create_wiki_connector() {
    printf "$FUNCNAME...\n"
