@@ -23,6 +23,7 @@ COPY --from=builder /usr/local/bin/ttyd /usr/local/bin/ttyd
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl vim-tiny \
     ca-certificates \
+    stress \
     libjson-c-dev libwebsockets-dev \
     && rm -rf /var/lib/apt/lists/*
 

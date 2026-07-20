@@ -1,13 +1,15 @@
 locals {
-  install_image = {
-    test = "us-central1-docker.pkg.dev/elastic-sa/tbekiares/install:o11y--course--field--100-e2e--test"
-    prod = "us-central1-docker.pkg.dev/elastic-sa/tbekiares/install:o11y--course--field--100-e2e--serverless"
+  course = {
+    test = "o11y--course--field--100-e2e--test"
+    prod = "o11y--course--field--100-e2e--serverless"
   }
   # Fallback to a default if the variable doesn't match a known key
-  selected_install_image = try(
-    local.install_image[var.environment], 
-    local.install_image["prod"]
+  selected_course = try(
+    local.course[var.environment], 
+    local.course["prod"]
   )
+
+  install_image = "us-central1-docker.pkg.dev/elastic-sa/tbekiares/install:${local.selected_course}"
 
   # String interpolation combining both variables
   cluster_name = "${var.cluster_name}-${var.labels.project}"
@@ -139,8 +141,12 @@ resource "kubernetes_job_v1" "install" {
 
         container {
           name  = "install"
-          image = local.selected_install_image
+          image = local.install_image
 
+          env {
+            name  = "COURSE"
+            value = local.selected_course
+          }
           env {
             name  = "ELASTICSEARCH_URL"
             value = var.elasticsearch_url
