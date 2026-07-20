@@ -252,7 +252,7 @@ def load_synthetics(kibana_server, kibana_auth, namespaces, iis_endpoint):
                     content = fileo.read()
                     if content.find('$NAMESPACE') != -1:
                         print("multi-namespace")
-                        port=8081
+                        port=9000
                         for namespace in namespaces:
                             with open(full_path, 'r') as fileo:
                                 synthetic = json.load(fileo)
