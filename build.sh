@@ -1,7 +1,7 @@
 #!/bin/bash
 
 check_assets() {
-    kubectl wait --for=condition=complete job/assets-$1 --timeout=120s
+    kubectl wait --for=condition=complete job/assets-$1 --timeout=240s
 }
 
 check_services() {
@@ -255,7 +255,7 @@ if [ "$prereq" == "true" ]; then
         --from-literal=elastic_api_key="$elasticsearch_api_key"
 
     kubectl apply -f utils/semantic-code-search/indexer.yaml
-    kubectl -n infra wait --for=condition=complete job/code-setup --timeout=120s
+    kubectl -n infra wait --for=condition=complete job/code-setup --timeout=240s
 
 fi
 
