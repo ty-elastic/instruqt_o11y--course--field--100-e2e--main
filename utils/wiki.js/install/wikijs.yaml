@@ -23,7 +23,7 @@ metadata:
   name: wikijs-config
   namespace: wiki
 spec:
-  backoffLimit: 0 
+  backoffLimit: 1
   template:
     spec:
       containers:
@@ -37,5 +37,5 @@ spec:
             - "http://wiki.wiki.svc.cluster.local:80"
             - "--wiki_private_url"
             - "http://wiki.wiki.svc.cluster.local:80"
-      restartPolicy: Never
+      restartPolicy: OnFailure
 ---
