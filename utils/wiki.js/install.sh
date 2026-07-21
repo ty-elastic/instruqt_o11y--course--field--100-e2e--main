@@ -34,7 +34,7 @@ retry_command_lin check_http "http://wiki.wiki.svc.cluster.local:80/"
 envsubst '$course,$repo' < $root/utils/wiki.js/install/wikijs.yaml | kubectl apply -f -
 
 # wait
-kubectl wait --for=condition=complete job/wikijs-config -n wiki --timeout=240s
+kubectl wait --for=condition=complete job/wikijs-config -n wiki --timeout=5m
 
 create_wiki_connector() {
    printf "$FUNCNAME...\n"

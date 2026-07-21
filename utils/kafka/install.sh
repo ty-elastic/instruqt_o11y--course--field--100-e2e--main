@@ -14,7 +14,7 @@ echo $values
 kubectl create namespace infra
 
 kubectl create -f 'https://strimzi.io/install/latest?namespace=infra' -n infra
-kubectl wait --for=condition=Ready pod --all -n infra --timeout=300s
+kubectl wait --for=condition=Ready pod --all -n infra --timeout=5m
 
 kubectl apply -f $values -n infra 
-kubectl wait kafka/my-cluster --for=condition=Ready --timeout=300s -n infra
+kubectl wait kafka/my-cluster --for=condition=Ready --timeout=5m -n infra

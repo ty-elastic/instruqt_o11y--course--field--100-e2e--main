@@ -20,7 +20,7 @@ done
 export AGENT_VERSION=9.4.3
 
 check_otel() {
-    kubectl wait --for=condition=Ready pods --all -n opentelemetry-operator-system --timeout=120s
+    kubectl wait --for=condition=Ready pods --all -n opentelemetry-operator-system --timeout=5m
 
     if kubectl describe otelinst -n opentelemetry-operator-system | grep -q "No resources found"; then
         echo "otel operator not yet ready"

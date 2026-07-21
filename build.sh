@@ -1,7 +1,7 @@
 #!/bin/bash
 
 check_assets() {
-    kubectl wait --for=condition=complete job/assets-$1 --timeout=240s
+    kubectl wait --for=condition=complete job/assets-$1 --timeout=5m
 }
 
 check_services() {
@@ -255,7 +255,7 @@ if [ "$prereq" == "true" ]; then
         --from-literal=elastic_api_key="$elasticsearch_api_key"
 
     kubectl apply -f utils/semantic-code-search/indexer.yaml
-    kubectl -n infra wait --for=condition=complete job/code-setup --timeout=240s
+    kubectl -n infra wait --for=condition=complete job/code-setup --timeout=5m
 
 fi
 
@@ -416,7 +416,7 @@ if [ "$assets" = "true" ]; then
     cd ..
 
     retry_command_lin check_assets $JOB_ID
-    #retry_command_lin kubectl logs -f job/assets-$1 
+    #retry_command_lin kubectl logs -f job/assets-$JOB_ID
 
     for current_region in "${regions[@]}"; do
         namespace=$namespace_base-$current_region
