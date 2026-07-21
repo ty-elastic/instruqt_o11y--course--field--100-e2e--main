@@ -95,5 +95,5 @@ spec:
     - kind: Rule
       match: PathPrefix(`/`)
       services:
-        - name: proxy
+        - name: remote
           port: 43210
