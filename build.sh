@@ -215,10 +215,6 @@ if [ "$build_lib" = "true" ]; then
     cd ..
 fi
 
-retry_command_lin check_http $elasticsearch_kibana_endpoint
-retry_command_lin check_http $elasticsearch_es_endpoint
-retry_command_lin check_http $elasticsearch_otlp_endpoint
-retry_command_lin check_http $elasticsearch_fleet_endpoint
 
 if [ "$prereq" == "true" ]; then
     source $PWD/utils/ksm/ksm.sh
@@ -236,6 +232,12 @@ if [ "$deploy_otel" != "false" ]; then
 fi
 
 if [ "$features" = "true" ]; then
+
+    retry_command_lin check_http $elasticsearch_kibana_endpoint
+    retry_command_lin check_http $elasticsearch_es_endpoint
+    retry_command_lin check_http $elasticsearch_otlp_endpoint
+    retry_command_lin check_http $elasticsearch_fleet_endpoint
+
     source $PWD/assets/scripts/features_es.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -j $elasticsearch_es_endpoint -k $elasticsearch_otlp_endpoint
     source $PWD/assets/scripts/snowem.sh -h $elasticsearch_kibana_endpoint -i $elasticsearch_api_key -e https://snowem-v2-voldmqr2bq-uc.a.run.app
 fi
