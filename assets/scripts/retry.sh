@@ -76,7 +76,7 @@ check_http_ok() {
 export -f check_http_ok
 
 check_http() {
-   printf "$FUNCNAME...\n"
+   printf "$FUNCNAME $1...\n"
 
    output=$(curl -s -X GET "$1" \
       -w "\n%{http_code}")
@@ -88,7 +88,7 @@ check_http() {
       printf "$FUNCNAME...ERROR $http_code: $http_response\n"
       return 1
    fi
-   printf "$FUNCNAME...SUCCESS\n"
+   printf "$FUNCNAME $1...SUCCESS\n"
    return 0
 }
 export -f check_http
