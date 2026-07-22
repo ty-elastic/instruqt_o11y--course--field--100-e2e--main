@@ -215,6 +215,11 @@ if [ "$build_lib" = "true" ]; then
     cd ..
 fi
 
+retry_command_lin check_http $elasticsearch_kibana_endpoint
+retry_command_lin check_http $elasticsearch_es_endpoint
+retry_command_lin check_http $elasticsearch_otlp_endpoint
+retry_command_lin check_http $elasticsearch_fleet_endpoint
+
 if [ "$prereq" == "true" ]; then
     source $PWD/utils/ksm/ksm.sh
 
