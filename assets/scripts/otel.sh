@@ -18,9 +18,8 @@ do
 done
 
 if [[ ! "$elasticsearch_otlp_endpoint" =~ :[0-9]+($|/) ]]; then
-    printf("appending port to ingest url")
-    # Insert port before the first slash after the scheme, or append
     elasticsearch_otlp_endpoint=$elasticsearch_otlp_endpoint:443
+    printf "appending port to ingest url: $elasticsearch_otlp_endpoint\n"
 fi
 
 export AGENT_VERSION=9.4.3
